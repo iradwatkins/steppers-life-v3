@@ -6,42 +6,33 @@ import { Button } from "@/components/ui/button";
 import { Star, MapPin, Users, CheckCircle, Heart, MessageCircle } from 'lucide-react';
 
 interface InstructorCardProps {
-  id: string;
-  name: string;
-  title: string;
-  location: string;
-  image: string;
-  rating: number;
-  students: number;
-  specialties: string[];
-  verified?: boolean;
-  bio?: string;
+  instructor: {
+    id: number;
+    name: string;
+    title: string;
+    location: string;
+    rating: number;
+    reviewCount: number;
+    image: string;
+    specialties: string[];
+    verified: boolean;
+    experience: string;
+  };
 }
 
-const InstructorCard = ({ 
-  id, 
-  name, 
-  title, 
-  location, 
-  image, 
-  rating, 
-  students, 
-  specialties, 
-  verified = false,
-  bio 
-}: InstructorCardProps) => {
+const InstructorCard = ({ instructor }: InstructorCardProps) => {
   const handleContact = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Contact instructor:', id);
+    console.log('Contact instructor:', instructor.id);
   };
 
   const handleFavorite = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log('Favorite instructor:', id);
+    console.log('Favorite instructor:', instructor.id);
   };
 
   const handleViewProfile = () => {
-    console.log('View instructor profile:', id);
+    console.log('View instructor profile:', instructor.id);
   };
 
   return (
@@ -51,8 +42,8 @@ const InstructorCard = ({
     >
       <div className="relative">
         <img 
-          src={image} 
-          alt={name}
+          src={instructor.image} 
+          alt={instructor.name}
           className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute top-3 right-3 flex gap-2">
@@ -65,7 +56,7 @@ const InstructorCard = ({
             <Heart className="h-4 w-4" />
           </Button>
         </div>
-        {verified && (
+        {instructor.verified && (
           <div className="absolute bottom-3 left-3">
             <Badge className="bg-feedback-success text-white flex items-center gap-1">
               <CheckCircle className="h-3 w-3" />
@@ -79,13 +70,13 @@ const InstructorCard = ({
         <div className="flex items-start justify-between">
           <div>
             <h3 className="font-semibold text-lg text-text-primary group-hover:text-brand-primary transition-colors">
-              {name}
+              {instructor.name}
             </h3>
-            <p className="text-text-secondary text-sm">{title}</p>
+            <p className="text-text-secondary text-sm">{instructor.title}</p>
           </div>
           <div className="flex items-center text-sm text-text-secondary">
             <Star className="h-4 w-4 text-yellow-400 fill-current mr-1" />
-            <span className="font-medium">{rating}</span>
+            <span className="font-medium">{instructor.rating}</span>
           </div>
         </div>
       </CardHeader>
@@ -94,20 +85,16 @@ const InstructorCard = ({
         <div className="space-y-3 mb-4">
           <div className="flex items-center text-text-secondary text-sm">
             <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>{location}</span>
+            <span>{instructor.location}</span>
           </div>
           <div className="flex items-center text-text-secondary text-sm">
             <Users className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>{students}+ students taught</span>
+            <span>{instructor.reviewCount}+ reviews</span>
           </div>
         </div>
 
-        {bio && (
-          <p className="text-text-secondary text-sm mb-4 line-clamp-2">{bio}</p>
-        )}
-
         <div className="flex flex-wrap gap-1 mb-4">
-          {specialties.slice(0, 3).map((specialty, index) => (
+          {instructor.specialties.slice(0, 3).map((specialty, index) => (
             <Badge 
               key={index} 
               variant="outline" 
@@ -116,9 +103,9 @@ const InstructorCard = ({
               {specialty}
             </Badge>
           ))}
-          {specialties.length > 3 && (
+          {instructor.specialties.length > 3 && (
             <Badge variant="outline" className="text-xs">
-              +{specialties.length - 3} more
+              +{instructor.specialties.length - 3} more
             </Badge>
           )}
         </div>
