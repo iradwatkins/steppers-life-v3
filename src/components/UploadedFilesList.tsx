@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { File, X, ExternalLink, Cloud } from 'lucide-react';
 import { StoredFile, useFileOperations } from '@/hooks/useFileOperations';
 import { User } from '@supabase/supabase-js';
+import FileContentViewer from './FileContentViewer';
 
 interface UploadedFilesListProps {
   user: User | null;
@@ -85,6 +85,14 @@ const UploadedFilesList: React.FC<UploadedFilesListProps> = ({ user, refreshTrig
         </span>
       </div>
       
+      {uploadedFiles.length > 0 && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+          <p className="text-sm text-green-800">
+            <strong>💡 Tip:</strong> Click the eye icon to view file contents and copy them to your local .docs folder for direct access.
+          </p>
+        </div>
+      )}
+      
       {uploadedFiles.length > 0 ? (
         <div className="space-y-2">
           {uploadedFiles.map((file) => (
@@ -102,12 +110,13 @@ const UploadedFilesList: React.FC<UploadedFilesListProps> = ({ user, refreshTrig
                 </div>
               </div>
               <div className="flex gap-2">
+                <FileContentViewer file={file} />
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => openFile(file)}
                   className="text-blue-600 hover:text-blue-700 p-1"
-                  title="Open file"
+                  title="Open file in new tab"
                 >
                   <ExternalLink className="h-4 w-4" />
                 </Button>
