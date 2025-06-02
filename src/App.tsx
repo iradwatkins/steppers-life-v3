@@ -10,6 +10,9 @@ import Events from "./pages/Events";
 import Classes from "./pages/Classes";
 import Community from "./pages/Community";
 import Instructors from "./pages/Instructors";
+import Profile from "./pages/Profile";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
 
@@ -28,8 +31,12 @@ const App = () => (
           <Route path="/classes" element={<Classes />} />
           <Route path="/community" element={<Community />} />
           <Route path="/instructors" element={<Instructors />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="/docs" element={<Docs />} />
         </Route>
+        {/* Auth routes without layout */}
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/register" element={<Register />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
