@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
@@ -17,6 +16,24 @@ export interface StoredFile {
 export const useFileOperations = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Function to determine correct MIME type based on file extension
+  const getMimeType = (fileName: string): string => {
+    const extension = fileName.toLowerCase().split('.').pop();
+    
+    const mimeTypes: { [key: string]: string } = {
+      'md': 'text/markdown',
+      'txt': 'text/plain',
+      'pdf': 'application/pdf',
+      'doc': 'application/msword',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg'
+    };
+    
+    return mimeTypes[extension || ''] || 'application/octet-stream';
+  };
 
   const uploadFiles = async (files: File[]) => {
     if (files.length === 0) return;
@@ -46,13 +63,20 @@ export const useFileOperations = () => {
         const file = files[i];
         const fileName = file.name;
         const storagePath = `${user.id}/${Date.now()}-${fileName}`;
+        const correctMimeType = getMimeType(fileName);
 
-        console.log(`Uploading file ${i + 1}/${files.length}: ${fileName}`);
+        console.log(`Uploading file ${i + 1}/${files.length}: ${fileName} (MIME: ${correctMimeType})`);
+
+        // Create a new File object with the correct MIME type
+        const correctedFile = new File([file], fileName, {
+          type: correctMimeType,
+          lastModified: file.lastModified
+        });
 
         // Upload file to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('docs')
-          .upload(storagePath, file, {
+          .upload(storagePath, correctedFile, {
             cacheControl: '3600',
             upsert: false
           });
@@ -75,7 +99,7 @@ export const useFileOperations = () => {
             file_name: fileName,
             file_path: `docs/${fileName}`,
             file_size: file.size,
-            mime_type: file.type,
+            mime_type: correctMimeType,
             uploaded_by: user.id,
             storage_path: storagePath
           })
