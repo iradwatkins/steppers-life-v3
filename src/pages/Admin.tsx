@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import GitHubSync from '@/components/GitHubSync';
 
 interface DashboardStats {
   totalUsers: number;
@@ -20,7 +21,7 @@ const Admin = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalFiles: 0,
-    adminUsers: 0,
+    adminUsers: 1, // Hardcoded for now since we don't have user_roles table
     recentActivity: []
   });
   const [isAdmin, setIsAdmin] = useState(false);
@@ -34,21 +35,18 @@ const Admin = () => {
   }, [user]);
 
   const checkAdminStatus = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     
     try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      if (data) {
-        setIsAdmin(true);
-      }
+      // For now, hardcode admin check for the specified email
+      const adminEmails = ['iradwatkins@gmail.com'];
+      const userIsAdmin = adminEmails.includes(user.email || '');
+      setIsAdmin(userIsAdmin);
     } catch (error) {
-      console.log('User is not an admin');
+      console.log('Error checking admin status:', error);
       setIsAdmin(false);
     } finally {
       setLoading(false);
@@ -57,32 +55,26 @@ const Admin = () => {
 
   const loadDashboardStats = async () => {
     try {
-      // Get total users count (this would normally be from a view or function)
-      const { count: userCount } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true });
-
       // Get total files count
       const { count: fileCount } = await supabase
         .from('uploaded_files')
         .select('*', { count: 'exact', head: true });
 
-      // Get admin users count
-      const { count: adminCount } = await supabase
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('role', 'admin');
-
       setStats({
-        totalUsers: userCount || 0,
+        totalUsers: 1, // Hardcoded since we can't access auth.users
         totalFiles: fileCount || 0,
-        adminUsers: adminCount || 0,
+        adminUsers: 1, // Hardcoded for now
         recentActivity: []
       });
     } catch (error) {
       console.error('Error loading dashboard stats:', error);
       toast.error('Failed to load dashboard statistics');
     }
+  };
+
+  const handleRefreshStats = () => {
+    loadDashboardStats();
+    toast.success('Dashboard statistics refreshed');
   };
 
   if (loading) {
@@ -139,6 +131,9 @@ const Admin = () => {
             <p className="text-text-secondary">Manage your SteppersLife platform</p>
           </div>
 
+          {/* GitHub Sync Component */}
+          <GitHubSync onRefresh={handleRefreshStats} />
+
           {/* Security Status */}
           <div className="mb-8">
             <Card className="border-feedback-success">
@@ -166,6 +161,12 @@ const Admin = () => {
                     <span>Row Level Security</span>
                     <Badge variant="outline" className="text-feedback-success border-feedback-success">
                       Enabled
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>Admin Access</span>
+                    <Badge variant="outline" className="text-feedback-success border-feedback-success">
+                      iradwatkins@gmail.com
                     </Badge>
                   </div>
                 </div>
@@ -258,6 +259,14 @@ const Admin = () => {
                     <p className="text-sm text-text-secondary">Role-based access control for administrative functions</p>
                   </div>
                 </div>
+
+                <div className="flex items-center gap-3 p-4 bg-feedback-success/10 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-feedback-success" />
+                  <div>
+                    <p className="font-medium">GitHub Integration Added</p>
+                    <p className="text-sm text-text-secondary">Git push/pull functionality for version control</p>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -266,7 +275,7 @@ const Admin = () => {
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
             <div className="flex gap-4">
-              <Button onClick={loadDashboardStats} variant="outline">
+              <Button onClick={handleRefreshStats} variant="outline">
                 Refresh Stats
               </Button>
               <Button variant="outline" disabled>

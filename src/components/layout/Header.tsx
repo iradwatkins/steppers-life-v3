@@ -4,7 +4,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,18 +27,10 @@ const Header = () => {
   const checkAdminStatus = async () => {
     if (!user) return;
     
-    try {
-      const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
-        .single();
-
-      setIsAdmin(!!data);
-    } catch (error) {
-      setIsAdmin(false);
-    }
+    // For now, hardcode admin check for the specified email
+    // In a real app, this would check against the user_roles table
+    const adminEmails = ['iradwatkins@gmail.com'];
+    setIsAdmin(adminEmails.includes(user.email || ''));
   };
 
   const handleSignOut = async () => {
