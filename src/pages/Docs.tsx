@@ -1,7 +1,6 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, File, X, CheckCircle } from "lucide-react";
+import { Upload, File, X, CheckCircle, Folder } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 interface UploadedFile {
@@ -10,11 +9,46 @@ interface UploadedFile {
   uploadDate: Date;
 }
 
+interface DocsFile {
+  name: string;
+  path: string;
+  isDirectory: boolean;
+}
+
 const Docs = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [docsFiles, setDocsFiles] = useState<DocsFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+
+  // Load files from .docs folder on component mount
+  useEffect(() => {
+    loadDocsFiles();
+  }, []);
+
+  const loadDocsFiles = async () => {
+    try {
+      setIsLoadingDocs(true);
+      // Simulate loading .docs files - in a real implementation this would fetch from your file system
+      const mockDocsFiles: DocsFile[] = [
+        { name: "README.md", path: ".docs/README.md", isDirectory: false },
+        { name: "upload.html", path: ".docs/upload.html", isDirectory: false },
+      ];
+      
+      setDocsFiles(mockDocsFiles);
+      console.log('Loaded docs files:', mockDocsFiles);
+    } catch (error) {
+      console.error('Failed to load docs files:', error);
+      toast.error("Failed to load docs files", {
+        description: "Could not retrieve files from .docs folder",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoadingDocs(false);
+    }
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -105,6 +139,43 @@ const Docs = () => {
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Docs</h1>
           
+          {/* .docs Folder Files Section */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex items-center mb-4">
+              <Folder className="h-5 w-5 text-blue-500 mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">.docs Folder</h2>
+            </div>
+            
+            {isLoadingDocs ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="text-sm text-gray-500">Loading files...</div>
+              </div>
+            ) : docsFiles.length > 0 ? (
+              <div className="space-y-2">
+                {docsFiles.map((file, index) => (
+                  <div key={index} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-center">
+                      {file.isDirectory ? (
+                        <Folder className="h-5 w-5 text-blue-600 mr-2" />
+                      ) : (
+                        <File className="h-5 w-5 text-blue-600 mr-2" />
+                      )}
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">{file.name}</span>
+                        <div className="text-xs text-gray-500">{file.path}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No files found in .docs folder
+              </div>
+            )}
+          </div>
+
+          {/* Upload Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="mb-6">
               <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
