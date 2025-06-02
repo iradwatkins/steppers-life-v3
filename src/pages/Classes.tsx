@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { BookOpen, Clock, Users, Star, Play, Filter, Search } from 'lucide-react';
 
 const Classes = () => {
-  const [selectedLevel, setSelectedLevel] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   const classes = [
@@ -105,8 +105,8 @@ const Classes = () => {
   const filteredClasses = classes.filter(classItem => {
     const matchesSearch = classItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          classItem.instructor.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLevel = !selectedLevel || classItem.level === selectedLevel;
-    const matchesCategory = !selectedCategory || classItem.category === selectedCategory;
+    const matchesLevel = selectedLevel === 'all' || classItem.level === selectedLevel;
+    const matchesCategory = selectedCategory === 'all' || classItem.category === selectedCategory;
     return matchesSearch && matchesLevel && matchesCategory;
   });
 
@@ -181,7 +181,7 @@ const Classes = () => {
                   <SelectValue placeholder="All Levels" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Levels</SelectItem>
+                  <SelectItem value="all">All Levels</SelectItem>
                   {levels.map(level => (
                     <SelectItem key={level} value={level}>{level}</SelectItem>
                   ))}
@@ -193,7 +193,7 @@ const Classes = () => {
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
