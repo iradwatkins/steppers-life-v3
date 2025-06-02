@@ -1,10 +1,18 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, File, X } from "lucide-react";
+import { Upload, File, X, CheckCircle } from "lucide-react";
+import { toast } from "@/components/ui/sonner";
+
+interface UploadedFile {
+  name: string;
+  size: number;
+  uploadDate: Date;
+}
 
 const Docs = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
@@ -57,14 +65,38 @@ const Docs = () => {
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);
       }
 
+      // Add uploaded files to the uploaded files list
+      const newUploadedFiles = selectedFiles.map(file => ({
+        name: file.name,
+        size: file.size,
+        uploadDate: new Date()
+      }));
+      
+      setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
+      
       console.log('Files uploaded successfully:', selectedFiles.map(f => f.name));
+      
+      // Show success notification
+      toast.success("Files uploaded successfully!", {
+        description: `${selectedFiles.length} file(s) uploaded`,
+        duration: 3000,
+      });
+      
       clearFiles();
     } catch (error) {
       console.error('Upload failed:', error);
+      toast.error("Upload failed", {
+        description: "Please try again",
+        duration: 3000,
+      });
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
     }
+  };
+
+  const removeUploadedFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -73,7 +105,7 @@ const Docs = () => {
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Docs</h1>
           
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="mb-6">
               <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
                 Select files to upload
@@ -157,6 +189,39 @@ const Docs = () => {
               </div>
             )}
           </div>
+
+          {/* Uploaded Files Section */}
+          {uploadedFiles.length > 0 && (
+            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+              <div className="flex items-center mb-4">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                <h2 className="text-lg font-semibold text-gray-900">Uploaded Files</h2>
+              </div>
+              <div className="space-y-2">
+                {uploadedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="flex items-center">
+                      <File className="h-5 w-5 text-green-600 mr-2" />
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">{file.name}</span>
+                        <div className="text-xs text-gray-500">
+                          {formatFileSize(file.size)} • Uploaded {file.uploadDate.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeUploadedFile(index)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mt-8 text-center">
             <a href="/" className="text-indigo-600 hover:text-indigo-500 font-medium">← Back to Home</a>
