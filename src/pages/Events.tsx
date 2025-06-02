@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +10,7 @@ import EventCard from '@/components/EventCard';
 const Events = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [filterType, setFilterType] = useState('all');
-  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCity, setSelectedCity] = useState('all');
 
   const events = [
     {
@@ -104,7 +103,7 @@ const Events = () => {
   
   const filteredEvents = events.filter(event => {
     const matchesType = filterType === 'all' || event.category.toLowerCase() === filterType;
-    const matchesCity = !selectedCity || `${event.city}, ${event.state}` === selectedCity;
+    const matchesCity = selectedCity === 'all' || `${event.city}, ${event.state}` === selectedCity;
     return matchesType && matchesCity;
   });
 
@@ -219,7 +218,7 @@ const Events = () => {
                   <SelectValue placeholder="All Cities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Cities</SelectItem>
+                  <SelectItem value="all">All Cities</SelectItem>
                   {cities.map(city => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
