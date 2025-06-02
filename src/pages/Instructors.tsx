@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +9,9 @@ import InstructorCard from '@/components/InstructorCard';
 
 const Instructors = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('');
-  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedCity, setSelectedCity] = useState('all');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
+  const [selectedLevel, setSelectedLevel] = useState('all');
 
   const instructors = [
     {
@@ -115,8 +114,8 @@ const Instructors = () => {
     const matchesSearch = instructor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          instructor.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          instructor.bio.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCity = !selectedCity || instructor.location === selectedCity;
-    const matchesSpecialty = !selectedSpecialty || instructor.specialties.includes(selectedSpecialty);
+    const matchesCity = selectedCity === 'all' || instructor.location === selectedCity;
+    const matchesSpecialty = selectedSpecialty === 'all' || instructor.specialties.includes(selectedSpecialty);
     return matchesSearch && matchesCity && matchesSpecialty;
   });
 
@@ -195,7 +194,7 @@ const Instructors = () => {
                   <SelectValue placeholder="All Cities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Cities</SelectItem>
+                  <SelectItem value="all">All Cities</SelectItem>
                   {cities.map(city => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
@@ -207,7 +206,7 @@ const Instructors = () => {
                   <SelectValue placeholder="All Specialties" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Specialties</SelectItem>
+                  <SelectItem value="all">All Specialties</SelectItem>
                   {specialties.map(specialty => (
                     <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
                   ))}
