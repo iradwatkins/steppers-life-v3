@@ -25,7 +25,11 @@ export const useFileOperations = () => {
     setUploadProgress(0);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        throw new Error("Authentication error: " + userError.message);
+      }
       
       if (!user) {
         toast.error("Authentication required", {
@@ -35,26 +39,34 @@ export const useFileOperations = () => {
         return;
       }
 
+      console.log('Uploading files as user:', user.email);
       const uploadedFiles: StoredFile[] = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const fileName = file.name;
-        const storagePath = `docs/${Date.now()}-${fileName}`;
+        const storagePath = `${user.id}/${Date.now()}-${fileName}`;
+
+        console.log(`Uploading file ${i + 1}/${files.length}: ${fileName}`);
 
         // Upload file to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('docs')
-          .upload(storagePath, file);
+          .upload(storagePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
         if (uploadError) {
-          console.error('Upload error:', uploadError);
+          console.error('Storage upload error:', uploadError);
           toast.error(`Failed to upload ${fileName}`, {
             description: uploadError.message,
             duration: 3000,
           });
           continue;
         }
+
+        console.log('File uploaded to storage:', uploadData.path);
 
         // Store file metadata in database
         const { data: dbData, error: dbError } = await supabase
@@ -71,7 +83,12 @@ export const useFileOperations = () => {
           .single();
 
         if (dbError) {
-          console.error('Database error:', dbError);
+          console.error('Database insert error:', dbError);
+          // Try to clean up the uploaded file
+          await supabase.storage
+            .from('docs')
+            .remove([storagePath]);
+          
           toast.error(`Failed to save metadata for ${fileName}`, {
             description: dbError.message,
             duration: 3000,
@@ -79,22 +96,23 @@ export const useFileOperations = () => {
           continue;
         }
 
+        console.log('File metadata saved:', dbData);
         uploadedFiles.push(dbData);
         setUploadProgress(((i + 1) / files.length) * 100);
       }
 
-      console.log('Files uploaded successfully:', uploadedFiles);
-      
-      toast.success("Files uploaded successfully!", {
-        description: `${uploadedFiles.length} file(s) uploaded to Supabase Storage`,
-        duration: 3000,
-      });
+      if (uploadedFiles.length > 0) {
+        toast.success("Files uploaded successfully!", {
+          description: `${uploadedFiles.length} file(s) uploaded to Supabase Storage`,
+          duration: 3000,
+        });
+      }
 
       return uploadedFiles;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload failed:', error);
       toast.error("Upload failed", {
-        description: "Please try again",
+        description: error.message || "Please try again",
         duration: 3000,
       });
     } finally {
@@ -105,12 +123,22 @@ export const useFileOperations = () => {
 
   const deleteFile = async (file: StoredFile) => {
     try {
-      // Delete from storage
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast.error("Authentication required to delete files");
+        return false;
+      }
+
+      console.log('Deleting file:', file.file_name);
+
+      // Delete from storage first
       const { error: storageError } = await supabase.storage
         .from('docs')
         .remove([file.storage_path]);
 
       if (storageError) {
+        console.error('Storage delete error:', storageError);
         throw storageError;
       }
 
@@ -121,6 +149,7 @@ export const useFileOperations = () => {
         .eq('id', file.id);
 
       if (dbError) {
+        console.error('Database delete error:', dbError);
         throw dbError;
       }
 
@@ -130,10 +159,10 @@ export const useFileOperations = () => {
       });
 
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete failed:', error);
       toast.error("Failed to delete file", {
-        description: "Please try again",
+        description: error.message || "Please try again",
         duration: 3000,
       });
       return false;

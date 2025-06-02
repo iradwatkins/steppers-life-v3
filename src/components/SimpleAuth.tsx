@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/sonner';
-import { User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 
 interface SimpleAuthProps {
   onAuthChange: (user: User | null) => void;
@@ -12,20 +12,33 @@ interface SimpleAuthProps {
 
 const SimpleAuth: React.FC<SimpleAuthProps> = ({ onAuthChange }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      onAuthChange(session?.user ?? null);
-    });
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        onAuthChange(session?.user ?? null);
+        
+        if (event === 'SIGNED_IN') {
+          toast.success("Successfully signed in!");
+        } else if (event === 'SIGNED_OUT') {
+          toast.success("Successfully signed out!");
+        }
+      }
+    );
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
+      setSession(session);
       setUser(session?.user ?? null);
       onAuthChange(session?.user ?? null);
     });
@@ -39,33 +52,58 @@ const SimpleAuth: React.FC<SimpleAuthProps> = ({ onAuthChange }) => {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const redirectUrl = `${window.location.origin}/`;
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: redirectUrl
+          }
         });
+        
         if (error) throw error;
-        toast.success("Check your email for verification link!");
+        
+        if (data.user && !data.user.email_confirmed_at) {
+          toast.success("Check your email for verification link!");
+        } else {
+          toast.success("Account created successfully!");
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        toast.success("Signed in successfully!");
       }
+      
+      // Clear form on success
+      setEmail('');
+      setPassword('');
     } catch (error: any) {
-      toast.error(error.message);
+      console.error('Auth error:', error);
+      
+      // Handle specific error cases
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error("Invalid email or password");
+      } else if (error.message.includes('User already registered')) {
+        toast.error("This email is already registered. Try signing in instead.");
+      } else if (error.message.includes('Email not confirmed')) {
+        toast.error("Please check your email and click the confirmation link before signing in.");
+      } else {
+        toast.error(error.message);
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Signed out successfully!");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+    } catch (error: any) {
+      console.error('Sign out error:', error);
+      toast.error("Failed to sign out: " + error.message);
     }
   };
 
@@ -110,10 +148,11 @@ const SimpleAuth: React.FC<SimpleAuthProps> = ({ onAuthChange }) => {
         />
         <Input
           type="password"
-          placeholder="Password"
+          placeholder="Password (minimum 6 characters)"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          minLength={6}
           className="text-sm"
         />
         <div className="flex gap-2">
@@ -136,6 +175,12 @@ const SimpleAuth: React.FC<SimpleAuthProps> = ({ onAuthChange }) => {
           </Button>
         </div>
       </form>
+      <div className="mt-3 text-xs text-yellow-700">
+        {isSignUp ? 
+          "Create a new account to start uploading files" : 
+          "Sign in with your existing account"
+        }
+      </div>
     </div>
   );
 };
