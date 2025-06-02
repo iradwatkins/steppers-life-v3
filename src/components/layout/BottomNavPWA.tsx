@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Ticket, Heart, Users, User } from 'lucide-react';
+import { Home, Search, Calendar, Users, BookOpen, User } from 'lucide-react';
 
 const BottomNavPWA = () => {
   const location = useLocation();
@@ -9,8 +9,8 @@ const BottomNavPWA = () => {
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
     { icon: Search, label: 'Explore', path: '/explore' },
-    { icon: Ticket, label: 'My Tickets', path: '/dashboard/tickets' },
-    { icon: Heart, label: 'Favorites', path: '/dashboard/favorites' },
+    { icon: Calendar, label: 'Events', path: '/events' },
+    { icon: BookOpen, label: 'Classes', path: '/classes' },
     { icon: Users, label: 'Community', path: '/community' },
     { icon: User, label: 'Profile', path: '/profile' },
   ];
