@@ -1,289 +1,436 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import TestimonialCard from "@/components/TestimonialCard";
-import { Users, MessageCircle, Heart, Star, Camera, Calendar, MapPin, Zap } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { MessageCircle, Heart, Share2, Users, TrendingUp, Plus, Search, Filter } from 'lucide-react';
 
 const Community = () => {
-  const communityStats = [
-    { icon: Users, label: 'Active Members', value: '12,000+' },
-    { icon: MessageCircle, label: 'Monthly Posts', value: '5,000+' },
-    { icon: Heart, label: 'Connections Made', value: '25,000+' },
-    { icon: Star, label: 'Events Hosted', value: '500+' }
-  ];
+  const [activeTab, setActiveTab] = useState('feed');
+  const [newPost, setNewPost] = useState('');
 
-  const featuredPosts = [
+  const posts = [
     {
       id: 1,
-      author: 'Marcus Williams',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-      time: '2 hours ago',
-      content: 'Just finished an amazing workshop in Chicago! The energy was incredible. Shoutout to everyone who came out to learn and grow together. 🕺',
+      author: "Marcus Johnson",
+      authorImage: "/placeholder.svg",
+      badge: "Master Stepper",
+      time: "2 hours ago",
+      content: "Just finished an amazing workshop in Chicago! The energy was incredible and seeing everyone's progress was so rewarding. Remember, it's not about perfection - it's about the passion and connection to the music. Keep stepping! 💃🕺",
+      image: "/placeholder.svg",
       likes: 45,
       comments: 12,
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=500&h=300&fit=crop'
+      shares: 8,
+      liked: false
     },
     {
       id: 2,
-      author: 'Tanya Johnson',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b5bb?w=100&h=100&fit=crop&crop=face',
-      time: '5 hours ago',
-      content: 'Beginners class was off the charts tonight! So proud of my students\' progress. Remember, it\'s all about the rhythm and having fun! 💃',
+      author: "Lisa Davis",
+      authorImage: "/placeholder.svg",
+      badge: "Verified Instructor",
+      time: "4 hours ago",
+      content: "Throwback to last week's competition! So proud of all my students who participated. Win or lose, you all showed incredible spirit and skill. The stepping community is truly special. 🏆",
       likes: 32,
-      comments: 8
+      comments: 18,
+      shares: 5,
+      liked: true
     },
     {
       id: 3,
-      author: 'Robert Davis',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-      time: '1 day ago',
-      content: 'Throwback to the legendary steppers who paved the way for all of us. Their dedication and passion built this beautiful community we have today. Much respect! 🙏',
-      likes: 78,
-      comments: 23
+      author: "Angela Smith",
+      authorImage: "/placeholder.svg",
+      badge: "Community Member",
+      time: "1 day ago",
+      content: "Looking for a stepping partner in Atlanta! I'm intermediate level and love social dancing. Would love to connect with someone who shares the passion. Drop me a message! 💌",
+      likes: 28,
+      comments: 15,
+      shares: 3,
+      liked: false
+    },
+    {
+      id: 4,
+      author: "DJ Smooth",
+      authorImage: "/placeholder.svg",
+      badge: "Event Organizer",
+      time: "2 days ago",
+      content: "Saturday's social was OFF THE HOOK! 🔥 Thank you to everyone who came out and showed love. Next event is already in the works - stay tuned for details!",
+      image: "/placeholder.svg",
+      likes: 67,
+      comments: 24,
+      shares: 12,
+      liked: true
     }
   ];
 
-  const testimonials = [
+  const groups = [
     {
-      name: 'Sarah Mitchell',
-      location: 'Houston, TX',
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-      rating: 5,
-      testimonial: "SteppersLife changed my life! I found my stepping family and improved my skills through amazing instructors. The community here is incredible.",
-      title: 'Stepping Enthusiast'
+      id: 1,
+      name: "Chicago Steppers United",
+      members: 1245,
+      category: "Local Community",
+      image: "/placeholder.svg",
+      description: "The largest stepping community in Chicago"
     },
     {
-      name: 'Michael Thompson',
-      location: 'Chicago, IL',
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face',
-      rating: 5,
-      testimonial: "As an instructor, this platform helps me connect with students nationwide. The event management tools are fantastic for organizing classes.",
-      title: 'Professional Instructor'
+      id: 2,
+      name: "Beginner Steppers Support",
+      members: 892,
+      category: "Learning",
+      image: "/placeholder.svg",
+      description: "A supportive space for new steppers"
     },
     {
-      name: 'Jessica Brown',
-      location: 'Atlanta, GA',
-      image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=face',
-      rating: 5,
-      testimonial: "I was a complete beginner and found the most welcoming community here. The beginner-friendly events made all the difference in my journey."
+      id: 3,
+      name: "Competition Prep Squad",
+      members: 456,
+      category: "Competition",
+      image: "/placeholder.svg",
+      description: "Training tips and competition announcements"
+    },
+    {
+      id: 4,
+      name: "Step Music Lovers",
+      members: 734,
+      category: "Music",
+      image: "/placeholder.svg",
+      description: "Share and discover stepping music"
     }
   ];
+
+  const trending = [
+    { tag: "#ChicagoStepping", posts: 234 },
+    { tag: "#StepWorkshop", posts: 189 },
+    { tag: "#SteppersUnite", posts: 156 },
+    { tag: "#CompetitionSeason", posts: 143 },
+    { tag: "#StepMusic", posts: 127 }
+  ];
+
+  const handleLike = (postId: number) => {
+    console.log(`Liked post ${postId}`);
+  };
+
+  const handleComment = (postId: number) => {
+    console.log(`Comment on post ${postId}`);
+  };
+
+  const handleShare = (postId: number) => {
+    console.log(`Shared post ${postId}`);
+  };
 
   return (
-    <div className="min-h-screen bg-background-main">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-brand-primary to-brand-primary-hover text-text-on-primary py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="font-serif text-4xl lg:text-5xl font-bold mb-4">
-              Join the Stepping Community
-            </h1>
-            <p className="text-xl text-text-on-primary/90 max-w-3xl mx-auto mb-8">
-              Connect with fellow steppers, share your journey, and be part of a 
-              vibrant community that celebrates the art of stepping.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-brand-primary hover:bg-white/90">
-                <Users className="mr-2 h-5 w-5" />
-                Join Community
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                <MessageCircle className="mr-2 h-5 w-5" />
-                Start Discussion
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-background-main py-8">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="font-serif text-4xl font-bold text-text-primary mb-4">
+            Community
+          </h1>
+          <p className="text-text-secondary text-lg">
+            Connect, share, and grow with the stepping community
+          </p>
         </div>
-      </section>
 
-      {/* Community Stats */}
-      <section className="py-12 bg-surface-card border-b border-border-default">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {communityStats.map(({ icon: Icon, label, value }, index) => (
-              <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Icon className="h-8 w-8 text-brand-primary" />
-                </div>
-                <h3 className="text-2xl lg:text-3xl font-bold text-text-primary mb-1">{value}</h3>
-                <p className="text-text-secondary">{label}</p>
-              </div>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex space-x-1 mb-8 bg-surface-contrast rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab('feed')}
+            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
+              activeTab === 'feed'
+                ? 'bg-surface-card text-text-primary shadow-sm'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <MessageCircle className="w-4 h-4 inline mr-2" />
+            Feed
+          </button>
+          <button
+            onClick={() => setActiveTab('groups')}
+            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
+              activeTab === 'groups'
+                ? 'bg-surface-card text-text-primary shadow-sm'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <Users className="w-4 h-4 inline mr-2" />
+            Groups
+          </button>
+          <button
+            onClick={() => setActiveTab('trending')}
+            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
+              activeTab === 'trending'
+                ? 'bg-surface-card text-text-primary shadow-sm'
+                : 'text-text-secondary hover:text-text-primary'
+            }`}
+          >
+            <TrendingUp className="w-4 h-4 inline mr-2" />
+            Trending
+          </button>
         </div>
-      </section>
 
-      {/* Featured Posts */}
-      <section className="py-16 bg-background-main">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-              Community Highlights
-            </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              See what's happening in the stepping community. Share your experiences, 
-              celebrate achievements, and connect with fellow dancers.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {featuredPosts.map((post) => (
-              <Card key={post.id} className="bg-surface-card border-border-default">
-                <CardHeader className="pb-4">
-                  <div className="flex items-center space-x-4">
-                    <img 
-                      src={post.avatar} 
-                      alt={post.author}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-text-primary">{post.author}</h4>
-                      <p className="text-sm text-text-secondary">{post.time}</p>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {activeTab === 'feed' && (
+              <div className="space-y-6">
+                {/* Create Post */}
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="flex gap-4">
+                      <img
+                        src="/placeholder.svg"
+                        alt="Your Avatar"
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div className="flex-1">
+                        <Textarea
+                          placeholder="Share your stepping journey..."
+                          value={newPost}
+                          onChange={(e) => setNewPost(e.target.value)}
+                          className="mb-4"
+                        />
+                        <div className="flex justify-between items-center">
+                          <div className="flex gap-2">
+                            <Button variant="outline" size="sm">
+                              📷 Photo
+                            </Button>
+                            <Button variant="outline" size="sm">
+                              🎵 Music
+                            </Button>
+                          </div>
+                          <Button className="bg-brand-primary hover:bg-brand-primary-hover">
+                            Post
+                          </Button>
+                        </div>
+                      </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Posts */}
+                {posts.map((post) => (
+                  <Card key={post.id}>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <img
+                          src={post.authorImage}
+                          alt={post.author}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-text-primary">{post.author}</h3>
+                            <Badge variant="secondary" className="text-xs">
+                              {post.badge}
+                            </Badge>
+                            <span className="text-sm text-text-secondary">{post.time}</span>
+                          </div>
+                          
+                          <p className="text-text-primary mb-4">{post.content}</p>
+                          
+                          {post.image && (
+                            <img
+                              src={post.image}
+                              alt="Post content"
+                              className="w-full h-64 object-cover rounded-lg mb-4"
+                            />
+                          )}
+                          
+                          <div className="flex items-center justify-between pt-4 border-t border-border-default">
+                            <div className="flex gap-6">
+                              <button
+                                onClick={() => handleLike(post.id)}
+                                className={`flex items-center gap-2 transition-colors ${
+                                  post.liked ? 'text-red-500' : 'text-text-secondary hover:text-text-primary'
+                                }`}
+                              >
+                                <Heart className={`w-5 h-5 ${post.liked ? 'fill-current' : ''}`} />
+                                <span>{post.likes}</span>
+                              </button>
+                              <button
+                                onClick={() => handleComment(post.id)}
+                                className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
+                              >
+                                <MessageCircle className="w-5 h-5" />
+                                <span>{post.comments}</span>
+                              </button>
+                              <button
+                                onClick={() => handleShare(post.id)}
+                                className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
+                              >
+                                <Share2 className="w-5 h-5" />
+                                <span>{post.shares}</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'groups' && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-semibold text-text-primary">
+                    Community Groups
+                  </h2>
+                  <Button className="bg-brand-primary hover:bg-brand-primary-hover">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Group
+                  </Button>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-6">
+                  {groups.map((group) => (
+                    <Card key={group.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex items-start gap-4">
+                          <img
+                            src={group.image}
+                            alt={group.name}
+                            className="w-16 h-16 rounded-lg object-cover"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-text-primary mb-1">
+                              {group.name}
+                            </h3>
+                            <Badge variant="outline" className="mb-2">
+                              {group.category}
+                            </Badge>
+                            <p className="text-text-secondary text-sm mb-3">
+                              {group.description}
+                            </p>
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-text-secondary">
+                                {group.members.toLocaleString()} members
+                              </span>
+                              <Button variant="outline" size="sm">
+                                Join Group
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'trending' && (
+              <div className="space-y-6">
+                <h2 className="text-2xl font-semibold text-text-primary">
+                  Trending Topics
+                </h2>
+                
+                <div className="space-y-4">
+                  {trending.map((trend, index) => (
+                    <Card key={trend.tag} className="hover:shadow-md transition-shadow cursor-pointer">
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center text-text-on-primary font-bold">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-text-primary text-lg">
+                                {trend.tag}
+                              </h3>
+                              <p className="text-text-secondary">
+                                {trend.posts} posts
+                              </p>
+                            </div>
+                          </div>
+                          <TrendingUp className="w-6 h-6 text-brand-primary" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Community Stats */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Community Stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Total Members</span>
+                    <span className="font-semibold text-text-primary">5,847</span>
                   </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-text-primary mb-4">{post.content}</p>
-                  {post.image && (
-                    <img 
-                      src={post.image} 
-                      alt="Post image"
-                      className="w-full h-48 object-cover rounded-lg mb-4"
-                    />
-                  )}
-                  <div className="flex items-center space-x-6 text-text-secondary">
-                    <button className="flex items-center space-x-2 hover:text-brand-primary transition-colors">
-                      <Heart className="h-4 w-4" />
-                      <span>{post.likes}</span>
-                    </button>
-                    <button className="flex items-center space-x-2 hover:text-brand-primary transition-colors">
-                      <MessageCircle className="h-4 w-4" />
-                      <span>{post.comments}</span>
-                    </button>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Active Groups</span>
+                    <span className="font-semibold text-text-primary">23</span>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover">
-              View All Posts
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Community Features */}
-      <section className="py-16 bg-surface-contrast">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-              Community Features
-            </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Discover all the ways you can connect, learn, and grow with the stepping community.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="text-center bg-surface-card border-border-default hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <MessageCircle className="h-8 w-8 text-brand-primary" />
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Posts Today</span>
+                    <span className="font-semibold text-text-primary">142</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">Events This Week</span>
+                    <span className="font-semibold text-text-primary">8</span>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-text-primary mb-2">Discussion Forums</h3>
-                <p className="text-text-secondary text-sm">
-                  Join conversations about techniques, events, and stepping culture.
-                </p>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-surface-card border-border-default hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Camera className="h-8 w-8 text-brand-primary" />
-                </div>
-                <h3 className="font-semibold text-text-primary mb-2">Photo & Video Sharing</h3>
-                <p className="text-text-secondary text-sm">
-                  Share your stepping moments and learn from others' performances.
-                </p>
+            {/* Quick Actions */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button className="w-full justify-start" variant="outline">
+                  <Users className="w-4 h-4 mr-2" />
+                  Find Stepping Partners
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Join a Discussion
+                </Button>
+                <Button className="w-full justify-start" variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Event
+                </Button>
               </CardContent>
             </Card>
 
-            <Card className="text-center bg-surface-card border-border-default hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-8 w-8 text-brand-primary" />
+            {/* Active Members */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Active Members</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {['Marcus Johnson', 'Lisa Davis', 'Angela Smith', 'DJ Smooth'].map((member, index) => (
+                    <div key={member} className="flex items-center gap-3">
+                      <div className="relative">
+                        <img
+                          src="/placeholder.svg"
+                          alt={member}
+                          className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      </div>
+                      <span className="text-sm text-text-primary">{member}</span>
+                    </div>
+                  ))}
                 </div>
-                <h3 className="font-semibold text-text-primary mb-2">Event Organization</h3>
-                <p className="text-text-secondary text-sm">
-                  Create and promote your own stepping events with our tools.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="text-center bg-surface-card border-border-default hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="w-16 h-16 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-brand-primary" />
-                </div>
-                <h3 className="font-semibold text-text-primary mb-2">Mentor Network</h3>
-                <p className="text-text-secondary text-sm">
-                  Connect with experienced steppers for guidance and support.
-                </p>
               </CardContent>
             </Card>
           </div>
         </div>
-      </section>
-
-      {/* Community Testimonials */}
-      <section className="py-16 bg-background-main">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-              What Our Community Says
-            </h2>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Hear from steppers across the nation about how our community has 
-              impacted their stepping journey.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {testimonials.map((testimonial, index) => (
-              <TestimonialCard key={index} {...testimonial} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Join CTA */}
-      <section className="py-16 bg-brand-primary text-text-on-primary">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="max-w-3xl mx-auto">
-            <Zap className="h-12 w-12 mx-auto mb-6" />
-            <h2 className="font-serif text-3xl lg:text-4xl font-bold mb-4">
-              Ready to Join the Movement?
-            </h2>
-            <p className="text-lg mb-8 text-text-on-primary/90">
-              Become part of the most vibrant stepping community online. Share your passion, 
-              learn from others, and help grow the stepping culture nationwide.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-brand-primary hover:bg-white/90">
-                Join the Community
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                Learn More
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </div>
   );
 };

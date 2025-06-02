@@ -1,198 +1,284 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import EventCard from "@/components/EventCard";
-import { Calendar, MapPin, Clock, Users, Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, MapPin, Users, Clock, DollarSign, Filter, Plus, Star } from 'lucide-react';
+import EventCard from '@/components/EventCard';
 
 const Events = () => {
-  // Mock events data with more variety
-  const upcomingEvents = [
+  const [viewMode, setViewMode] = useState('grid');
+  const [filterType, setFilterType] = useState('all');
+  const [selectedCity, setSelectedCity] = useState('');
+
+  const events = [
     {
-      id: '1',
-      title: 'Chicago Steppers Social at Navy Pier',
-      date: 'Saturday, Jan 15',
-      time: '8:00 PM',
-      location: 'Navy Pier, Chicago, IL',
-      category: 'Social Dance',
-      image: 'https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=300&fit=crop',
-      attendees: 127
+      id: 1,
+      title: "Chicago Step Championship",
+      date: "2024-07-15",
+      time: "7:00 PM",
+      location: "Chicago Cultural Center",
+      city: "Chicago",
+      state: "IL",
+      price: 45,
+      image: "/placeholder.svg",
+      category: "Competition",
+      attendees: 250,
+      instructor: "Marcus Johnson"
     },
     {
-      id: '2',
-      title: 'Beginner Stepping Classes',
-      date: 'Monday, Jan 17',
-      time: '7:00 PM',
-      location: 'South Side Cultural Center',
-      category: 'Class',
-      image: 'https://images.unsplash.com/photo-1574279606130-09958dc756f4?w=400&h=300&fit=crop',
-      attendees: 45
+      id: 2,
+      title: "Beginner Step Workshop",
+      date: "2024-07-20",
+      time: "2:00 PM",
+      location: "Dance Studio One",
+      city: "Atlanta",
+      state: "GA",
+      price: 25,
+      image: "/placeholder.svg",
+      category: "Workshop",
+      attendees: 30,
+      instructor: "Lisa Davis"
     },
     {
-      id: '3',
-      title: 'Annual Steppers Convention 2024',
-      date: 'Friday, Feb 25',
-      time: '6:00 PM',
-      location: 'McCormick Place, Chicago, IL',
-      category: 'Convention',
-      image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop',
-      attendees: 1250
+      id: 3,
+      title: "Saturday Step Social",
+      date: "2024-07-22",
+      time: "8:00 PM",
+      location: "Community Center",
+      city: "Detroit",
+      state: "MI",
+      price: 15,
+      image: "/placeholder.svg",
+      category: "Social",
+      attendees: 75,
+      instructor: "DJ Smooth"
+    },
+    {
+      id: 4,
+      title: "Advanced Technique Masterclass",
+      date: "2024-07-25",
+      time: "6:00 PM",
+      location: "Elite Dance Academy",
+      city: "Houston",
+      state: "TX",
+      price: 35,
+      image: "/placeholder.svg",
+      category: "Class",
+      attendees: 45,
+      instructor: "Carlos Martinez"
+    },
+    {
+      id: 5,
+      title: "Monthly Step Showcase",
+      date: "2024-07-28",
+      time: "7:30 PM",
+      location: "Grand Theater",
+      city: "Dallas",
+      state: "TX",
+      price: 20,
+      image: "/placeholder.svg",
+      category: "Performance",
+      attendees: 150,
+      instructor: "Multiple Artists"
+    },
+    {
+      id: 6,
+      title: "Youth Step Training Camp",
+      date: "2024-08-02",
+      time: "10:00 AM",
+      location: "Youth Center",
+      city: "Memphis",
+      state: "TN",
+      price: 30,
+      image: "/placeholder.svg",
+      category: "Workshop",
+      attendees: 40,
+      instructor: "Coach Williams"
     }
   ];
 
-  const featuredEvents = [
-    {
-      id: '4',
-      title: 'Masters Workshop with Chicago Legends',
-      date: 'Sunday, Jan 30',
-      time: '1:00 PM',
-      location: 'Dance Center Chicago',
-      category: 'Workshop',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
-      attendees: 200
-    },
-    {
-      id: '5',
-      title: 'Valentine\'s Day Stepping Party',
-      date: 'Friday, Feb 14',
-      time: '8:00 PM',
-      location: 'Grand Ballroom, Atlanta',
-      category: 'Social Dance',
-      image: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop',
-      attendees: 300
-    }
-  ];
+  const cities = ["Chicago, IL", "Atlanta, GA", "Detroit, MI", "Houston, TX", "Dallas, TX", "Memphis, TN"];
+  
+  const filteredEvents = events.filter(event => {
+    const matchesType = filterType === 'all' || event.category.toLowerCase() === filterType;
+    const matchesCity = !selectedCity || `${event.city}, ${event.state}` === selectedCity;
+    return matchesType && matchesCity;
+  });
+
+  const upcomingEvents = filteredEvents.filter(event => new Date(event.date) >= new Date());
+  const featuredEvent = upcomingEvents[0];
 
   return (
-    <div className="min-h-screen bg-background-main">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-brand-primary to-brand-primary-hover text-text-on-primary py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="font-serif text-4xl lg:text-5xl font-bold mb-4">
-              Stepping Events & Classes
+    <div className="min-h-screen bg-background-main py-8">
+      <div className="container mx-auto px-4">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+          <div>
+            <h1 className="font-serif text-4xl font-bold text-text-primary mb-2">
+              Stepping Events
             </h1>
-            <p className="text-xl text-text-on-primary/90 max-w-3xl mx-auto mb-8">
-              Join the community at exciting stepping events nationwide. From social dances 
-              to intensive workshops, find your next stepping adventure.
+            <p className="text-text-secondary text-lg">
+              Discover and join stepping events in your area
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-white text-brand-primary hover:bg-white/90">
-                <Plus className="mr-2 h-5 w-5" />
-                Create Event
-              </Button>
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                <Calendar className="mr-2 h-5 w-5" />
-                View Calendar
-              </Button>
-            </div>
           </div>
-        </div>
-      </section>
-
-      {/* Quick Stats */}
-      <section className="py-8 bg-surface-card border-b border-border-default">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            <div>
-              <h3 className="text-2xl font-bold text-brand-primary">25+</h3>
-              <p className="text-text-secondary">This Week</p>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-brand-primary">150+</h3>
-              <p className="text-text-secondary">This Month</p>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-brand-primary">15</h3>
-              <p className="text-text-secondary">Cities</p>
-            </div>
-            <div>
-              <h3 className="text-2xl font-bold text-brand-primary">5K+</h3>
-              <p className="text-text-secondary">Attendees</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content */}
-      <section className="py-12">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <Tabs defaultValue="upcoming" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-96 mb-8">
-              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-              <TabsTrigger value="featured">Featured</TabsTrigger>
-              <TabsTrigger value="past">Past Events</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="upcoming">
-              <div className="mb-8">
-                <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-                  Upcoming Events
-                </h2>
-                <p className="text-text-secondary text-lg">
-                  Don't miss these exciting stepping events happening soon.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {upcomingEvents.map((event) => (
-                  <EventCard key={event.id} {...event} />
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="featured">
-              <div className="mb-8">
-                <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-                  Featured Events
-                </h2>
-                <p className="text-text-secondary text-lg">
-                  Special events you won't want to miss.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                {featuredEvents.map((event) => (
-                  <EventCard key={event.id} {...event} />
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="past">
-              <div className="mb-8 text-center">
-                <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-                  Past Events
-                </h2>
-                <p className="text-text-secondary text-lg">
-                  Check out highlights from previous events.
-                </p>
-                <div className="mt-8 p-8 border-2 border-dashed border-border-default rounded-lg">
-                  <Calendar className="h-12 w-12 text-text-secondary mx-auto mb-4" />
-                  <p className="text-text-secondary">Past events archive coming soon</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
-
-      {/* Call to Action */}
-      <section className="py-16 bg-surface-contrast">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-            Host Your Own Event
-          </h2>
-          <p className="text-lg text-text-secondary mb-8 max-w-2xl mx-auto">
-            Ready to organize a stepping event? Our platform makes it easy to create, 
-            promote, and manage your own stepping gatherings.
-          </p>
-          <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover">
-            <Plus className="mr-2 h-5 w-5" />
-            Create Your Event
+          <Button className="bg-brand-primary hover:bg-brand-primary-hover mt-4 md:mt-0">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Event
           </Button>
         </div>
-      </section>
+
+        {/* Featured Event */}
+        {featuredEvent && (
+          <Card className="mb-8 overflow-hidden bg-gradient-to-r from-brand-primary to-brand-primary-hover text-text-on-primary">
+            <CardContent className="p-8">
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <Badge className="bg-text-on-primary text-brand-primary mb-4">
+                    Featured Event
+                  </Badge>
+                  <h2 className="font-serif text-3xl font-bold mb-4">
+                    {featuredEvent.title}
+                  </h2>
+                  <div className="space-y-2 mb-6">
+                    <div className="flex items-center">
+                      <Calendar className="w-5 h-5 mr-3" />
+                      <span>{new Date(featuredEvent.date).toLocaleDateString()} at {featuredEvent.time}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <MapPin className="w-5 h-5 mr-3" />
+                      <span>{featuredEvent.location}, {featuredEvent.city}, {featuredEvent.state}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Users className="w-5 h-5 mr-3" />
+                      <span>{featuredEvent.attendees} attending</span>
+                    </div>
+                  </div>
+                  <Button className="bg-text-on-primary text-brand-primary hover:bg-text-on-primary/90">
+                    Register Now - ${featuredEvent.price}
+                  </Button>
+                </div>
+                <div className="hidden md:block">
+                  <img
+                    src={featuredEvent.image}
+                    alt={featuredEvent.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Filters */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant={filterType === 'all' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('all')}
+                  size="sm"
+                >
+                  All Events
+                </Button>
+                <Button
+                  variant={filterType === 'competition' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('competition')}
+                  size="sm"
+                >
+                  Competitions
+                </Button>
+                <Button
+                  variant={filterType === 'workshop' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('workshop')}
+                  size="sm"
+                >
+                  Workshops
+                </Button>
+                <Button
+                  variant={filterType === 'social' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('social')}
+                  size="sm"
+                >
+                  Socials
+                </Button>
+                <Button
+                  variant={filterType === 'class' ? 'default' : 'outline'}
+                  onClick={() => setFilterType('class')}
+                  size="sm"
+                >
+                  Classes
+                </Button>
+              </div>
+              
+              <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <SelectTrigger className="md:w-48">
+                  <SelectValue placeholder="All Cities" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All Cities</SelectItem>
+                  {cities.map(city => (
+                    <SelectItem key={city} value={city}>{city}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Event Categories */}
+        <div className="grid md:grid-cols-5 gap-4 mb-8">
+          {['Competition', 'Workshop', 'Social', 'Class', 'Performance'].map((category) => (
+            <Card key={category} className="text-center cursor-pointer hover:shadow-md transition-shadow">
+              <CardContent className="p-4">
+                <div className="w-12 h-12 bg-brand-primary rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Star className="w-6 h-6 text-text-on-primary" />
+                </div>
+                <h3 className="font-semibold text-text-primary">{category}</h3>
+                <p className="text-sm text-text-secondary">
+                  {events.filter(e => e.category === category).length} events
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Events Grid */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold text-text-primary">
+            Upcoming Events ({filteredEvents.length})
+          </h2>
+          <div className="flex gap-2">
+            <Badge variant="secondary">This Week</Badge>
+            <Badge variant="outline">This Month</Badge>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
+        </div>
+
+        {/* Call to Action */}
+        <Card className="mt-12 bg-surface-contrast">
+          <CardContent className="p-8 text-center">
+            <h3 className="font-serif text-2xl font-bold text-text-primary mb-4">
+              Don't See Your Event?
+            </h3>
+            <p className="text-text-secondary mb-6">
+              Create and promote your own stepping event to reach the community
+            </p>
+            <Button className="bg-brand-primary hover:bg-brand-primary-hover">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Event
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
