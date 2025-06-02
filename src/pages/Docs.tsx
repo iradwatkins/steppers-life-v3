@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, File, X, Folder, ExternalLink } from "lucide-react";
+import { Upload, File, X, Folder, ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { User } from '@supabase/supabase-js';
 import SimpleAuth from '@/components/SimpleAuth';
@@ -27,7 +26,7 @@ const Docs = () => {
   // Load files from .docs folder on component mount
   useEffect(() => {
     loadDocsFiles();
-  }, []);
+  }, [refreshTrigger]);
 
   const loadDocsFiles = async () => {
     try {
@@ -51,6 +50,15 @@ const Docs = () => {
     } finally {
       setIsLoadingDocs(false);
     }
+  };
+
+  const handleRefreshFolders = () => {
+    console.log('Refreshing folders...');
+    setRefreshTrigger(prev => prev + 1);
+    toast.success("Refreshing folders", {
+      description: "Reloading files from both local .docs and Supabase Storage",
+      duration: 2000,
+    });
   };
 
   const uploadToDocsFolder = async (files: File[]) => {
@@ -120,7 +128,17 @@ const Docs = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Docs</h1>
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Docs</h1>
+            <Button
+              onClick={handleRefreshFolders}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh Folders
+            </Button>
+          </div>
           
           {/* Authentication Section */}
           <SimpleAuth onAuthChange={setUser} />
