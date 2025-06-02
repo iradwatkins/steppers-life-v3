@@ -1,7 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, File, X, Folder } from "lucide-react";
+import { Upload, File, X, Folder, ExternalLink } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { User } from '@supabase/supabase-js';
 import SimpleAuth from '@/components/SimpleAuth';
@@ -12,6 +11,7 @@ interface DocsFile {
   name: string;
   path: string;
   isDirectory: boolean;
+  url?: string;
 }
 
 const Docs = () => {
@@ -23,7 +23,7 @@ const Docs = () => {
 
   const { uploadFiles, isUploading, uploadProgress } = useFileOperations();
 
-  // Load files from .docs folder on component mount
+  // Load files from public/docs folder on component mount
   useEffect(() => {
     loadDocsFiles();
   }, []);
@@ -31,22 +31,46 @@ const Docs = () => {
   const loadDocsFiles = async () => {
     try {
       setIsLoadingDocs(true);
-      // Simulate loading .docs files - in a real implementation this would fetch from your file system
-      const mockDocsFiles: DocsFile[] = [
-        { name: "README.md", path: ".docs/README.md", isDirectory: false },
-        { name: "upload.html", path: ".docs/upload.html", isDirectory: false },
-      ];
       
-      setDocsFiles(mockDocsFiles);
-      console.log('Loaded docs files:', mockDocsFiles);
+      // List of known documentation files in the public/docs folder
+      const knownDocsFiles = [
+        { name: "README.md", path: "/docs/README.md", isDirectory: false },
+        { name: "upload.html", path: "/docs/upload.html", isDirectory: false },
+      ];
+
+      // Verify which files actually exist by attempting to fetch them
+      const existingFiles: DocsFile[] = [];
+      
+      for (const file of knownDocsFiles) {
+        try {
+          const response = await fetch(file.path, { method: 'HEAD' });
+          if (response.ok) {
+            existingFiles.push({
+              ...file,
+              url: file.path
+            });
+          }
+        } catch (error) {
+          console.log(`File ${file.name} not found in public/docs`);
+        }
+      }
+      
+      setDocsFiles(existingFiles);
+      console.log('Loaded docs files:', existingFiles);
     } catch (error) {
       console.error('Failed to load docs files:', error);
       toast.error("Failed to load docs files", {
-        description: "Could not retrieve files from .docs folder",
+        description: "Could not retrieve files from docs folder",
         duration: 3000,
       });
     } finally {
       setIsLoadingDocs(false);
+    }
+  };
+
+  const openFile = (file: DocsFile) => {
+    if (file.url) {
+      window.open(file.url, '_blank');
     }
   };
 
@@ -105,11 +129,11 @@ const Docs = () => {
           {/* Authentication Section */}
           <SimpleAuth onAuthChange={setUser} />
           
-          {/* .docs Folder Files Section */}
+          {/* Documentation Files Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
               <Folder className="h-5 w-5 text-gray-500 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Local .docs Folder</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Documentation Files</h2>
               <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
                 Read-only
               </span>
@@ -122,7 +146,7 @@ const Docs = () => {
             ) : docsFiles.length > 0 ? (
               <div className="space-y-2">
                 {docsFiles.map((file, index) => (
-                  <div key={index} className="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-md">
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
                     <div className="flex items-center">
                       {file.isDirectory ? (
                         <Folder className="h-5 w-5 text-gray-600 mr-2" />
@@ -134,12 +158,22 @@ const Docs = () => {
                         <div className="text-xs text-gray-500">{file.path}</div>
                       </div>
                     </div>
+                    {file.url && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openFile(file)}
+                        className="text-indigo-600 hover:text-indigo-700"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-4 text-gray-500">
-                No files found in .docs folder
+                No documentation files found
               </div>
             )}
           </div>
