@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { GitPull, GitPush } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 
 interface GitHubSyncProps {
@@ -69,7 +69,7 @@ const GitHubSync: React.FC<GitHubSyncProps> = ({ onRefresh }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="flex items-center mb-4">
-        <GitPull className="h-5 w-5 text-blue-600 mr-2" />
+        <ArrowDown className="h-5 w-5 text-blue-600 mr-2" />
         <h2 className="text-lg font-semibold text-gray-900">GitHub Sync</h2>
         <span className="ml-2 text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
           Version Control
@@ -83,7 +83,7 @@ const GitHubSync: React.FC<GitHubSyncProps> = ({ onRefresh }) => {
           variant="outline"
           className="flex items-center gap-2 p-4 h-auto flex-col"
         >
-          <GitPull className="h-6 w-6 text-green-600" />
+          <ArrowDown className="h-6 w-6 text-green-600" />
           <div className="text-center">
             <div className="font-medium">Pull from GitHub</div>
             <div className="text-xs text-gray-500">Get latest changes</div>
@@ -96,7 +96,7 @@ const GitHubSync: React.FC<GitHubSyncProps> = ({ onRefresh }) => {
           variant="outline"
           className="flex items-center gap-2 p-4 h-auto flex-col"
         >
-          <GitPush className="h-6 w-6 text-blue-600" />
+          <ArrowUp className="h-6 w-6 text-blue-600" />
           <div className="text-center">
             <div className="font-medium">Push to GitHub</div>
             <div className="text-xs text-gray-500">Upload local changes</div>
