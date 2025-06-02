@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,8 +11,8 @@ import InstructorCard from '@/components/InstructorCard';
 const Explore = () => {
   const [activeTab, setActiveTab] = useState('events');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCity, setSelectedCity] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedCity, setSelectedCity] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   const events = [
     {
@@ -105,15 +104,15 @@ const Explore = () => {
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.instructor.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCity = !selectedCity || `${event.city}, ${event.state}` === selectedCity;
-    const matchesCategory = !selectedCategory || event.category === selectedCategory;
+    const matchesCity = selectedCity === 'all' || `${event.city}, ${event.state}` === selectedCity;
+    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
     return matchesSearch && matchesCity && matchesCategory;
   });
 
   const filteredInstructors = instructors.filter(instructor => {
     const matchesSearch = instructor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          instructor.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCity = !selectedCity || instructor.location === selectedCity;
+    const matchesCity = selectedCity === 'all' || instructor.location === selectedCity;
     return matchesSearch && matchesCity;
   });
 
@@ -175,7 +174,7 @@ const Explore = () => {
                   <SelectValue placeholder="All Cities" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Cities</SelectItem>
+                  <SelectItem value="all">All Cities</SelectItem>
                   {cities.map(city => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
@@ -188,7 +187,7 @@ const Explore = () => {
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     {categories.map(category => (
                       <SelectItem key={category} value={category}>{category}</SelectItem>
                     ))}
@@ -262,8 +261,8 @@ const Explore = () => {
               variant="outline"
               onClick={() => {
                 setSearchTerm('');
-                setSelectedCity('');
-                setSelectedCategory('');
+                setSelectedCity('all');
+                setSelectedCategory('all');
               }}
             >
               Clear Filters
