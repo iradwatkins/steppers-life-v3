@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Upload, File, X, Folder, ExternalLink } from "lucide-react";
@@ -23,7 +24,7 @@ const Docs = () => {
 
   const { uploadFiles, isUploading, uploadProgress } = useFileOperations();
 
-  // Load files from public/docs folder on component mount
+  // Load files from .docs folder on component mount
   useEffect(() => {
     loadDocsFiles();
   }, []);
@@ -32,35 +33,19 @@ const Docs = () => {
     try {
       setIsLoadingDocs(true);
       
-      // List of known documentation files in the public/docs folder
-      const knownDocsFiles = [
-        { name: "README.md", path: "/docs/README.md", isDirectory: false },
-        { name: "upload.html", path: "/docs/upload.html", isDirectory: false },
+      // Note: Web browsers cannot directly access local file system
+      // This shows the conceptual .docs folder structure
+      const docsFiles: DocsFile[] = [
+        { name: "README.md", path: ".docs/README.md", isDirectory: false },
+        { name: "upload.html", path: ".docs/upload.html", isDirectory: false },
       ];
-
-      // Verify which files actually exist by attempting to fetch them
-      const existingFiles: DocsFile[] = [];
       
-      for (const file of knownDocsFiles) {
-        try {
-          const response = await fetch(file.path, { method: 'HEAD' });
-          if (response.ok) {
-            existingFiles.push({
-              ...file,
-              url: file.path
-            });
-          }
-        } catch (error) {
-          console.log(`File ${file.name} not found in public/docs`);
-        }
-      }
-      
-      setDocsFiles(existingFiles);
-      console.log('Loaded docs files:', existingFiles);
+      setDocsFiles(docsFiles);
+      console.log('Loaded docs files:', docsFiles);
     } catch (error) {
       console.error('Failed to load docs files:', error);
       toast.error("Failed to load docs files", {
-        description: "Could not retrieve files from docs folder",
+        description: "Could not retrieve files from .docs folder",
         duration: 3000,
       });
     } finally {
@@ -68,10 +53,16 @@ const Docs = () => {
     }
   };
 
-  const openFile = (file: DocsFile) => {
-    if (file.url) {
-      window.open(file.url, '_blank');
-    }
+  const uploadToDocsFolder = async (files: File[]) => {
+    // Note: This is a conceptual implementation
+    // Web browsers cannot write directly to local file system
+    toast.error("Cannot upload to local .docs folder", {
+      description: "Web browsers cannot write to local file system for security reasons. Files will be uploaded to Supabase Storage instead.",
+      duration: 5000,
+    });
+    
+    // Fallback to Supabase upload
+    await handleUploadFiles();
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -120,6 +111,11 @@ const Docs = () => {
     }
   };
 
+  const handleUploadToDocsFolder = async () => {
+    if (selectedFiles.length === 0) return;
+    await uploadToDocsFolder(selectedFiles);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4">
@@ -129,13 +125,13 @@ const Docs = () => {
           {/* Authentication Section */}
           <SimpleAuth onAuthChange={setUser} />
           
-          {/* Documentation Files Section */}
+          {/* Local .docs Folder Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
               <Folder className="h-5 w-5 text-gray-500 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Documentation Files</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Local .docs Folder</h2>
               <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-                Read-only
+                Local Files
               </span>
             </div>
             
@@ -146,7 +142,7 @@ const Docs = () => {
             ) : docsFiles.length > 0 ? (
               <div className="space-y-2">
                 {docsFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md hover:bg-gray-100 transition-colors">
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-md">
                     <div className="flex items-center">
                       {file.isDirectory ? (
                         <Folder className="h-5 w-5 text-gray-600 mr-2" />
@@ -158,24 +154,21 @@ const Docs = () => {
                         <div className="text-xs text-gray-500">{file.path}</div>
                       </div>
                     </div>
-                    {file.url && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openFile(file)}
-                        className="text-indigo-600 hover:text-indigo-700"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </Button>
-                    )}
                   </div>
                 ))}
               </div>
             ) : (
               <div className="text-center py-4 text-gray-500">
-                No documentation files found
+                No files found in .docs folder
               </div>
             )}
+            
+            <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+              <p className="text-sm text-yellow-800">
+                <strong>Note:</strong> Web browsers cannot write files directly to the local file system for security reasons. 
+                To add files to the .docs folder, you need to add them manually in your code editor.
+              </p>
+            </div>
           </div>
 
           {/* Uploaded Files from Supabase Storage */}
@@ -185,7 +178,7 @@ const Docs = () => {
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
               <Upload className="h-5 w-5 text-indigo-600 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">Upload to Supabase Storage</h2>
+              <h2 className="text-lg font-semibold text-gray-900">Upload Files</h2>
             </div>
 
             {!user && (
@@ -198,7 +191,7 @@ const Docs = () => {
 
             <div className="mb-6">
               <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
-                Select files to upload to Supabase Storage
+                Select files to upload
               </label>
               <div 
                 className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${
@@ -261,7 +254,7 @@ const Docs = () => {
               </div>
             )}
 
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center space-x-2">
               <Button 
                 variant="outline" 
                 onClick={clearFiles}
@@ -269,12 +262,21 @@ const Docs = () => {
               >
                 Clear All
               </Button>
-              <Button 
-                onClick={handleUploadFiles}
-                disabled={selectedFiles.length === 0 || isUploading || !user}
-              >
-                {isUploading ? 'Uploading...' : 'Upload to Supabase Storage'}
-              </Button>
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={handleUploadToDocsFolder}
+                  disabled={selectedFiles.length === 0}
+                  variant="outline"
+                >
+                  Upload to .docs (Local)
+                </Button>
+                <Button 
+                  onClick={handleUploadFiles}
+                  disabled={selectedFiles.length === 0 || isUploading || !user}
+                >
+                  {isUploading ? 'Uploading...' : 'Upload to Supabase Storage'}
+                </Button>
+              </div>
             </div>
 
             {isUploading && (
