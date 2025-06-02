@@ -1,13 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Upload, File, X, CheckCircle, Folder } from "lucide-react";
+import { Upload, File, X, Folder } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
-
-interface UploadedFile {
-  name: string;
-  size: number;
-  uploadDate: Date;
-}
+import { User } from '@supabase/supabase-js';
+import SimpleAuth from '@/components/SimpleAuth';
+import UploadedFilesList from '@/components/UploadedFilesList';
+import { useFileOperations } from '@/hooks/useFileOperations';
 
 interface DocsFile {
   name: string;
@@ -17,11 +16,12 @@ interface DocsFile {
 
 const Docs = () => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [docsFiles, setDocsFiles] = useState<DocsFile[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const { uploadFiles, isUploading, uploadProgress } = useFileOperations();
 
   // Load files from .docs folder on component mount
   useEffect(() => {
@@ -86,51 +86,14 @@ const Docs = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const uploadFiles = async () => {
+  const handleUploadFiles = async () => {
     if (selectedFiles.length === 0) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    try {
-      // Simulate upload progress
-      for (let i = 0; i < selectedFiles.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setUploadProgress(((i + 1) / selectedFiles.length) * 100);
-      }
-
-      // Add uploaded files to the uploaded files list
-      const newUploadedFiles = selectedFiles.map(file => ({
-        name: file.name,
-        size: file.size,
-        uploadDate: new Date()
-      }));
-      
-      setUploadedFiles(prev => [...prev, ...newUploadedFiles]);
-      
-      console.log('Files uploaded successfully:', selectedFiles.map(f => f.name));
-      
-      // Show success notification
-      toast.success("Files uploaded successfully!", {
-        description: `${selectedFiles.length} file(s) uploaded`,
-        duration: 3000,
-      });
-      
+    
+    const result = await uploadFiles(selectedFiles);
+    if (result) {
       clearFiles();
-    } catch (error) {
-      console.error('Upload failed:', error);
-      toast.error("Upload failed", {
-        description: "Please try again",
-        duration: 3000,
-      });
-    } finally {
-      setIsUploading(false);
-      setUploadProgress(0);
+      setRefreshTrigger(prev => prev + 1); // Trigger refresh of uploaded files list
     }
-  };
-
-  const removeUploadedFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -139,11 +102,17 @@ const Docs = () => {
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">Docs</h1>
           
+          {/* Authentication Section */}
+          <SimpleAuth onAuthChange={setUser} />
+          
           {/* .docs Folder Files Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <div className="flex items-center mb-4">
-              <Folder className="h-5 w-5 text-blue-500 mr-2" />
-              <h2 className="text-lg font-semibold text-gray-900">.docs Folder</h2>
+              <Folder className="h-5 w-5 text-gray-500 mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">Local .docs Folder</h2>
+              <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                Read-only
+              </span>
             </div>
             
             {isLoadingDocs ? (
@@ -153,12 +122,12 @@ const Docs = () => {
             ) : docsFiles.length > 0 ? (
               <div className="space-y-2">
                 {docsFiles.map((file, index) => (
-                  <div key={index} className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div key={index} className="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-md">
                     <div className="flex items-center">
                       {file.isDirectory ? (
-                        <Folder className="h-5 w-5 text-blue-600 mr-2" />
+                        <Folder className="h-5 w-5 text-gray-600 mr-2" />
                       ) : (
-                        <File className="h-5 w-5 text-blue-600 mr-2" />
+                        <File className="h-5 w-5 text-gray-600 mr-2" />
                       )}
                       <div>
                         <span className="text-sm font-medium text-gray-900">{file.name}</span>
@@ -175,21 +144,41 @@ const Docs = () => {
             )}
           </div>
 
+          {/* Uploaded Files from Supabase Storage */}
+          <UploadedFilesList user={user} refreshTrigger={refreshTrigger} />
+
           {/* Upload Section */}
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="flex items-center mb-4">
+              <Upload className="h-5 w-5 text-indigo-600 mr-2" />
+              <h2 className="text-lg font-semibold text-gray-900">Upload to Supabase Storage</h2>
+            </div>
+
+            {!user && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+                <p className="text-sm text-yellow-800">
+                  Sign in above to upload files to Supabase Storage
+                </p>
+              </div>
+            )}
+
             <div className="mb-6">
               <label htmlFor="file-upload" className="block text-sm font-medium text-gray-700 mb-2">
-                Select files to upload
+                Select files to upload to Supabase Storage
               </label>
               <div 
-                className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors cursor-pointer"
-                onDrop={handleDrop}
-                onDragOver={handleDragOver}
+                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md transition-colors cursor-pointer ${
+                  !user ? 'border-gray-200 bg-gray-50' : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onDrop={user ? handleDrop : undefined}
+                onDragOver={user ? handleDragOver : undefined}
               >
                 <div className="space-y-1 text-center">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <Upload className={`mx-auto h-12 w-12 ${!user ? 'text-gray-300' : 'text-gray-400'}`} />
                   <div className="flex text-sm text-gray-600">
-                    <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500">
+                    <label htmlFor="file-upload" className={`relative cursor-pointer bg-white rounded-md font-medium ${
+                      !user ? 'text-gray-400' : 'text-indigo-600 hover:text-indigo-500'
+                    }`}>
                       <span>Upload files</span>
                       <input 
                         id="file-upload" 
@@ -199,6 +188,7 @@ const Docs = () => {
                         multiple 
                         accept=".md,.txt,.pdf,.doc,.docx,.png,.jpg,.jpeg"
                         onChange={handleFileSelect}
+                        disabled={!user}
                       />
                     </label>
                     <p className="pl-1">or drag and drop</p>
@@ -206,6 +196,11 @@ const Docs = () => {
                   <p className="text-xs text-gray-500">
                     MD, TXT, PDF, DOC, DOCX, PNG, JPG up to 10MB each
                   </p>
+                  {!user && (
+                    <p className="text-xs text-yellow-600 font-medium">
+                      Authentication required
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -241,10 +236,10 @@ const Docs = () => {
                 Clear All
               </Button>
               <Button 
-                onClick={uploadFiles}
-                disabled={selectedFiles.length === 0 || isUploading}
+                onClick={handleUploadFiles}
+                disabled={selectedFiles.length === 0 || isUploading || !user}
               >
-                {isUploading ? 'Uploading...' : 'Upload Files'}
+                {isUploading ? 'Uploading...' : 'Upload to Supabase Storage'}
               </Button>
             </div>
 
@@ -256,43 +251,10 @@ const Docs = () => {
                     style={{ width: `${uploadProgress}%` }}
                   ></div>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">Uploading... {Math.round(uploadProgress)}%</p>
+                <p className="text-sm text-gray-600 mt-2">Uploading to Supabase Storage... {Math.round(uploadProgress)}%</p>
               </div>
             )}
           </div>
-
-          {/* Uploaded Files Section */}
-          {uploadedFiles.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <div className="flex items-center mb-4">
-                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                <h2 className="text-lg font-semibold text-gray-900">Uploaded Files</h2>
-              </div>
-              <div className="space-y-2">
-                {uploadedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-md">
-                    <div className="flex items-center">
-                      <File className="h-5 w-5 text-green-600 mr-2" />
-                      <div>
-                        <span className="text-sm font-medium text-gray-900">{file.name}</span>
-                        <div className="text-xs text-gray-500">
-                          {formatFileSize(file.size)} • Uploaded {file.uploadDate.toLocaleString()}
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeUploadedFile(index)}
-                      className="text-red-500 hover:text-red-700 p-1"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className="mt-8 text-center">
             <a href="/" className="text-indigo-600 hover:text-indigo-500 font-medium">← Back to Home</a>
