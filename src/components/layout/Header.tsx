@@ -1,23 +1,65 @@
 
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from '@/components/ui/navigation-menu';
-import { Search, User, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Menu, X, User, LogOut, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/components/ui/sonner';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user) {
+      checkAdminStatus();
+    }
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      setIsAdmin(!!data);
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
 
   const handleSignOut = async () => {
-    const result = await signOut();
-    if (result.success) {
-      navigate('/');
-    } else {
-      toast.error('Failed to sign out');
+    await signOut();
+  };
+
+  const navigation = [
+    { name: 'Home', href: '/' },
+    { name: 'Explore', href: '/explore' },
+    { name: 'Events', href: '/events' },
+    { name: 'Classes', href: '/classes' },
+    { name: 'Community', href: '/community' },
+    { name: 'Instructors', href: '/instructors' },
+  ];
+
+  const isActiveLink = (href: string) => {
+    if (href === '/') {
+      return location.pathname === '/';
     }
+    return location.pathname.startsWith(href);
   };
 
   return (
@@ -32,97 +74,155 @@ const Header = () => {
             <span className="font-serif font-semibold text-xl text-header-text">SteppersLife</span>
           </Link>
 
-          {/* Navigation */}
-          <NavigationMenu className="hidden md:flex">
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link to="/explore" className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:text-header-link-active focus:text-header-link-active">
-                    Explore
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-              
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Classes</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <div className="grid gap-3 p-6 w-[400px]">
-                    <NavigationMenuLink asChild>
-                      <Link to="/classes" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-surface-contrast">
-                        <div className="text-sm font-medium leading-none">All Classes</div>
-                        <p className="line-clamp-2 text-sm leading-snug text-text-secondary">
-                          Browse all available stepping classes
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                    <NavigationMenuLink asChild>
-                      <Link to="/instructors" className="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-surface-contrast">
-                        <div className="text-sm font-medium leading-none">Instructors</div>
-                        <p className="line-clamp-2 text-sm leading-snug text-text-secondary">
-                          Meet our certified stepping instructors
-                        </p>
-                      </Link>
-                    </NavigationMenuLink>
-                  </div>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`text-sm font-medium transition-colors ${
+                  isActiveLink(item.href)
+                    ? 'text-header-link-active'
+                    : 'text-header-text hover:text-header-link-active'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </nav>
 
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link to="/events" className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:text-header-link-active focus:text-header-link-active">
-                    Events
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-
-              <NavigationMenuItem>
-                <NavigationMenuLink asChild>
-                  <Link to="/community" className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors hover:text-header-link-active focus:text-header-link-active">
-                    Community
-                  </Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-
-          {/* Right side actions */}
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-header-text hover:text-header-link-active">
-              <Search className="h-4 w-4" />
-            </Button>
-            
+          {/* Desktop Auth */}
+          <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <div className="flex items-center space-x-2">
-                <Link to="/profile">
-                  <Button variant="ghost" size="sm" className="text-header-text hover:text-header-link-active">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                     <User className="h-4 w-4" />
+                    <span>{user.email}</span>
                   </Button>
-                </Link>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleSignOut}
-                  className="text-header-text hover:text-header-link-active"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/docs" className="flex items-center">
+                      <span>Docs</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="flex items-center">
+                        <Shield className="mr-2 h-4 w-4" />
+                        <span>Admin Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Sign Out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/auth/login">
-                  <Button variant="ghost" size="sm" className="text-header-text hover:text-header-link-active">
-                    Sign In
-                  </Button>
+                  <Button variant="ghost" size="sm">Sign In</Button>
                 </Link>
                 <Link to="/auth/register">
                   <Button size="sm" className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
-                    Join Now
+                    Sign Up
                   </Button>
                 </Link>
               </div>
             )}
           </div>
+
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 rounded-md text-header-text hover:bg-gray-100"
+          >
+            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t border-border-default">
+            <nav className="flex flex-col space-y-2">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                    isActiveLink(item.href)
+                      ? 'text-header-link-active bg-brand-primary/10'
+                      : 'text-header-text hover:text-header-link-active hover:bg-gray-50'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {user ? (
+                <>
+                  <Link
+                    to="/profile"
+                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Profile
+                  </Link>
+                  <Link
+                    to="/docs"
+                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Docs
+                  </Link>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin Dashboard
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setIsMenuOpen(false);
+                    }}
+                    className="px-3 py-2 text-sm font-medium text-left text-header-text hover:text-header-link-active hover:bg-gray-50"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              ) : (
+                <div className="flex flex-col space-y-2 px-3 pt-2">
+                  <Link to="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                    <Button size="sm" className="w-full bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </div>
+        )}
       </div>
     </header>
   );

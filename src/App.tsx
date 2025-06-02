@@ -12,6 +12,7 @@ import Classes from "./pages/Classes";
 import Community from "./pages/Community";
 import Instructors from "./pages/Instructors";
 import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Docs from "./pages/Docs";
@@ -40,6 +41,11 @@ const App = () => (
           <Route path="/profile" element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/admin" element={
+            <ProtectedRoute>
+              <Admin />
             </ProtectedRoute>
           } />
           <Route path="/docs" element={

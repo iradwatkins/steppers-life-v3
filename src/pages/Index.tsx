@@ -16,74 +16,94 @@ const Index = () => {
 
   const upcomingEvents = [
     {
-      id: "1",
+      id: 1,
       title: "Chicago Steppers Social",
       date: "2024-02-15",
       time: "8:00 PM",
       location: "Chicago Cultural Center",
+      city: "Chicago",
+      state: "IL",
       image: "/placeholder.svg",
       price: 15,
-      attendees: 120
+      attendees: 120,
+      category: "Social",
+      instructor: "Angela Davis"
     },
     {
-      id: "2", 
+      id: 2, 
       title: "Beginner Workshop",
       date: "2024-02-18",
       time: "2:00 PM", 
       location: "Dance Studio Downtown",
+      city: "Chicago",
+      state: "IL",
       image: "/placeholder.svg",
       price: 25,
-      attendees: 45
+      attendees: 45,
+      category: "Workshop",
+      instructor: "Marcus Thompson"
     },
     {
-      id: "3",
+      id: 3,
       title: "Advanced Techniques Masterclass",
       date: "2024-02-22",
       time: "7:30 PM",
       location: "Community Center",
+      city: "Atlanta",
+      state: "GA",
       image: "/placeholder.svg", 
       price: 35,
-      attendees: 60
+      attendees: 60,
+      category: "Class",
+      instructor: "Angela Davis"
     }
   ];
 
   const testimonials = [
     {
+      id: 1,
       name: "Maria Rodriguez",
       location: "Chicago, IL",
       text: "SteppersLife connected me with an amazing community. The classes are top-notch!",
       rating: 5,
-      avatar: "/placeholder.svg"
+      image: "/placeholder.svg",
+      date: "2024-01-15"
     },
     {
+      id: 2,
       name: "David Johnson", 
       location: "Atlanta, GA",
       text: "Best stepping platform out there. Found my dance partner and made lifelong friends.",
       rating: 5,
-      avatar: "/placeholder.svg"
+      image: "/placeholder.svg",
+      date: "2024-01-10"
     }
   ];
 
   const instructors = [
     {
-      id: "1",
+      id: 1,
       name: "Angela Davis",
+      title: "Master Instructor",
       specialties: ["Chicago Stepping", "Advanced Techniques"],
       location: "Chicago, IL",
       rating: 4.9,
+      reviewCount: 150,
       experience: "15+ years",
       image: "/placeholder.svg",
-      bio: "Master instructor with over 15 years of experience in Chicago Stepping."
+      verified: true
     },
     {
-      id: "2", 
+      id: 2, 
       name: "Marcus Thompson",
+      title: "Community Instructor",
       specialties: ["Beginner Classes", "Social Dancing"],
       location: "Atlanta, GA", 
       rating: 4.8,
+      reviewCount: 89,
       experience: "10+ years",
       image: "/placeholder.svg",
-      bio: "Passionate instructor specializing in beginner-friendly stepping classes."
+      verified: true
     }
   ];
 
