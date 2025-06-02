@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Explore from "./pages/Explore";
 import Events from "./pages/Events";
@@ -24,6 +25,11 @@ const App = () => (
     <Sonner />
     <BrowserRouter>
       <Routes>
+        {/* Public routes */}
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/register" element={<Register />} />
+        
+        {/* Protected routes with layout */}
         <Route path="/" element={<AppLayout />}>
           <Route index element={<Index />} />
           <Route path="/explore" element={<Explore />} />
@@ -31,13 +37,19 @@ const App = () => (
           <Route path="/classes" element={<Classes />} />
           <Route path="/community" element={<Community />} />
           <Route path="/instructors" element={<Instructors />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/docs" element={<Docs />} />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/docs" element={
+            <ProtectedRoute>
+              <Docs />
+            </ProtectedRoute>
+          } />
         </Route>
-        {/* Auth routes without layout */}
-        <Route path="/auth/login" element={<Login />} />
-        <Route path="/auth/register" element={<Register />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+        
+        {/* Catch-all route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

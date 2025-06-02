@@ -1,192 +1,210 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Calendar, Users, Star, ArrowRight, Play, CheckCircle } from 'lucide-react';
+import { Calendar, MapPin, Users, Star, ArrowRight, Play, Heart, Zap, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import EventCard from '@/components/EventCard';
-import InstructorCard from '@/components/InstructorCard';
 import TestimonialCard from '@/components/TestimonialCard';
+import InstructorCard from '@/components/InstructorCard';
+import GlobalSearchForm from '@/components/GlobalSearchForm';
 
 const Index = () => {
-  const featuredEvents = [
-    {
-      id: 1,
-      title: "Chicago Step Championship",
-      date: "2024-07-15",
-      time: "7:00 PM",
-      location: "Chicago Cultural Center",
-      city: "Chicago",
-      state: "IL",
-      price: 45,
-      image: "/placeholder.svg",
-      category: "Competition",
-      attendees: 250,
-      instructor: "Marcus Johnson"
-    },
-    {
-      id: 2,
-      title: "Beginner Step Workshop",
-      date: "2024-07-20",
-      time: "2:00 PM",
-      location: "Dance Studio One",
-      city: "Atlanta",
-      state: "GA",
-      price: 25,
-      image: "/placeholder.svg",
-      category: "Workshop",
-      attendees: 30,
-      instructor: "Lisa Davis"
-    }
-  ];
+  const { user } = useAuth();
 
-  const featuredInstructors = [
+  const upcomingEvents = [
     {
-      id: 1,
-      name: "Marcus Johnson",
-      title: "Master Stepper",
-      location: "Chicago, IL",
-      rating: 4.9,
-      reviewCount: 127,
+      id: "1",
+      title: "Chicago Steppers Social",
+      date: "2024-02-15",
+      time: "8:00 PM",
+      location: "Chicago Cultural Center",
       image: "/placeholder.svg",
-      specialties: ["Competition", "Advanced"],
-      verified: true,
-      experience: "15+ years"
+      price: 15,
+      attendees: 120
     },
     {
-      id: 2,
-      name: "Lisa Davis",
-      title: "Step Instructor",
-      location: "Atlanta, GA",
-      rating: 4.8,
-      reviewCount: 89,
+      id: "2", 
+      title: "Beginner Workshop",
+      date: "2024-02-18",
+      time: "2:00 PM", 
+      location: "Dance Studio Downtown",
       image: "/placeholder.svg",
-      specialties: ["Beginner", "Workshop"],
-      verified: true,
-      experience: "8+ years"
+      price: 25,
+      attendees: 45
+    },
+    {
+      id: "3",
+      title: "Advanced Techniques Masterclass",
+      date: "2024-02-22",
+      time: "7:30 PM",
+      location: "Community Center",
+      image: "/placeholder.svg", 
+      price: 35,
+      attendees: 60
     }
   ];
 
   const testimonials = [
     {
-      id: 1,
-      name: "Angela Smith",
+      name: "Maria Rodriguez",
       location: "Chicago, IL",
+      text: "SteppersLife connected me with an amazing community. The classes are top-notch!",
       rating: 5,
-      text: "SteppersLife has completely transformed my stepping journey. The community is amazing and the instructors are top-notch!",
-      image: "/placeholder.svg",
-      date: "2024-06-15"
+      avatar: "/placeholder.svg"
     },
     {
-      id: 2,
-      name: "Michael Brown",
-      location: "Detroit, MI",
+      name: "David Johnson", 
+      location: "Atlanta, GA",
+      text: "Best stepping platform out there. Found my dance partner and made lifelong friends.",
       rating: 5,
-      text: "Found my stepping crew through this platform. The events are well-organized and the atmosphere is always positive.",
+      avatar: "/placeholder.svg"
+    }
+  ];
+
+  const instructors = [
+    {
+      id: "1",
+      name: "Angela Davis",
+      specialties: ["Chicago Stepping", "Advanced Techniques"],
+      location: "Chicago, IL",
+      rating: 4.9,
+      experience: "15+ years",
       image: "/placeholder.svg",
-      date: "2024-06-10"
+      bio: "Master instructor with over 15 years of experience in Chicago Stepping."
+    },
+    {
+      id: "2", 
+      name: "Marcus Thompson",
+      specialties: ["Beginner Classes", "Social Dancing"],
+      location: "Atlanta, GA", 
+      rating: 4.8,
+      experience: "10+ years",
+      image: "/placeholder.svg",
+      bio: "Passionate instructor specializing in beginner-friendly stepping classes."
     }
   ];
 
   return (
     <div className="min-h-screen bg-background-main">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-brand-primary to-brand-primary-hover text-text-on-primary py-20 px-4">
-        <div className="container mx-auto text-center">
-          <h1 className="font-serif text-5xl md:text-6xl font-bold mb-6">
-            Your Stepping Journey Starts Here
+      <section className="relative py-20 px-4 text-center bg-gradient-to-b from-brand-primary/10 to-background-main">
+        <div className="container mx-auto max-w-4xl">
+          <h1 className="font-serif text-5xl md:text-6xl font-bold text-text-primary mb-6">
+            Step Into Your
+            <span className="text-brand-primary block">Dancing Journey</span>
           </h1>
-          <p className="text-xl md:text-2xl mb-8 text-text-on-primary/90 max-w-2xl mx-auto">
-            Connect with the stepping community, find events, learn from master instructors, and elevate your stepping experience.
+          <p className="text-xl text-text-secondary mb-8 max-w-2xl mx-auto">
+            Connect with the vibrant stepping community, find classes, events, and dance partners near you.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-surface-card text-text-primary hover:bg-surface-card/90">
-              <Play className="w-5 h-5 mr-2" />
-              Watch Demo
-            </Button>
-            <Link to="/auth/register">
-              <Button size="lg" variant="outline" className="border-text-on-primary text-text-on-primary hover:bg-text-on-primary hover:text-brand-primary">
-                Join Community
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-            </Link>
-          </div>
+          
+          {user ? (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/classes">
+                <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
+                  <Play className="mr-2 h-5 w-5" />
+                  Find Classes
+                </Button>
+              </Link>
+              <Link to="/events">
+                <Button size="lg" variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary/10">
+                  Explore Events
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/auth/register">
+                <Button size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
+                  <Play className="mr-2 h-5 w-5" />
+                  Join the Community
+                </Button>
+              </Link>
+              <Link to="/auth/login">
+                <Button size="lg" variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary/10">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Search Section */}
+      <section className="py-12 px-4 bg-surface-card">
+        <div className="container mx-auto max-w-4xl">
+          <GlobalSearchForm />
         </div>
       </section>
 
       {/* Features Section */}
       <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl md:text-4xl font-bold text-text-primary mb-4">
-              Everything You Need to Step
-            </h2>
-            <p className="text-text-secondary text-lg max-w-2xl mx-auto">
-              From finding events to connecting with instructors, SteppersLife is your all-in-one platform for the stepping community.
-            </p>
-          </div>
-          
+        <div className="container mx-auto max-w-6xl">
+          <h2 className="font-serif text-3xl font-bold text-center text-text-primary mb-12">
+            Why Choose SteppersLife?
+          </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center">
+            <Card className="text-center border-border-default">
               <CardHeader>
-                <Calendar className="w-12 h-12 text-brand-primary mx-auto mb-4" />
-                <CardTitle>Discover Events</CardTitle>
+                <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Heart className="h-6 w-6 text-brand-primary" />
+                </div>
+                <CardTitle className="text-xl">Community First</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-text-secondary">
-                  Find stepping events, competitions, and workshops in your area or nationwide.
-                </p>
+                <CardDescription className="text-text-secondary">
+                  Connect with passionate steppers in your city and build lasting friendships through dance.
+                </CardDescription>
               </CardContent>
             </Card>
-            
-            <Card className="text-center">
+
+            <Card className="text-center border-border-default">
               <CardHeader>
-                <Users className="w-12 h-12 text-brand-primary mx-auto mb-4" />
-                <CardTitle>Connect with Community</CardTitle>
+                <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Zap className="h-6 w-6 text-brand-primary" />
+                </div>
+                <CardTitle className="text-xl">Expert Instruction</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-text-secondary">
-                  Join a vibrant community of steppers, share experiences, and make lasting connections.
-                </p>
+                <CardDescription className="text-text-secondary">
+                  Learn from certified instructors with years of experience in Chicago stepping and social dance.
+                </CardDescription>
               </CardContent>
             </Card>
-            
-            <Card className="text-center">
+
+            <Card className="text-center border-border-default">
               <CardHeader>
-                <Star className="w-12 h-12 text-brand-primary mx-auto mb-4" />
-                <CardTitle>Learn from Masters</CardTitle>
+                <div className="w-12 h-12 bg-brand-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Target className="h-6 w-6 text-brand-primary" />
+                </div>
+                <CardTitle className="text-xl">All Skill Levels</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-text-secondary">
-                  Access classes and workshops from verified master steppers and experienced instructors.
-                </p>
+                <CardDescription className="text-text-secondary">
+                  From complete beginners to advanced dancers, find classes and events that match your skill level.
+                </CardDescription>
               </CardContent>
             </Card>
           </div>
         </div>
       </section>
 
-      {/* Featured Events */}
+      {/* Upcoming Events */}
       <section className="py-16 px-4 bg-surface-contrast">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="font-serif text-3xl font-bold text-text-primary mb-2">
-                Featured Events
-              </h2>
-              <p className="text-text-secondary">Don't miss these upcoming stepping events</p>
-            </div>
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="font-serif text-3xl font-bold text-text-primary">Upcoming Events</h2>
             <Link to="/events">
-              <Button variant="outline">
+              <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary/10">
                 View All Events
-                <ArrowRight className="w-4 h-4 ml-2" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            {featuredEvents.map((event) => (
+          <div className="grid md:grid-cols-3 gap-6">
+            {upcomingEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
           </div>
@@ -195,24 +213,18 @@ const Index = () => {
 
       {/* Featured Instructors */}
       <section className="py-16 px-4">
-        <div className="container mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="font-serif text-3xl font-bold text-text-primary mb-2">
-                Master Instructors
-              </h2>
-              <p className="text-text-secondary">Learn from the best in the stepping community</p>
-            </div>
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex justify-between items-center mb-8">
+            <h2 className="font-serif text-3xl font-bold text-text-primary">Featured Instructors</h2>
             <Link to="/instructors">
-              <Button variant="outline">
-                View All Instructors
-                <ArrowRight className="w-4 h-4 ml-2" />
+              <Button variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary/10">
+                Meet All Instructors
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
           </div>
-          
           <div className="grid md:grid-cols-2 gap-6">
-            {featuredInstructors.map((instructor) => (
+            {instructors.map((instructor) => (
               <InstructorCard key={instructor.id} instructor={instructor} />
             ))}
           </div>
@@ -221,48 +233,43 @@ const Index = () => {
 
       {/* Testimonials */}
       <section className="py-16 px-4 bg-surface-contrast">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="font-serif text-3xl font-bold text-text-primary mb-4">
-              What Our Community Says
-            </h2>
-            <p className="text-text-secondary text-lg">
-              Real stories from real steppers
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-6">
-            {testimonials.map((testimonial) => (
-              <TestimonialCard key={testimonial.id} testimonial={testimonial} />
+        <div className="container mx-auto max-w-4xl">
+          <h2 className="font-serif text-3xl font-bold text-center text-text-primary mb-12">
+            What Our Community Says
+          </h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <TestimonialCard key={index} testimonial={testimonial} />
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 px-4 bg-brand-primary text-text-on-primary">
-        <div className="container mx-auto text-center">
-          <h2 className="font-serif text-3xl md:text-4xl font-bold mb-4">
-            Ready to Join the Stepping Community?
-          </h2>
-          <p className="text-xl mb-8 text-text-on-primary/90 max-w-2xl mx-auto">
-            Start your journey today and connect with steppers worldwide.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth/register">
-              <Button size="lg" className="bg-surface-card text-text-primary hover:bg-surface-card/90">
-                <CheckCircle className="w-5 h-5 mr-2" />
-                Sign Up Free
-              </Button>
-            </Link>
-            <Link to="/explore">
-              <Button size="lg" variant="outline" className="border-text-on-primary text-text-on-primary hover:bg-text-on-primary hover:text-brand-primary">
-                Explore Events
-              </Button>
-            </Link>
+      {!user && (
+        <section className="py-16 px-4 bg-brand-primary text-center">
+          <div className="container mx-auto max-w-4xl">
+            <h2 className="font-serif text-3xl font-bold text-text-on-primary mb-4">
+              Ready to Start Your Stepping Journey?
+            </h2>
+            <p className="text-xl text-text-on-primary/90 mb-8">
+              Join thousands of steppers already connected through our platform.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/auth/register">
+                <Button size="lg" variant="secondary" className="bg-text-on-primary text-brand-primary hover:bg-text-on-primary/90">
+                  Join Free Today
+                </Button>
+              </Link>
+              <Link to="/auth/login">
+                <Button size="lg" variant="outline" className="border-text-on-primary text-text-on-primary hover:bg-text-on-primary/10">
+                  Sign In
+                </Button>
+              </Link>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 };

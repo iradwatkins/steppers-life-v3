@@ -1,13 +1,62 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from '@/components/ui/sonner';
 
 const Login = () => {
-  const [showPassword, setShowPassword] = React.useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const result = await signIn(email, password);
+      
+      if (result.success) {
+        navigate('/', { replace: true });
+      } else {
+        toast.error(result.error || 'Failed to sign in');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background-main flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -32,7 +81,7 @@ const Login = () => {
             <CardTitle className="text-center">Sign In</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">
                   Email Address
@@ -43,6 +92,10 @@ const Login = () => {
                     type="email" 
                     placeholder="Enter your email"
                     className="pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -57,31 +110,31 @@ const Login = () => {
                     type={showPassword ? "text" : "password"} 
                     placeholder="Enter your password"
                     className="pl-10 pr-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-secondary hover:text-text-primary"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input type="checkbox" className="h-4 w-4 text-brand-primary border-border-input rounded" />
-                <span className="ml-2 text-sm text-text-secondary">Remember me</span>
-              </label>
-              <Link to="/auth/forgot-password" className="text-sm text-brand-primary hover:text-brand-primary-hover">
-                Forgot password?
-              </Link>
-            </div>
-
-            <Button className="w-full bg-brand-primary hover:bg-brand-primary-hover">
-              Sign In
-            </Button>
+              <Button 
+                type="submit" 
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Signing In...' : 'Sign In'}
+              </Button>
+            </form>
 
             <div className="text-center">
               <span className="text-text-secondary">Don't have an account? </span>

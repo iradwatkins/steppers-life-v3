@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import { User } from '@supabase/supabase-js';
-import SimpleAuth from '@/components/SimpleAuth';
+import { useAuth } from '@/hooks/useAuth';
 import UploadedFilesList from '@/components/UploadedFilesList';
 import GitHubSync from '@/components/GitHubSync';
 import LocalDocsFolder from '@/components/LocalDocsFolder';
@@ -20,8 +20,8 @@ interface DocsFile {
 const Docs = () => {
   const [docsFiles, setDocsFiles] = useState<DocsFile[]>([]);
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { user } = useAuth();
 
   // Load files from .docs folder on component mount
   useEffect(() => {
@@ -83,8 +83,17 @@ const Docs = () => {
             </div>
           </div>
           
-          {/* Authentication Section */}
-          <SimpleAuth onAuthChange={setUser} />
+          {/* Authentication status */}
+          {user && (
+            <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+              <p className="text-sm font-medium text-green-800">
+                Signed in as: {user.email}
+              </p>
+              <p className="text-xs text-green-600">
+                You can now upload files to Supabase Storage
+              </p>
+            </div>
+          )}
           
           {/* GitHub Sync Section */}
           <GitHubSync onRefresh={handleRefreshFolders} />
