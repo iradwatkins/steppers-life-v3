@@ -209,4 +209,63 @@ Created comprehensive email campaign management system with EmailCampaignsPage f
 - **Batch Generation**: Implemented `BatchQRCodeDialog.tsx` with manual entry, CSV import, progress tracking, and validation for bulk QR code creation
 - **Campaign Management**: Created `QRCodeCampaignManager.tsx` with campaign organization, A/B testing, performance tracking, and QR code assignment
 - **Integration**: Added routing integration and linked from ManageEventPage for seamless organizer workflow access
-- **UI Components**: Leveraged existing UI library with progress bars, tabs, dialogs, forms, and comprehensive styling for professional interface 
+- **UI Components**: Leveraged existing UI library with progress bars, tabs, dialogs, forms, and comprehensive styling for professional interface
+
+## Epic D: On-Site Event Management Tools (PWA)
+
+### 🔄 D-001: PWA Setup & Secure Login for Organizers & Staff - In Progress
+
+**Story:** As an event organizer or authorized staff member, I want a progressive web app (PWA) with secure login and role-based access for on-site event management, so that I can efficiently manage my events on mobile devices with offline capability, fast loading, and native-like experience while ensuring proper security and access control for different team members.
+
+**Tasks / Subtasks:**
+
+- [x] **Task 1: Create PWA infrastructure and configuration (AC: 1, 2, 6) - Done**
+  - [x] Generate PWA manifest.json with SteppersLife branding and metadata
+  - [x] Create service worker for asset caching and offline functionality
+  - [x] Implement PWA installation detection and prompts
+  - [x] Add iOS/Android-specific PWA configuration and icons
+  - **Summary**: Created comprehensive PWA manifest.json with SteppersLife branding, proper metadata, and shortcuts for quick access to key PWA features. Configured Vite PWA plugin with Workbox for service worker management, asset caching, and offline functionality. Added proper PWA meta tags and iOS-specific configuration to index.html for optimal mobile experience and native app-like behavior.
+
+- [ ] Task 2: Build PWA-specific authentication system (AC: 3, 4, 5)
+  - [x] Create mobile-optimized login interface for PWA
+  - [x] Implement role-based authentication with event-specific permissions
+  - [x] Add secure session management with automatic timeout
+  - [x] Build role verification middleware for sensitive operations
+  - **Summary**: Created comprehensive PWA authentication service with encrypted offline caching using crypto-js, role-based access control supporting organizer/event_staff/sales_agent roles, and session validation. Built PWA-specific login page with mobile-optimized interface, biometric authentication support, and device PIN authentication. Implemented usePWAAuth hook extending existing authentication with offline capabilities and role checking.
+
+- [ ] Task 3: Implement offline authentication and security (AC: 7, 10)
+  - [ ] Create encrypted local storage for temporary authentication
+  - [ ] Implement biometric authentication integration (Touch/Face ID)
+  - [ ] Add device PIN/pattern backup authentication
+  - [ ] Build offline access validation and security checks
+- [ ] Task 4: Develop PWA navigation and routing (AC: 8, 11)
+  - [ ] Create PWA-specific route structure under /pwa/ prefix
+  - [ ] Implement touch-optimized navigation and gestures
+  - [ ] Add event switching interface for multi-event staff
+  - [ ] Build PWA-specific header and navigation components
+- [ ] Task 5: Create background sync and performance optimization (AC: 9, 12)
+  - [ ] Implement background sync for authentication state
+  - [ ] Add role and permission updates sync when online
+  - [ ] Optimize PWA loading performance and caching strategies
+  - [ ] Create smooth animations and responsive design for mobile
+- [ ] Task 6: Integration and testing (AC: All)
+  - [ ] Integrate PWA authentication with existing user system
+  - [ ] Test PWA functionality across iOS/Android devices
+  - [ ] Validate offline capability and background sync
+  - [ ] Implement comprehensive security testing and role validation
+
+**Progress Notes:**
+- **2024-12-19**: Started D-001 implementation with comprehensive PWA infrastructure setup
+- **Task 1 Complete**: PWA manifest, service worker configuration, and basic infrastructure ready
+- **Task 2 In Progress**: Authentication system with offline support and role-based access implemented
+- **Next Steps**: Complete offline authentication security features and PWA-specific routing
+
+**Implementation Status**: 
+- ✅ PWA manifest.json with comprehensive metadata and shortcuts
+- ✅ Vite PWA plugin configuration with Workbox for caching
+- ✅ iOS/Android PWA meta tags and configuration
+- ✅ PWA authentication service with encryption and offline support
+- ✅ Mobile-optimized PWA login page with biometric/device auth
+- ✅ Role-based authentication hook with offline capabilities
+- ✅ PWA routing structure under /pwa/ prefix
+- 🔄 Continue with Task 3: offline security and Task 4: PWA navigation 

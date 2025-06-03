@@ -38,6 +38,9 @@ import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
 
+// PWA-specific imports
+import PWALoginPage from "./pages/pwa/PWALoginPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -50,6 +53,9 @@ const App = () => (
           {/* Public routes */}
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
+          
+          {/* PWA-specific routes (standalone, no layout) */}
+          <Route path="/pwa/login" element={<PWALoginPage />} />
           
           {/* Protected routes with layout */}
           <Route path="/" element={<AppLayout />}>
