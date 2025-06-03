@@ -7,7 +7,7 @@ const AppLayout = () => {
   return (
     <div className="app-layout flex flex-col min-h-screen bg-background-main">
       <Header />
-      <main className="main-content flex-grow pb-14 xs:pb-16 sm:pb-16 md:pb-0">
+      <main className="main-content flex-grow main-content-with-bottom-nav">
         <Outlet />
       </main>
       <BottomNavPWA />

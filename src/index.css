@@ -204,12 +204,27 @@
     }
   }
 
-  /* Safe area for notched devices */
+  /* Safe area for notched devices - only apply top safe area to avoid bottom nav issues */
   .app-layout {
     padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
+  }
+
+  /* Bottom navigation safe area handling */
+  .main-content-with-bottom-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+
+  @media (min-width: 768px) {
+    .main-content-with-bottom-nav {
+      padding-bottom: 0;
+    }
+  }
+
+  /* Bottom navigation with safe area */
+  .bottom-nav-mobile {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   /* Smooth scrolling for better mobile experience */
