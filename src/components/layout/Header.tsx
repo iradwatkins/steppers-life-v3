@@ -29,7 +29,6 @@ const Header = () => {
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
-    { name: 'Instructors', href: '/instructors' },
   ];
 
   const isActiveLink = (href: string) => {
@@ -96,7 +95,7 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="#" className="flex items-center">
+                      <Link to="/community" className="flex items-center">
                         <Store className="mr-2 h-4 w-4" />
                         <span>Add Store/Service</span>
                       </Link>
@@ -236,7 +235,7 @@ const Header = () => {
                         <span>List Class</span>
                       </Link>
                       <Link
-                        to="#"
+                        to="/community"
                         className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}
                       >

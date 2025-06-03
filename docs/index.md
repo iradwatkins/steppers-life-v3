@@ -1,36 +1,120 @@
-# Project Documentation Index
+# SteppersLife V2 Documentation
 
-This index provides a central catalog for key documents related to the SteppersLife.com project.
+Welcome to the comprehensive documentation for SteppersLife V2, a community platform for the Chicago Stepping dance community built using the BMAD (Breakthrough Method of Agile ai-driven Development) methodology.
 
-## Functional Requirement Epics (from PRD - `docs/prd.md`)
+## 🎯 Project Overview
 
-- [Epic U: Initial User Dashboard & Role Activation](./epic-u.md) - Details on generic user dashboard, content posting, dashboard extension, and night mode.
-- [Epic A: Event Creation & Setup](./epic-a.md) - Requirements for event creation, details, ticketing, seating, and admin setup for organizers.
-- [Epic B: Ticketing & Registration Operations](./epic-b.md) - Covers event listing pages, online sales, e-tickets, payment workflows, and cash handling.
-- [Epic C: Event Promotion & Marketing](./epic-c.md) - Details on social sharing, public URLs, email tools, and platform promotions for events.
-- [Epic D: On-Site Event Management](./epic-d.md) - Requirements for the PWA for on-site check-in, attendee lists, and payments.
-- [Epic E: Reporting & Analytics for Organizers](./epic-e.md) - Covers event performance dashboards, key metrics, and attendee reports for organizers.
-- [Epic F: Organizer's Team/Follower Management & Sales](./epic-f.md) - Details on follower systems, sales agent roles, commission tracking, and pre-bought inventory.
-- [Epic G: Attendee Experience & Ticket Management](./epic-g.md) - Covers user registration, event discovery, ticket purchasing, and attendee dashboards.
-- [Epic H: Administrative Platform Management](./epic-h.md) - Requirements for admin user management, platform analytics, event oversight, and site configuration.
-- [Epic I: Blog Management](./epic-i.md) - Details on admin interface for blog post creation, management, and public blog display.
-- [Epic J: Community Directory: Stores](./epic-j.md) - Requirements for store listings, attendee browsing, user-generated content, and admin management for stores.
-- [Epic K: Community Directory: Services](./epic-k.md) - Requirements for service listings, attendee browsing, user-generated content, and admin management for services.
-- [Epic L: Classes Module](./epic-l.md) - Covers physical class listings, VOD classes, promotional product store, and instructor T-shirt sales.
-- [Epic M: Other Initial Launch Features](./epic-m.md) - Details on vanity URLs, email system integration, and secondary ticket market.
-- [Epic X: Advertising System](./epic-x.md) - Requirements for general ad display, direct user ad sales, and AdSense integration.
-- [Epic Y: User Network Growth & Friend Invitation Features](./epic-y.md) - Covers finding friends, syncing contacts, and invitation mechanics.
+SteppersLife.com is the centralized hub for the global Stepping community, providing event management, ticketing, class discovery, and community engagement features.
 
-*(This index will be updated further as other source documents like architecture.md are sharded.)*
+## 📋 Core Documentation
 
-## Frontend Architecture Shards (from `docs/architecture.md`)
+### Project Foundation
+- [Project Brief](./project-brief.md) - High-level project vision and goals
+- [Product Requirements Document (PRD)](./prd.md) - Comprehensive feature requirements  
+- [Technical Preferences](./technical-preferences.md) - Technology stack and constraints
+- [Implementation Plan](./implementation-plan.md) - Epic and story roadmap
 
-- [Front-End Project Structure](./front-end-project-structure.md) - Detailed layout of the `src/` directory and other key frontend folders.
-- [Front-End Style Guide](./front-end-style-guide.md) - Conventions for using Tailwind CSS, configuration files, and key styling practices.
-- [Front-End Component Guide](./front-end-component-guide.md) - Naming conventions, organization, and the template for specifying UI components.
-- [Front-End State Management](./front-end-state-management.md) - In-depth strategy for client-side state using Zustand and React Context API.
-- [Front-End API Interaction](./front-end-api-interaction.md) - Guidelines for client-server communication, Axios setup, service definitions, and error handling.
-- [Front-End Routing Strategy](./front-end-routing-strategy.md) - Approach to client-side navigation using React Router DOM, including route definitions and protection.
-- [Front-End Testing Strategy](./front-end-testing-strategy.md) - Strategies for component testing, UI integration testing, and E2E testing for the frontend.
+### Architecture & Design
+- [System Architecture](./architecture.md) - Backend and system design
+- [Frontend Architecture](./front-end-project-structure.md) - React/TypeScript frontend structure
+- [UI/UX Specification](./7#%20SteppersLife.com%20UI_UX%20Specification.md) - Design system and user experience
 
-*(This index will be updated further as other source documents are sharded.)* 
+## 🏗️ BMAD Structure
+
+### User Stories
+- [Stories Index](./stories/index.md) - Complete story catalog and progress
+- [Epic A Stories](./stories/) - Event Creation & Setup (Organizers/Promoters)
+- [Epic B Stories](./stories/) - Core Platform Features (Buyer Experience)
+
+### Epic Documentation
+- [Epic A](./epic-a.md) - Event Creation & Setup
+- [Epic B](./epic-b.md) - Core Platform Features  
+- [Epic C](./epic-c.md) - Event Promotion & Marketing
+- [Additional Epics](./epic-d.md) - D through Y for future development
+
+### Project Management
+- [Sprints](./sprints/) - Sprint planning and execution
+- [Testing](./testing/) - Testing strategy and documentation
+- [Architecture Decisions](./decisions/) - ADRs and technical decisions
+
+## 🛠️ Technical Documentation
+
+### Frontend Development
+- [Component Guide](./front-end-component-guide.md) - React component patterns
+- [State Management](./front-end-state-management.md) - Application state architecture
+- [Routing Strategy](./front-end-routing-strategy.md) - Navigation and URL structure
+- [API Interaction](./front-end-api-interaction.md) - Backend integration patterns
+- [Style Guide](./front-end-style-guide.md) - CSS and design system
+- [Testing Strategy](./front-end-testing-strategy.md) - Frontend testing approach
+
+### Development Setup
+- [IDE Setup](./ide-setup.md) - Development environment configuration
+- [Recommended Plugins](./recommended-ide-plugins.md) - IDE extensions and tools
+- [Workflow Diagram](./workflow-diagram.md) - Development process visualization
+
+## 📊 BMAD Compliance
+
+### Full Compliance Achieved ✅
+- [BMAD Compliance Checklist](./bmad-compliance-checklist.md) - Complete compliance verification
+- All required BMAD structures implemented
+- Agent personas, tasks, templates, and checklists available
+- Story-by-story development process established
+- Documentation follows BMAD templates
+
+### BMAD Agent System
+Located in `/bmad-agent/` directory:
+- **Personas**: Agent definitions for specialized roles
+- **Tasks**: Reusable instruction sets for complex operations  
+- **Templates**: Standardized formats for all documentation
+- **Checklists**: Quality assurance and process validation
+- **Orchestrators**: IDE and web-based agent coordination
+
+## 🚀 Current Status
+
+### Epic A: Event Creation & Setup
+- **Status**: ✅ 7 completed, ⏸️ 1 deferred (87.5%)
+- **Completed Stories**: A.001-A.003, A.005-A.008
+- **Deferred**: A.004 (Visual Seating Chart Builder - requires library research)
+
+### Epic B: Core Platform Features  
+- **Status**: ✅ 9 completed, 🔄 1 in progress (90%)
+- **Completed Stories**: B.002-B.010
+- **In Progress**: B.011 (Real-time Inventory Management System)
+
+### Overall Progress
+- **16 completed stories** with 150+ acceptance criteria
+- **75+ major tasks** with 250+ subtasks documented
+- **Complete BMAD methodology compliance** achieved
+- **Ready for continued story-by-story development**
+
+## 🎨 Design Assets
+
+- [Lovable.dev Prompt](./Lovable.md) - AI frontend generation prompt
+- [Master Prompt](./7#%20A%20Master%20Prompt%20for%20Lovable.dev_%20SteppersLife.com%20Frontend%20PWA.md) - Comprehensive frontend prompt
+- [Tailwind Configuration](./Tailwind%20CSS%20Theme%20Configuration%20Content.md) - Design system configuration
+
+## 📝 Contributing
+
+- [Contributing Guidelines](./CONTRIBUTING.md) - How to contribute to the project
+- [License](./LICENSE) - MIT License terms
+- [Code of Conduct](./CONTRIBUTING.md#code-of-conduct) - Community guidelines
+
+## 🔄 Development Workflow
+
+### BMAD Agent Workflow
+1. **Story Generation**: Use SM (Scrum Master) agent
+2. **Development**: Use Dev agents for implementation  
+3. **Quality Assurance**: Apply story definition of done checklists
+4. **Review**: Use PO (Product Owner) for validation
+5. **Documentation**: Update stories with completion notes
+
+### Next Steps
+1. Complete B-011 Real-time Inventory Management System
+2. Run PO master checklist for document alignment validation
+3. Begin Epic C development (Event Promotion & Marketing)
+4. Establish sprint planning and execution processes
+5. Create ADRs for key architectural decisions
+
+---
+
+**Documentation Status**: ✅ Complete BMAD compliance achieved with all structures, templates, and processes in place for continued development. 

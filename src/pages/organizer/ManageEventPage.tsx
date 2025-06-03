@@ -4,7 +4,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from '@/components/ui/separator';
-import { ChevronRight, Edit, Settings, Eye, Send, Archive, CalendarCheck2, Ticket, Armchair, MessageSquarePlus, Tag as TagIcon, RefreshCw, DollarSign } from 'lucide-react';
+import { 
+  ChevronRight, 
+  Edit, 
+  Settings, 
+  Eye, 
+  Send, 
+  Archive, 
+  CalendarCheck2, 
+  Ticket, 
+  Armchair, 
+  MessageSquarePlus, 
+  Tag as TagIcon, 
+  RefreshCw, 
+  DollarSign,
+  Share2,
+  BarChart3,
+  Copy,
+  Download,
+  ExternalLink
+} from 'lucide-react';
+import SocialShareButtons from '@/components/SocialShareButtons';
+import { createEventURL, createShortURL, addTrackingParams } from '@/utils/urlUtils';
+import type { EventData } from '@/services/socialSharingService';
 
 // Mock event data structure
 interface MockEvent {
@@ -36,6 +58,7 @@ const ManageEventPage = () => {
   const navigate = useNavigate();
   const [event, setEvent] = useState<MockEvent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (eventId) {
@@ -113,6 +136,53 @@ const ManageEventPage = () => {
     },
   ];
 
+  // Convert event to EventData for sharing
+  const eventForSharing: EventData = event ? {
+    id: event.id,
+    title: event.name,
+    date: event.date || new Date().toISOString().split('T')[0],
+    location: event.location || 'TBD',
+    description: `Join us for ${event.name}!`,
+    organizer: 'Organizer'
+  } : {
+    id: '1',
+    title: 'Sample Event',
+    date: new Date().toISOString().split('T')[0],
+    location: 'TBD'
+  };
+
+  // Sharing analytics (mock data)
+  const sharingAnalytics = {
+    totalShares: 247,
+    platforms: {
+      facebook: 89,
+      twitter: 54,
+      linkedin: 23,
+      whatsapp: 81
+    },
+    recentActivity: [
+      { platform: 'Facebook', shares: 12, time: '2 hours ago' },
+      { platform: 'Twitter', shares: 8, time: '4 hours ago' },
+      { platform: 'WhatsApp', shares: 15, time: '6 hours ago' }
+    ]
+  };
+
+  const handleCopyUrl = async (url: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(label);
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
+  const generateCampaignUrl = (campaign: string) => {
+    if (!event) return '';
+    const baseUrl = createEventURL(eventForSharing);
+    return addTrackingParams(baseUrl, 'organizer_dashboard', campaign, 'manual_share');
+  };
+
   return (
     <div className="min-h-screen bg-background-main py-8 px-4 md:px-8">
       <div className="max-w-4xl mx-auto">
@@ -182,6 +252,194 @@ const ManageEventPage = () => {
             </Link>
           ))}
         </div>
+
+        {/* Social Media Promotion Tools */}
+        <Card className="bg-surface-card mt-8">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Share2 className="h-6 w-6 text-brand-primary" />
+              <div>
+                <CardTitle className="text-2xl font-bold text-text-primary">Social Media Promotion</CardTitle>
+                <CardDescription className="text-text-secondary">Share your event and track engagement across social platforms</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Quick Share */}
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-3">Quick Share</h3>
+              <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600">
+                <SocialShareButtons
+                  event={eventForSharing}
+                  campaign="organizer_promotion"
+                  platforms={['facebook', 'twitter', 'linkedin', 'instagram', 'whatsapp', 'email']}
+                  size="lg"
+                  variant="default"
+                  showLabels={false}
+                />
+                <Separator orientation="vertical" className="h-12" />
+                <div className="text-sm text-text-secondary">
+                  Share directly to your favorite platforms with pre-filled content and tracking
+                </div>
+              </div>
+            </div>
+
+            {/* Campaign URLs */}
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-3">Campaign URLs</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-text-primary">Event Page</div>
+                      <div className="text-xs text-text-secondary truncate">
+                        {generateCampaignUrl('event_page')}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCopyUrl(generateCampaignUrl('event_page'), 'event_page')}
+                      className="dark:text-white dark:border-gray-600"
+                    >
+                      {copiedUrl === 'event_page' ? (
+                        <>✓ Copied</>
+                      ) : (
+                        <><Copy className="h-4 w-4 mr-1" /> Copy</>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-text-primary">Ticket Purchase</div>
+                      <div className="text-xs text-text-secondary truncate">
+                        {generateCampaignUrl('ticket_sales')}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCopyUrl(generateCampaignUrl('ticket_sales'), 'tickets')}
+                      className="dark:text-white dark:border-gray-600"
+                    >
+                      {copiedUrl === 'tickets' ? (
+                        <>✓ Copied</>
+                      ) : (
+                        <><Copy className="h-4 w-4 mr-1" /> Copy</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg">
+                    <div className="flex-1">
+                      <div className="font-medium text-text-primary">Short URL</div>
+                      <div className="text-xs text-text-secondary truncate">
+                        {createShortURL(generateCampaignUrl('short_link'), 'organizer_share')}
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleCopyUrl(createShortURL(generateCampaignUrl('short_link')), 'short')}
+                      className="dark:text-white dark:border-gray-600"
+                    >
+                      {copiedUrl === 'short' ? (
+                        <>✓ Copied</>
+                      ) : (
+                        <><Copy className="h-4 w-4 mr-1" /> Copy</>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full dark:text-white dark:border-gray-600"
+                    onClick={() => window.open(generateCampaignUrl('preview'), '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Preview Event Page
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Sharing Analytics */}
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-3 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Sharing Analytics
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="border border-gray-200 dark:border-gray-600">
+                  <CardContent className="p-4 text-center">
+                    <div className="text-3xl font-bold text-brand-primary">{sharingAnalytics.totalShares}</div>
+                    <div className="text-sm text-text-secondary">Total Shares</div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border border-gray-200 dark:border-gray-600">
+                  <CardContent className="p-4">
+                    <div className="text-sm font-medium text-text-primary mb-2">Platform Breakdown</div>
+                    <div className="space-y-1 text-xs">
+                      <div className="flex justify-between">
+                        <span>Facebook</span>
+                        <span className="font-medium">{sharingAnalytics.platforms.facebook}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>WhatsApp</span>
+                        <span className="font-medium">{sharingAnalytics.platforms.whatsapp}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Twitter</span>
+                        <span className="font-medium">{sharingAnalytics.platforms.twitter}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>LinkedIn</span>
+                        <span className="font-medium">{sharingAnalytics.platforms.linkedin}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <Card className="border border-gray-200 dark:border-gray-600">
+                  <CardContent className="p-4">
+                    <div className="text-sm font-medium text-text-primary mb-2">Recent Activity</div>
+                    <div className="space-y-1 text-xs">
+                      {sharingAnalytics.recentActivity.map((activity, index) => (
+                        <div key={index} className="flex justify-between">
+                          <span>{activity.platform}</span>
+                          <span className="text-text-secondary">{activity.shares} • {activity.time}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+
+            {/* Download Tools */}
+            <div>
+              <h3 className="text-lg font-semibold text-text-primary mb-3">Download Assets</h3>
+              <div className="flex gap-3">
+                <Button variant="outline" size="sm" className="dark:text-white dark:border-gray-600">
+                  <Download className="h-4 w-4 mr-2" />
+                  Event Card (PNG)
+                </Button>
+                <Button variant="outline" size="sm" className="dark:text-white dark:border-gray-600">
+                  <Download className="h-4 w-4 mr-2" />
+                  Social Story (JPG)
+                </Button>
+                <Button variant="outline" size="sm" className="dark:text-white dark:border-gray-600">
+                  <Download className="h-4 w-4 mr-2" />
+                  QR Code
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

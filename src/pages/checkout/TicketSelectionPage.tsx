@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Input } from "@/components/ui/input"; // For quantity
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Ticket, ShoppingCart, CalendarDays, MapPin, MinusCircle, PlusCircle, Percent, Tag, DollarSign } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
+import { Ticket, ShoppingCart, CalendarDays, MapPin, MinusCircle, PlusCircle, Percent, Tag, DollarSign, AlertTriangle } from 'lucide-react';
+import { useInventory } from '@/hooks/useInventory';
+import { HoldTimer, HoldTimerSummary } from '@/components/HoldTimer';
+import { TicketAvailabilityStatus, InventoryHold } from '@/types/inventory';
 
 // Mock event data including ticket types
 interface TicketType {
@@ -12,7 +16,7 @@ interface TicketType {
   name: string;
   price: number;
   description?: string;
-  availableQuantity?: number; // Optional: for showing limited tickets
+  availableQuantity?: number; // This will be overridden by real-time inventory
 }
 
 interface MockEventWithTickets {
@@ -29,9 +33,9 @@ const mockEventData: MockEventWithTickets = {
   date: 'Saturday, October 25, 2025',
   location: 'The Elegant Ballroom, Downtown',
   ticketTypes: [
-    { id: 'tt001', name: 'General Admission', price: 50, description: 'Access to main event area.', availableQuantity: 200 },
-    { id: 'tt002', name: 'VIP Ticket', price: 120, description: 'Includes priority entry, VIP lounge access, and a complimentary drink.', availableQuantity: 50 },
-    { id: 'tt003', name: 'Early Bird Special', price: 40, description: 'Limited time offer for general admission.', availableQuantity: 30 },
+    { id: 'tt001', name: 'General Admission', price: 50, description: 'Access to main event area.' },
+    { id: 'tt002', name: 'VIP Ticket', price: 120, description: 'Includes priority entry, VIP lounge access, and a complimentary drink.' },
+    { id: 'tt003', name: 'Early Bird Special', price: 40, description: 'Limited time offer for general admission.' },
     { id: 'tt004', name: 'Table Reservation (Party of 8)', price: 450, description: 'Reserve a dedicated table for your group.' },
   ],
 };
@@ -46,28 +50,105 @@ interface CartItem {
 const TicketSelectionPage = () => {
   const { eventId: routeEventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const eventId = routeEventId || mockEventData.id; // Use route param or default mock
-  const eventDetails = mockEventData; // In a real app, fetch based on eventId
+  const eventId = routeEventId || mockEventData.id;
+  const eventDetails = mockEventData;
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromoDetails, setAppliedPromoDetails] = useState<{ code: string; discountAmount: number; message: string } | null>(null);
 
-  const handleQuantityChange = (ticketTypeId: string, ticketTypeName: string, pricePerTicket: number, quantity: number) => {
-    const existingItemIndex = cart.findIndex(item => item.ticketTypeId === ticketTypeId);
-    const newQuantity = Math.max(0, quantity); // Ensure quantity is not negative
+  // Use the inventory hook for real-time inventory management
+  const {
+    inventoryStatus,
+    availabilityStatuses,
+    userHolds,
+    isLoading: inventoryLoading,
+    error: inventoryError,
+    checkAvailability,
+    createHold,
+    releaseHold,
+    releaseAllHolds,
+    getHoldForTicketType,
+    getTotalHeldQuantity,
+    refresh: refreshInventory
+  } = useInventory({ eventId });
 
-    if (newQuantity === 0) {
+  // Handle hold expiration
+  const handleHoldExpired = async (holdId: string) => {
+    console.log('Hold expired:', holdId);
+    const expiredHold = userHolds.find(hold => hold.id === holdId);
+    if (expiredHold) {
+      // Remove from cart
+      setCart(prev => prev.filter(item => item.ticketTypeId !== expiredHold.ticketTypeId));
+      // Refresh inventory
+      await refreshInventory();
+    }
+  };
+
+  const handleQuantityChange = async (ticketTypeId: string, ticketTypeName: string, pricePerTicket: number, newQuantity: number) => {
+    const currentQuantity = getTicketQuantityInCart(ticketTypeId);
+    const quantityDiff = newQuantity - currentQuantity;
+    
+    if (quantityDiff === 0) return;
+
+    try {
+      if (quantityDiff > 0) {
+        // Increasing quantity - create hold for additional tickets
+        const response = await createHold(ticketTypeId, quantityDiff, 'checkout');
+        
+        if (response.success) {
+          updateCartQuantity(ticketTypeId, ticketTypeName, pricePerTicket, newQuantity);
+        } else if (response.conflict) {
+          // Handle partial fulfillment
+          if (response.conflict.resolutionType === 'partial-fulfill') {
+            const partialQuantity = currentQuantity + response.conflict.resolvedQuantity;
+            if (confirm(`Only ${response.conflict.resolvedQuantity} tickets available. Accept ${partialQuantity} tickets total?`)) {
+              updateCartQuantity(ticketTypeId, ticketTypeName, pricePerTicket, partialQuantity);
+            }
+          } else {
+            alert(response.message);
+          }
+        } else {
+          alert(response.message || 'Unable to reserve tickets');
+        }
+      } else {
+        // Decreasing quantity - release some held tickets
+        const ticketsToRelease = Math.abs(quantityDiff);
+        const holdToAdjust = getHoldForTicketType(ticketTypeId);
+
+        if (holdToAdjust) {
+          if (holdToAdjust.quantity === ticketsToRelease) {
+            // Release entire hold
+            await releaseHold(holdToAdjust.id, 'User decreased quantity');
+          } else {
+            // For simplicity, release the hold and create a new smaller one
+            await releaseHold(holdToAdjust.id, 'User decreased quantity');
+            await createHold(ticketTypeId, holdToAdjust.quantity - ticketsToRelease, 'checkout');
+          }
+        }
+        
+        updateCartQuantity(ticketTypeId, ticketTypeName, pricePerTicket, newQuantity);
+      }
+    } catch (error) {
+      console.error('Error updating ticket quantity:', error);
+      alert('Error updating ticket selection. Please try again.');
+    }
+  };
+
+  const updateCartQuantity = (ticketTypeId: string, ticketTypeName: string, pricePerTicket: number, quantity: number) => {
+    const existingItemIndex = cart.findIndex(item => item.ticketTypeId === ticketTypeId);
+    
+    if (quantity === 0) {
       setCart(cart.filter(item => item.ticketTypeId !== ticketTypeId));
       return;
     }
 
     if (existingItemIndex > -1) {
       const updatedCart = [...cart];
-      updatedCart[existingItemIndex].quantity = newQuantity;
+      updatedCart[existingItemIndex].quantity = quantity;
       setCart(updatedCart);
     } else {
-      setCart([...cart, { ticketTypeId, ticketTypeName, quantity: newQuantity, pricePerTicket }]);
+      setCart([...cart, { ticketTypeId, ticketTypeName, quantity, pricePerTicket }]);
     }
   };
 
@@ -88,37 +169,110 @@ const TicketSelectionPage = () => {
   };
 
   const handleApplyPromoCode = () => {
-    // Mock promo code validation
     const currentSubtotal = calculateSubtotal();
     if (promoCode.toUpperCase() === "SAVE10") {
-        const discountValue = currentSubtotal * 0.10;
+      const discountValue = currentSubtotal * 0.10;
       setAppliedPromoDetails({ code: promoCode, discountAmount: discountValue, message: `10% discount applied: -$${discountValue.toFixed(2)}` });
     } else if (promoCode.toUpperCase() === "FLAT20" && currentSubtotal >= 20) {
       setAppliedPromoDetails({ code: promoCode, discountAmount: 20, message: `Flat $20 discount applied: -$20.00` });
     } else if (promoCode.toUpperCase() === "FLAT20" && currentSubtotal < 20) {
-      setAppliedPromoDetails(null); // Clear previous if any
+      setAppliedPromoDetails(null);
       alert("Subtotal must be at least $20 to apply FLAT20 code.");
-    }
-    else {
-      setAppliedPromoDetails(null); // Clear previous if any
+    } else {
+      setAppliedPromoDetails(null);
       alert("Invalid promo code.");
     }
   };
 
   const handleProceedToCheckout = () => {
     if (cart.length === 0) {
-        alert("Please select at least one ticket to proceed.");
-        return;
+      alert("Please select at least one ticket to proceed.");
+      return;
     }
-    // In a real app, you'd pass the cart data to the next step
-    // For now, just navigate to a placeholder checkout page (to be created)
-    console.log('Proceeding to checkout with cart:', cart, 'Promo:', appliedPromoDetails);
-    navigate(`/checkout/${eventId}/details`, { state: { cart, appliedPromoDetails, subtotal: calculateSubtotal(), total: calculateTotal() } }); // Pass cart and promo via route state
+    
+    navigate(`/checkout/${eventId}/details`, { 
+      state: { 
+        cart, 
+        appliedPromoDetails, 
+        subtotal: calculateSubtotal(), 
+        total: calculateTotal(),
+        sessionId: 'current-session', // Pass session ID to maintain holds through checkout
+        activeHolds: userHolds
+      } 
+    });
   };
+
+  // Get real-time availability for display
+  const getAvailabilityDisplay = (ticketTypeId: string) => {
+    const status = availabilityStatuses.get(ticketTypeId);
+    const cartQuantity = getTicketQuantityInCart(ticketTypeId);
+    
+    if (!status) return null;
+
+    return (
+      <div className="mt-1">
+        <Badge variant={
+          status.status === 'sold-out' ? 'destructive' :
+          status.status === 'critical-stock' ? 'destructive' :
+          status.status === 'low-stock' ? 'secondary' : 'default'
+        } className={`text-xs ${status.className}`}>
+          {status.message}
+        </Badge>
+      </div>
+    );
+  };
+
+  const isTicketUnavailable = (ticketTypeId: string) => {
+    const status = availabilityStatuses.get(ticketTypeId);
+    return status?.status === 'sold-out' || status?.availableQuantity === 0;
+  };
+
+  const getMaxQuantity = (ticketTypeId: string) => {
+    const status = availabilityStatuses.get(ticketTypeId);
+    return status?.availableQuantity || 0;
+  };
+
+  // Cleanup holds when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Release all holds when user leaves
+      releaseAllHolds();
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Also release holds when component unmounts
+      releaseAllHolds();
+    };
+  }, [releaseAllHolds]);
 
   return (
     <div className="min-h-screen bg-background-main py-8 px-4 md:px-8">
       <div className="max-w-4xl mx-auto">
+        {/* Inventory Error Display */}
+        {inventoryError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center text-red-800">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            {inventoryError}
+          </div>
+        )}
+
+        {/* Hold Timer Summary */}
+        {userHolds.length > 0 && (
+          <div className="mb-6">
+            <HoldTimerSummary
+              holds={userHolds.map(hold => ({
+                id: hold.id,
+                expiresAt: hold.expiresAt,
+                ticketTypeName: eventDetails.ticketTypes.find(t => t.id === hold.ticketTypeId)?.name
+              }))}
+              onHoldExpired={handleHoldExpired}
+            />
+          </div>
+        )}
+
         <Card className="bg-surface-card mb-6">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-text-primary">{eventDetails.name}</CardTitle>
@@ -136,31 +290,53 @@ const TicketSelectionPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {eventDetails.ticketTypes.map((ticketType) => (
-              <div key={ticketType.id} className="p-4 border border-border-default rounded-lg bg-background-main flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                <div className="flex-grow mb-3 sm:mb-0">
-                  <h4 className="font-semibold text-text-primary">{ticketType.name} (${ticketType.price.toFixed(2)})</h4>
-                  {ticketType.description && <p className="text-sm text-text-secondary mt-1">{ticketType.description}</p>}
-                  {ticketType.availableQuantity !== undefined && <p className="text-xs text-brand-primary mt-1">Only {ticketType.availableQuantity - getTicketQuantityInCart(ticketType.id)} left!</p>}
+            {eventDetails.ticketTypes.map((ticketType) => {
+              const isUnavailable = isTicketUnavailable(ticketType.id);
+              const maxQuantity = getMaxQuantity(ticketType.id);
+              const cartQuantity = getTicketQuantityInCart(ticketType.id);
+              
+              return (
+                <div key={ticketType.id} className={`p-4 border rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center ${
+                  isUnavailable ? 'border-red-200 bg-gray-50 opacity-75' : 'border-border-default bg-background-main'
+                }`}>
+                  <div className="flex-grow mb-3 sm:mb-0">
+                    <h4 className="font-semibold text-text-primary">{ticketType.name} (${ticketType.price.toFixed(2)})</h4>
+                    {ticketType.description && <p className="text-sm text-text-secondary mt-1">{ticketType.description}</p>}
+                    {getAvailabilityDisplay(ticketType.id)}
+                  </div>
+                  <div className="flex items-center space-x-2 flex-shrink-0">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => handleQuantityChange(ticketType.id, ticketType.name, ticketType.price, cartQuantity - 1)} 
+                      disabled={cartQuantity === 0}
+                    >
+                      <MinusCircle className="h-4 w-4" />
+                    </Button>
+                    <Input 
+                      type="number"
+                      value={cartQuantity}
+                      onChange={(e) => {
+                        const newValue = Math.max(0, Math.min(parseInt(e.target.value, 10) || 0, maxQuantity));
+                        handleQuantityChange(ticketType.id, ticketType.name, ticketType.price, newValue);
+                      }}
+                      className="w-16 text-center hide-arrows" 
+                      min="0"
+                      max={maxQuantity}
+                      disabled={isUnavailable}
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={() => handleQuantityChange(ticketType.id, ticketType.name, ticketType.price, cartQuantity + 1)} 
+                      disabled={isUnavailable || cartQuantity >= maxQuantity}
+                    >
+                      <PlusCircle className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 flex-shrink-0">
-                  <Button variant="outline" size="icon" onClick={() => handleQuantityChange(ticketType.id, ticketType.name, ticketType.price, getTicketQuantityInCart(ticketType.id) - 1)} disabled={getTicketQuantityInCart(ticketType.id) === 0}>
-                    <MinusCircle className="h-4 w-4" />
-                  </Button>
-                  <Input 
-                    type="number"
-                    value={getTicketQuantityInCart(ticketType.id)}
-                    onChange={(e) => handleQuantityChange(ticketType.id, ticketType.name, ticketType.price, parseInt(e.target.value, 10) || 0)}
-                    className="w-16 text-center hide-arrows" 
-                    min="0"
-                    max={ticketType.availableQuantity}
-                  />
-                  <Button variant="outline" size="icon" onClick={() => handleQuantityChange(ticketType.id, ticketType.name, ticketType.price, getTicketQuantityInCart(ticketType.id) + 1)} disabled={ticketType.availableQuantity !== undefined && getTicketQuantityInCart(ticketType.id) >= ticketType.availableQuantity}>
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
           <Separator className="my-4" />
           <CardFooter className="flex flex-col items-start p-6 space-y-4">
@@ -176,13 +352,13 @@ const TicketSelectionPage = () => {
                 value={promoCode}
                 onChange={(e) => setPromoCode(e.target.value)}
                 className="flex-grow"
-                disabled={!!appliedPromoDetails} // Disable if a code is already applied
+                disabled={!!appliedPromoDetails}
               />
               <Button 
                 onClick={handleApplyPromoCode} 
                 variant="outline" 
                 className="w-full sm:w-auto whitespace-nowrap"
-                disabled={!promoCode || !!appliedPromoDetails} // Disable if no code entered or one is applied
+                disabled={!promoCode || !!appliedPromoDetails}
               >
                 <Tag className="mr-2 h-4 w-4" /> Apply Code
               </Button>
@@ -205,7 +381,12 @@ const TicketSelectionPage = () => {
             </div>
 
             <div className="w-full flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
-              <Button onClick={handleProceedToCheckout} size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary flex-1" disabled={cart.length === 0}>
+              <Button 
+                onClick={handleProceedToCheckout} 
+                size="lg" 
+                className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary flex-1" 
+                disabled={cart.length === 0}
+              >
                 <ShoppingCart className="mr-2 h-5 w-5" /> Proceed to Checkout
               </Button>
               
@@ -232,7 +413,7 @@ const TicketSelectionPage = () => {
           margin: 0;
         }
         .hide-arrows[type=number] {
-          -moz-appearance: textfield; /* Firefox */
+          -moz-appearance: textfield;
         }
       `}</style>
     </div>

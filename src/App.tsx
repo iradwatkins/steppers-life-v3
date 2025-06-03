@@ -10,7 +10,6 @@ import Explore from "./pages/Explore";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
 import Community from "./pages/Community";
-import Instructors from "./pages/Instructors";
 import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import Login from "./pages/auth/Login";
@@ -25,6 +24,7 @@ import ManageEventPage from "./pages/organizer/ManageEventPage";
 import ClaimableEventsPage from "./pages/promoter/ClaimableEventsPage";
 import EventClaimsPage from "./pages/admin/EventClaimsPage";
 import AdminCreateEventPage from "./pages/admin/AdminCreateEventPage";
+import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
 import TicketSelectionPage from "./pages/checkout/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/checkout/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/checkout/CheckoutPaymentPage";
@@ -34,6 +34,7 @@ import EventRefundsPage from "./pages/organizer/EventRefundsPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
+import EventDetailsPage from "./pages/EventDetailsPage";
 
 const queryClient = new QueryClient();
 
@@ -55,7 +56,6 @@ const App = () => (
             <Route path="/events" element={<Events />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/community" element={<Community />} />
-            <Route path="/instructors" element={<Instructors />} />
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
@@ -126,16 +126,34 @@ const App = () => (
                 <AdminCreateEventPage />
               </ProtectedRoute>
             } />
-            {/* Public route for ticket selection */}
-            <Route path="/event/:eventId/tickets" element={<TicketSelectionPage />} />
-            {/* Public route for checkout details */}
-            <Route path="/checkout/:eventId/details" element={<CheckoutDetailsPage />} />
-            {/* Public route for mock payment */}
-            <Route path="/checkout/:eventId/payment" element={<CheckoutPaymentPage />} />
-            {/* Public route for mock order confirmation */}
-            <Route path="/checkout/:eventId/confirmation" element={<CheckoutConfirmationPage />} />
-            {/* Public route for cash payment setup */}
-            <Route path="/event/:eventId/cash-payment" element={<CashPaymentPage />} />
+            <Route path="/admin/inventory" element={
+              <ProtectedRoute>
+                <InventoryDashboardPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* ===== SEO-FRIENDLY SLUG-BASED EVENT ROUTES ===== */}
+            {/* New slug-based event details route */}
+            <Route path="/event/:eventSlug" element={<EventDetailsPage />} />
+            {/* New slug-based ticket selection route */}
+            <Route path="/event/:eventSlug/tickets" element={<TicketSelectionPage />} />
+            {/* New slug-based checkout routes */}
+            <Route path="/event/:eventSlug/checkout/details" element={<CheckoutDetailsPage />} />
+            <Route path="/event/:eventSlug/checkout/payment" element={<CheckoutPaymentPage />} />
+            <Route path="/event/:eventSlug/checkout/confirmation" element={<CheckoutConfirmationPage />} />
+            <Route path="/event/:eventSlug/cash-payment" element={<CashPaymentPage />} />
+            
+            {/* ===== LEGACY ID-BASED ROUTES (BACKWARD COMPATIBILITY) ===== */}
+            {/* Legacy event details - will redirect to slug-based URL */}
+            <Route path="/event/:eventId(\d+)" element={<EventDetailsPage />} />
+            {/* Legacy ticket selection */}
+            <Route path="/event/:eventId(\d+)/tickets" element={<TicketSelectionPage />} />
+            {/* Legacy checkout routes */}
+            <Route path="/checkout/:eventId(\d+)/details" element={<CheckoutDetailsPage />} />
+            <Route path="/checkout/:eventId(\d+)/payment" element={<CheckoutPaymentPage />} />
+            <Route path="/checkout/:eventId(\d+)/confirmation" element={<CheckoutConfirmationPage />} />
+            <Route path="/event/:eventId(\d+)/cash-payment" element={<CashPaymentPage />} />
+            
             {/* Protected route for ticket history */}
             <Route path="/tickets/history" element={
               <ProtectedRoute>

@@ -1,435 +1,354 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { MessageCircle, Heart, Share2, Users, TrendingUp, Plus, Search, Filter } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Store, MapPin, Phone, Globe, Star, Search, Filter, Plus, Clock, CheckCircle } from 'lucide-react';
 
 const Community = () => {
-  const [activeTab, setActiveTab] = useState('feed');
-  const [newPost, setNewPost] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLocation, setSelectedLocation] = useState('all');
 
-  const posts = [
+  const businesses = [
     {
       id: 1,
-      author: "Marcus Johnson",
-      authorImage: "/placeholder.svg",
-      badge: "Master Stepper",
-      time: "2 hours ago",
-      content: "Just finished an amazing workshop in Chicago! The energy was incredible and seeing everyone's progress was so rewarding. Remember, it's not about perfection - it's about the passion and connection to the music. Keep stepping! 💃🕺",
+      name: "Steppin' Threads Boutique",
+      category: "Clothing & Accessories",
+      description: "High-quality stepping shoes, apparel, and accessories for dancers of all levels.",
+      location: "Chicago, IL",
+      phone: "(312) 555-0123",
+      website: "www.steppinthreads.com",
+      rating: 4.8,
+      reviewCount: 67,
       image: "/placeholder.svg",
-      likes: 45,
-      comments: 12,
-      shares: 8,
-      liked: false
+      verified: true,
+      featured: true,
+      hours: "Mon-Sat 10AM-8PM",
+      specialties: ["Stepping Shoes", "Dance Apparel", "Accessories"]
     },
     {
       id: 2,
-      author: "Lisa Davis",
-      authorImage: "/placeholder.svg",
-      badge: "Verified Instructor",
-      time: "4 hours ago",
-      content: "Throwback to last week's competition! So proud of all my students who participated. Win or lose, you all showed incredible spirit and skill. The stepping community is truly special. 🏆",
-      likes: 32,
-      comments: 18,
-      shares: 5,
-      liked: true
+      name: "Smooth Moves Dance Studio",
+      category: "Studios & Venues",
+      description: "Premier dance studio offering private lessons, group classes, and event space rental.",
+      location: "Atlanta, GA",
+      phone: "(404) 555-0456",
+      website: "www.smoothmovesdance.com",
+      rating: 4.9,
+      reviewCount: 123,
+      image: "/placeholder.svg",
+      verified: true,
+      featured: false,
+      hours: "Mon-Sun 9AM-11PM",
+      specialties: ["Private Lessons", "Group Classes", "Event Space"]
     },
     {
       id: 3,
-      author: "Angela Smith",
-      authorImage: "/placeholder.svg",
-      badge: "Community Member",
-      time: "1 day ago",
-      content: "Looking for a stepping partner in Atlanta! I'm intermediate level and love social dancing. Would love to connect with someone who shares the passion. Drop me a message! 💌",
-      likes: 28,
-      comments: 15,
-      shares: 3,
-      liked: false
+      name: "DJ Marcus Events",
+      category: "Entertainment Services",
+      description: "Professional DJ services for stepping events, socials, and competitions.",
+      location: "Detroit, MI",
+      phone: "(313) 555-0789",
+      website: "www.djmarcusevents.com",
+      rating: 4.7,
+      reviewCount: 89,
+      image: "/placeholder.svg",
+      verified: true,
+      featured: false,
+      hours: "Available 24/7",
+      specialties: ["Event DJ", "Stepping Music", "Sound Equipment"]
     },
     {
       id: 4,
-      author: "DJ Smooth",
-      authorImage: "/placeholder.svg",
-      badge: "Event Organizer",
-      time: "2 days ago",
-      content: "Saturday's social was OFF THE HOOK! 🔥 Thank you to everyone who came out and showed love. Next event is already in the works - stay tuned for details!",
+      name: "Step Perfect Photography",
+      category: "Photography Services",
+      description: "Capturing the elegance and passion of stepping through professional photography.",
+      location: "Houston, TX",
+      phone: "(713) 555-0321",
+      website: "www.stepperfectphoto.com",
+      rating: 4.6,
+      reviewCount: 45,
       image: "/placeholder.svg",
-      likes: 67,
-      comments: 24,
-      shares: 12,
-      liked: true
+      verified: false,
+      featured: false,
+      hours: "By Appointment",
+      specialties: ["Event Photography", "Competition Photos", "Portrait Sessions"]
+    },
+    {
+      id: 5,
+      name: "Urban Groove Catering",
+      category: "Food & Catering",
+      description: "Soul food catering services for stepping events and celebrations.",
+      location: "Memphis, TN",
+      phone: "(901) 555-0654",
+      website: "www.urbangroovecatering.com",
+      rating: 4.5,
+      reviewCount: 78,
+      image: "/placeholder.svg",
+      verified: true,
+      featured: false,
+      hours: "Mon-Fri 8AM-6PM",
+      specialties: ["Event Catering", "Soul Food", "Party Platters"]
+    },
+    {
+      id: 6,
+      name: "Stepping Health & Wellness",
+      category: "Health & Fitness",
+      description: "Physical therapy and wellness services specifically for dancers.",
+      location: "Chicago, IL",
+      phone: "(312) 555-0987",
+      website: "www.steppingwellness.com",
+      rating: 4.9,
+      reviewCount: 156,
+      image: "/placeholder.svg",
+      verified: true,
+      featured: true,
+      hours: "Mon-Fri 7AM-7PM",
+      specialties: ["Physical Therapy", "Sports Medicine", "Injury Prevention"]
     }
   ];
 
-  const groups = [
-    {
-      id: 1,
-      name: "Chicago Steppers United",
-      members: 1245,
-      category: "Local Community",
-      image: "/placeholder.svg",
-      description: "The largest stepping community in Chicago"
-    },
-    {
-      id: 2,
-      name: "Beginner Steppers Support",
-      members: 892,
-      category: "Learning",
-      image: "/placeholder.svg",
-      description: "A supportive space for new steppers"
-    },
-    {
-      id: 3,
-      name: "Competition Prep Squad",
-      members: 456,
-      category: "Competition",
-      image: "/placeholder.svg",
-      description: "Training tips and competition announcements"
-    },
-    {
-      id: 4,
-      name: "Step Music Lovers",
-      members: 734,
-      category: "Music",
-      image: "/placeholder.svg",
-      description: "Share and discover stepping music"
-    }
+  const categories = [
+    "All",
+    "Clothing & Accessories",
+    "Studios & Venues", 
+    "Entertainment Services",
+    "Photography Services",
+    "Food & Catering",
+    "Health & Fitness",
+    "Music Services",
+    "Event Planning"
   ];
 
-  const trending = [
-    { tag: "#ChicagoStepping", posts: 234 },
-    { tag: "#StepWorkshop", posts: 189 },
-    { tag: "#SteppersUnite", posts: 156 },
-    { tag: "#CompetitionSeason", posts: 143 },
-    { tag: "#StepMusic", posts: 127 }
-  ];
+  const locations = ["All Locations", "Chicago, IL", "Atlanta, GA", "Detroit, MI", "Houston, TX", "Memphis, TN", "Dallas, TX"];
 
-  const handleLike = (postId: number) => {
-    console.log(`Liked post ${postId}`);
-  };
+  const filteredBusinesses = businesses.filter(business => {
+    const matchesSearch = business.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         business.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         business.specialties.some(spec => spec.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory = activeTab === 'all' || business.category === activeTab;
+    const matchesLocation = selectedLocation === 'all' || selectedLocation === 'All Locations' || business.location === selectedLocation;
+    return matchesSearch && matchesCategory && matchesLocation;
+  });
 
-  const handleComment = (postId: number) => {
-    console.log(`Comment on post ${postId}`);
-  };
-
-  const handleShare = (postId: number) => {
-    console.log(`Shared post ${postId}`);
-  };
+  const featuredBusinesses = businesses.filter(business => business.featured);
 
   return (
     <div className="min-h-screen bg-background-main py-8">
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-serif text-4xl font-bold text-text-primary mb-4">
-            Community
-          </h1>
-          <p className="text-text-secondary text-lg">
-            Connect, share, and grow with the stepping community
-          </p>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="font-serif text-4xl font-bold text-text-primary mb-4">
+                Business & Services Directory
+              </h1>
+              <p className="text-text-secondary text-lg">
+                Discover and connect with stepping community businesses and service providers
+              </p>
+            </div>
+            <Button className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
+              <Plus className="w-4 h-4 mr-2" />
+              List Your Business
+            </Button>
+          </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex space-x-1 mb-8 bg-surface-contrast rounded-lg p-1">
-          <button
-            onClick={() => setActiveTab('feed')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'feed'
-                ? 'bg-surface-card text-text-primary shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <MessageCircle className="w-4 h-4 inline mr-2" />
-            Feed
-          </button>
-          <button
-            onClick={() => setActiveTab('groups')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'groups'
-                ? 'bg-surface-card text-text-primary shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <Users className="w-4 h-4 inline mr-2" />
-            Groups
-          </button>
-          <button
-            onClick={() => setActiveTab('trending')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'trending'
-                ? 'bg-surface-card text-text-primary shadow-sm'
-                : 'text-text-secondary hover:text-text-primary'
-            }`}
-          >
-            <TrendingUp className="w-4 h-4 inline mr-2" />
-            Trending
-          </button>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {activeTab === 'feed' && (
-              <div className="space-y-6">
-                {/* Create Post */}
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex gap-4">
+        {/* Featured Businesses */}
+        {featuredBusinesses.length > 0 && (
+          <div className="mb-8">
+            <h2 className="font-serif text-2xl font-bold text-text-primary mb-6">Featured Businesses</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              {featuredBusinesses.map((business) => (
+                <Card key={business.id} className="overflow-hidden border-brand-primary/20">
+                  <CardContent className="p-0">
+                    <div className="relative">
                       <img
-                        src="/placeholder.svg"
-                        alt="Your Avatar"
-                        className="w-12 h-12 rounded-full object-cover"
+                        src={business.image}
+                        alt={business.name}
+                        className="w-full h-32 object-cover"
                       />
-                      <div className="flex-1">
-                        <Textarea
-                          placeholder="Share your stepping journey..."
-                          value={newPost}
-                          onChange={(e) => setNewPost(e.target.value)}
-                          className="mb-4"
-                        />
-                        <div className="flex justify-between items-center">
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
-                              📷 Photo
-                            </Button>
-                            <Button variant="outline" size="sm">
-                              🎵 Music
-                            </Button>
-                          </div>
-                          <Button className="bg-brand-primary hover:bg-brand-primary-hover">
-                            Post
-                          </Button>
+                      <Badge className="absolute top-3 left-3 bg-brand-primary text-text-on-primary">
+                        Featured
+                      </Badge>
+                      {business.verified && (
+                        <Badge className="absolute top-3 right-3 bg-green-500 text-white">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Verified
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-lg text-text-primary">{business.name}</h3>
+                          <Badge variant="secondary" className="text-xs">{business.category}</Badge>
+                        </div>
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                          <span className="text-sm font-medium">{business.rating}</span>
+                          <span className="text-xs text-text-secondary ml-1">({business.reviewCount})</span>
+                        </div>
+                      </div>
+                      <p className="text-text-secondary text-sm mb-4">{business.description}</p>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center text-text-secondary">
+                          <MapPin className="w-4 h-4 mr-2" />
+                          {business.location}
+                        </div>
+                        <div className="flex items-center text-text-secondary">
+                          <Clock className="w-4 h-4 mr-2" />
+                          {business.hours}
                         </div>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
-                {/* Posts */}
-                {posts.map((post) => (
-                  <Card key={post.id}>
-                    <CardContent className="p-6">
-                      <div className="flex items-start gap-4">
-                        <img
-                          src={post.authorImage}
-                          alt={post.author}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-text-primary">{post.author}</h3>
-                            <Badge variant="secondary" className="text-xs">
-                              {post.badge}
-                            </Badge>
-                            <span className="text-sm text-text-secondary">{post.time}</span>
-                          </div>
-                          
-                          <p className="text-text-primary mb-4">{post.content}</p>
-                          
-                          {post.image && (
-                            <img
-                              src={post.image}
-                              alt="Post content"
-                              className="w-full h-64 object-cover rounded-lg mb-4"
-                            />
+        {/* Search and Filters */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="grid md:grid-cols-3 gap-4 mb-6">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary w-4 h-4" />
+                <Input
+                  placeholder="Search businesses and services..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
+              <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All Locations" />
+                </SelectTrigger>
+                <SelectContent>
+                  {locations.map(location => (
+                    <SelectItem key={location} value={location === 'All Locations' ? 'all' : location}>
+                      {location}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Button variant="outline" className="w-full">
+                <Filter className="w-4 h-4 mr-2" />
+                More Filters
+              </Button>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setActiveTab(category === 'All' ? 'all' : category)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    (activeTab === 'all' && category === 'All') || activeTab === category
+                      ? 'bg-brand-primary text-text-on-primary'
+                      : 'bg-surface-contrast text-text-secondary hover:text-text-primary hover:bg-surface-card'
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Business Listings */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {filteredBusinesses.map((business) => (
+            <Card key={business.id} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex gap-4">
+                  <img
+                    src={business.image}
+                    alt={business.name}
+                    className="w-20 h-20 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-semibold text-lg text-text-primary">{business.name}</h3>
+                          {business.verified && (
+                            <CheckCircle className="w-4 h-4 text-green-500" />
                           )}
-                          
-                          <div className="flex items-center justify-between pt-4 border-t border-border-default">
-                            <div className="flex gap-6">
-                              <button
-                                onClick={() => handleLike(post.id)}
-                                className={`flex items-center gap-2 transition-colors ${
-                                  post.liked ? 'text-red-500' : 'text-text-secondary hover:text-text-primary'
-                                }`}
-                              >
-                                <Heart className={`w-5 h-5 ${post.liked ? 'fill-current' : ''}`} />
-                                <span>{post.likes}</span>
-                              </button>
-                              <button
-                                onClick={() => handleComment(post.id)}
-                                className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
-                              >
-                                <MessageCircle className="w-5 h-5" />
-                                <span>{post.comments}</span>
-                              </button>
-                              <button
-                                onClick={() => handleShare(post.id)}
-                                className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition-colors"
-                              >
-                                <Share2 className="w-5 h-5" />
-                                <span>{post.shares}</span>
-                              </button>
-                            </div>
-                          </div>
                         </div>
+                        <Badge variant="secondary" className="text-xs">{business.category}</Badge>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {activeTab === 'groups' && (
-              <div className="space-y-6">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-semibold text-text-primary">
-                    Community Groups
-                  </h2>
-                  <Button className="bg-brand-primary hover:bg-brand-primary-hover">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Group
-                  </Button>
-                </div>
-                
-                <div className="grid md:grid-cols-2 gap-6">
-                  {groups.map((group) => (
-                    <Card key={group.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex items-start gap-4">
-                          <img
-                            src={group.image}
-                            alt={group.name}
-                            className="w-16 h-16 rounded-lg object-cover"
-                          />
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-text-primary mb-1">
-                              {group.name}
-                            </h3>
-                            <Badge variant="outline" className="mb-2">
-                              {group.category}
-                            </Badge>
-                            <p className="text-text-secondary text-sm mb-3">
-                              {group.description}
-                            </p>
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-text-secondary">
-                                {group.members.toLocaleString()} members
-                              </span>
-                              <Button variant="outline" size="sm">
-                                Join Group
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'trending' && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-semibold text-text-primary">
-                  Trending Topics
-                </h2>
-                
-                <div className="space-y-4">
-                  {trending.map((trend, index) => (
-                    <Card key={trend.tag} className="hover:shadow-md transition-shadow cursor-pointer">
-                      <CardContent className="p-6">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center text-text-on-primary font-bold">
-                              {index + 1}
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-text-primary text-lg">
-                                {trend.tag}
-                              </h3>
-                              <p className="text-text-secondary">
-                                {trend.posts} posts
-                              </p>
-                            </div>
-                          </div>
-                          <TrendingUp className="w-6 h-6 text-brand-primary" />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Community Stats */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Community Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Total Members</span>
-                    <span className="font-semibold text-text-primary">5,847</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Active Groups</span>
-                    <span className="font-semibold text-text-primary">23</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Posts Today</span>
-                    <span className="font-semibold text-text-primary">142</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">Events This Week</span>
-                    <span className="font-semibold text-text-primary">8</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full justify-start" variant="outline">
-                  <Users className="w-4 h-4 mr-2" />
-                  Find Stepping Partners
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Join a Discussion
-                </Button>
-                <Button className="w-full justify-start" variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Event
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Active Members */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Active Members</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {['Marcus Johnson', 'Lisa Davis', 'Angela Smith', 'DJ Smooth'].map((member, index) => (
-                    <div key={member} className="flex items-center gap-3">
-                      <div className="relative">
-                        <img
-                          src="/placeholder.svg"
-                          alt={member}
-                          className="w-8 h-8 rounded-full object-cover"
-                        />
-                        <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-400 mr-1" />
+                        <span className="text-sm font-medium">{business.rating}</span>
+                        <span className="text-xs text-text-secondary ml-1">({business.reviewCount})</span>
                       </div>
-                      <span className="text-sm text-text-primary">{member}</span>
                     </div>
-                  ))}
+                    
+                    <p className="text-text-secondary text-sm mb-3 line-clamp-2">{business.description}</p>
+                    
+                    <div className="space-y-1 text-sm mb-4">
+                      <div className="flex items-center text-text-secondary">
+                        <MapPin className="w-3 h-3 mr-2" />
+                        {business.location}
+                      </div>
+                      <div className="flex items-center text-text-secondary">
+                        <Phone className="w-3 h-3 mr-2" />
+                        {business.phone}
+                      </div>
+                      {business.website && (
+                        <div className="flex items-center text-text-secondary">
+                          <Globe className="w-3 h-3 mr-2" />
+                          {business.website}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-1 mb-4">
+                      {business.specialties.slice(0, 3).map((specialty, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {specialty}
+                        </Badge>
+                      ))}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1">
+                        Contact
+                      </Button>
+                      <Button variant="outline" size="sm" className="flex-1">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-          </div>
+          ))}
         </div>
+
+        {filteredBusinesses.length === 0 && (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <Store className="w-12 h-12 text-text-secondary mx-auto mb-4" />
+              <h3 className="font-semibold text-lg text-text-primary mb-2">No businesses found</h3>
+              <p className="text-text-secondary mb-6">
+                No businesses match your current search criteria. Try adjusting your filters or search terms.
+              </p>
+              <Button className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
+                <Plus className="w-4 h-4 mr-2" />
+                Be the First to List Your Business
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
