@@ -1,5 +1,5 @@
 import React from 'react';
-import { Template, Copy, Eye, Globe, Lock, Users } from 'lucide-react';
+import { FileText, Copy, Eye, Globe, Lock, Users } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,7 +57,7 @@ const EventTemplateManager: React.FC<EventTemplateManagerProps> = ({
       <Card>
         <CardContent className="flex items-center justify-center py-12">
           <div className="text-center">
-            <Template className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No templates found</h3>
             <p className="text-muted-foreground mb-4">
               Create templates from successful events to speed up event creation

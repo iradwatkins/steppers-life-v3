@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { X, Plus, Calendar, Template, FolderPlus } from 'lucide-react';
+import { X, Plus, Calendar, FileText, FolderPlus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -249,7 +249,7 @@ const CreateCollectionDialog: React.FC<CreateCollectionDialogProps> = ({
           <DialogTitle className="flex items-center gap-2">
             {activeTab === 'collections' && <FolderPlus className="h-5 w-5" />}
             {activeTab === 'series' && <Calendar className="h-5 w-5" />}
-            {activeTab === 'templates' && <Template className="h-5 w-5" />}
+            {activeTab === 'templates' && <FileText className="h-5 w-5" />}
             {getTabTitle()}
           </DialogTitle>
           <DialogDescription>

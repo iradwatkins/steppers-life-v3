@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Mail, Template, Users, BarChart3, Plus, Send, Calendar, TrendingUp } from 'lucide-react';
+import { ArrowLeft, Mail, FileText, Users, BarChart3, Plus, Send, Calendar, TrendingUp } from 'lucide-react';
 import { useEmailCampaigns } from '../../hooks/useEmailCampaigns';
 import EmailCampaignList from '../../components/email/EmailCampaignList';
 import EmailTemplateManager from '../../components/email/EmailTemplateManager';
@@ -202,7 +202,7 @@ const EventEmailCampaignsPage = () => {
                   Campaigns
                 </TabsTrigger>
                 <TabsTrigger value="templates" className="flex items-center">
-                  <Template className="mr-2 h-4 w-4" />
+                  <FileText className="mr-2 h-4 w-4" />
                   Templates
                 </TabsTrigger>
                 <TabsTrigger value="segments" className="flex items-center">
