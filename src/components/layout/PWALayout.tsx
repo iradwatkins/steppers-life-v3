@@ -161,7 +161,7 @@ const PWALayout: React.FC = () => {
             {/* Status and User Menu */}
             <div className="flex items-center space-x-3">
               {/* PWA Install Button */}
-              <PWAInstallButton variant="ghost" size="sm" className="hidden sm:flex" />
+              <PWAInstallButton variant="ghost" size="sm" className="hidden sm:flex" showDebug={true} />
               
               {/* Connection Status */}
               <div className="hidden sm:flex items-center space-x-2">
@@ -295,7 +295,7 @@ const PWALayout: React.FC = () => {
               
               {/* Mobile PWA Install */}
               <div className="px-3 py-2">
-                <PWAInstallButton variant="outline" size="sm" className="w-full" />
+                <PWAInstallButton variant="outline" size="sm" className="w-full" showDebug={true} />
               </div>
               
               {/* Mobile Status */}

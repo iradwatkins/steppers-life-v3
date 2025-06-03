@@ -24,8 +24,15 @@ import {
   Wifi,
   UserCheck,
   List,
-  CreditCard
+  CreditCard,
+  CalendarDays,
+  Crown,
+  Settings,
+  WifiOff
 } from 'lucide-react';
+import { Event } from '@/types/event';
+import { mockEvents } from '@/data/mockData';
+import pwaAnalyticsService from '@/services/pwaAnalyticsService';
 
 interface EventSummary {
   id: string;
@@ -99,6 +106,26 @@ const PWADashboardPage: React.FC = () => {
       ]);
       setLoading(false);
     }, 1000);
+  }, []);
+
+  useEffect(() => {
+    loadEventData();
+    
+    // Track dashboard feature usage
+    pwaAnalyticsService.trackFeatureUsage('dashboard');
+    
+    // Check online status
+    const handleOnlineStatusChange = () => {
+      setIsOnline(navigator.onLine);
+    };
+
+    window.addEventListener('online', handleOnlineStatusChange);
+    window.addEventListener('offline', handleOnlineStatusChange);
+
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange);
+      window.removeEventListener('offline', handleOnlineStatusChange);
+    };
   }, []);
 
   // Quick actions based on user role

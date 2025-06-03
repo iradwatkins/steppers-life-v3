@@ -22,10 +22,14 @@ import {
   UserCheck,
   Crown,
   RefreshCw,
-  Zap
+  Zap,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import PWAQRScanner from '@/components/pwa/PWAQRScanner';
 import { pwaCheckinService, PWATicketData, PWACheckinResult, PWAEventStats } from '@/services/pwaCheckinService';
+import pwaAnalyticsService from '@/services/pwaAnalyticsService';
 
 const PWACheckinPage: React.FC = () => {
   const navigate = useNavigate();
@@ -118,6 +122,12 @@ const PWACheckinPage: React.FC = () => {
 
   // Manual check-in from search results
   const handleManualCheckin = async (ticket: PWATicketData) => {
+    console.log('Manual check-in for:', ticket);
+    setIsSearching(false);
+    
+    // Track manual check-in usage
+    pwaAnalyticsService.trackFeatureUsage('manual-checkin');
+    
     try {
       const result = await pwaCheckinService.performCheckin(
         ticket,
@@ -191,6 +201,41 @@ const PWACheckinPage: React.FC = () => {
       hour: '2-digit', 
       minute: '2-digit' 
     });
+  };
+
+  useEffect(() => {
+    loadEventStats();
+    loadRecentCheckins();
+    
+    // Track feature usage
+    pwaAnalyticsService.trackFeatureUsage('check-in');
+    
+    // Set up periodic refresh for stats
+    const interval = setInterval(() => {
+      if (isOnline) {
+        loadEventStats();
+      }
+    }, 30000); // Refresh every 30 seconds
+
+    return () => clearInterval(interval);
+  }, [isOnline]);
+
+  const handleQRSuccess = async (ticketId: string) => {
+    console.log('QR Code scanned:', ticketId);
+    setScanning(false);
+    
+    // Track QR scanner usage
+    pwaAnalyticsService.trackFeatureUsage('qr-scanner');
+    
+    // Process the check-in by converting ticketId to ticket object
+    const ticket: PWATicketData = {
+      ticketId,
+      attendeeName: 'QR Scanned',
+      ticketType: 'standard',
+      status: 'checked-out'
+    };
+    
+    await handleManualCheckin(ticket);
   };
 
   return (
@@ -318,7 +363,7 @@ const PWACheckinPage: React.FC = () => {
         <TabsContent value="scanner" className="space-y-4">
           <PWAQRScanner
             eventId={selectedEvent}
-            onCheckinSuccess={handleCheckinSuccess}
+            onCheckinSuccess={handleQRSuccess}
             onCheckinError={handleCheckinError}
           />
         </TabsContent>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,8 +6,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
-import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare } from 'lucide-react';
+import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare, Smartphone } from 'lucide-react';
 import GitHubSync from '@/components/GitHubSync';
+import PWAAnalyticsDashboard from '@/components/admin/PWAAnalyticsDashboard';
 import { Link } from 'react-router-dom';
 
 interface DashboardStats {
@@ -235,6 +235,15 @@ const Admin = () => {
                 </Card>
               </Link>
             </div>
+          </div>
+
+          {/* PWA Analytics Dashboard */}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Smartphone className="h-5 w-5 text-text-primary" />
+              <h2 className="text-xl font-semibold text-text-primary">Progressive Web App Analytics</h2>
+            </div>
+            <PWAAnalyticsDashboard className="bg-white rounded-lg" />
           </div>
 
           {/* Recent Activity */}

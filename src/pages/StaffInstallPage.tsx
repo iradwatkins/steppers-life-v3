@@ -14,20 +14,27 @@ import {
   WifiOff,
   Monitor,
   Apple,
-  Chrome
+  Chrome,
+  Bug,
+  RefreshCw
 } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import PWAInstallButton from '@/components/PWAInstallButton';
+import { toast } from '@/components/ui/sonner';
 
 const StaffInstallPage = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showDebug, setShowDebug] = useState(false);
+  const [installationAttempts, setInstallationAttempts] = useState(0);
   const { 
     isInstallable, 
     isInstalled, 
     isInstalling, 
     install, 
     getInstallInstructions,
-    deviceInfo 
+    deviceInfo,
+    debugInfo,
+    checkPWAReadiness
   } = usePWAInstall();
 
   useEffect(() => {
@@ -115,12 +122,53 @@ const StaffInstallPage = () => {
   }, []);
 
   const handlePlatformInstall = async () => {
+    setInstallationAttempts(prev => prev + 1);
+    console.log(`🚀 Install attempt #${installationAttempts + 1}`);
+    
     // Try auto-install first if available
     const success = await install();
     if (!success) {
+      console.log('❌ Auto-install failed, showing manual instructions');
       // Fall back to scrolling to instructions if auto-install not available
       document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleDebugToggle = () => {
+    setShowDebug(!showDebug);
+    if (!showDebug) {
+      // Show debug info when enabling
+      const readiness = checkPWAReadiness();
+      console.log('🔍 PWA Debug Info:', readiness);
+    }
+  };
+
+  const forceInstallPromptCheck = () => {
+    console.log('🔄 Forcing install prompt check...');
+    
+    // Simulate user engagement
+    sessionStorage.setItem('pwa-engagement', 'true');
+    sessionStorage.setItem('user-interacted', 'true');
+    
+    // Trigger custom events
+    window.dispatchEvent(new CustomEvent('beforeinstallprompt-check'));
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('click'));
+    
+    // Force service worker update
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+          console.log('🔄 Updating service worker...');
+          registration.update();
+        });
+      });
+    }
+    
+    toast.info('🔄 Forced PWA check', {
+      description: 'Triggered install prompt check and user engagement. Wait 10-30 seconds.',
+      duration: 5000,
+    });
   };
 
   const instructions = getInstallInstructions();
@@ -149,7 +197,7 @@ const StaffInstallPage = () => {
               </span>
               <Button 
                 onClick={install} 
-                className="ml-4 blink-blue-yellow text-white font-bold"
+                className="ml-4 blink-blue-yellow text-white font-bold relative"
                 disabled={isInstalling}
                 size="lg"
               >
@@ -161,12 +209,70 @@ const StaffInstallPage = () => {
                     🚀 INSTALL APP NOW
                   </>
                 )}
+                {/* Installation ready indicator */}
+                {!isInstalling && (
+                  <>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></div>
+                  </>
+                )}
               </Button>
             </AlertDescription>
           </Alert>
         ) : (
           // Platform-specific install buttons
           <div className="grid gap-4">
+            {/* Enhanced install button with debugging */}
+            <div className="space-y-2">
+              {/* Primary install button */}
+              <Button 
+                size="lg" 
+                onClick={handlePlatformInstall}
+                className="h-20 w-full blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
+                disabled={isInstalling}
+              >
+                <Smartphone className="h-8 w-8 mr-4" />
+                <div className="text-left flex-1">
+                  <div className="font-bold text-xl">
+                    {isInstalling ? '🔄 INSTALLING...' : '📱 INSTALL PWA APP'}
+                  </div>
+                  <div className="text-sm opacity-90 font-medium">
+                    {isInstallable ? 'Click for instant install!' : 'Tap to try installation or see instructions'}
+                  </div>
+                  <div className="text-xs opacity-75">
+                    Attempt #{installationAttempts + 1} • {deviceInfo.isChrome ? `Chrome ${deviceInfo.chromeVersion}` : 'Other Browser'}
+                  </div>
+                </div>
+                <div className="absolute top-2 right-2">
+                  <span className="text-2xl animate-bounce">
+                    {isInstallable ? '⚡' : isInstalling ? '🔄' : '⬇️'}
+                  </span>
+                </div>
+                {/* Status indicators */}
+                {debugInfo.promptReceived && (
+                  <div className="absolute bottom-1 right-1 bg-green-500 text-white text-xs px-1 rounded">
+                    Ready
+                  </div>
+                )}
+                {!debugInfo.promptReceived && deviceInfo.isChrome && (
+                  <div className="absolute bottom-1 right-1 bg-orange-500 text-white text-xs px-1 rounded">
+                    Waiting
+                  </div>
+                )}
+              </Button>
+              
+              {/* Force check button for debugging */}
+              {deviceInfo.isChrome && !isInstallable && (
+                <Button 
+                  variant="outline"
+                  onClick={forceInstallPromptCheck}
+                  className="w-full"
+                >
+                  🔄 Force Install Check (Debug)
+                </Button>
+              )}
+            </div>
+
             {/* Android Install Button */}
             {deviceInfo.isAndroid && (
               <Button 
@@ -189,6 +295,12 @@ const StaffInstallPage = () => {
                     {isInstallable ? '⚡' : '⬇️'}
                   </span>
                 </div>
+                {/* Installation status indicator */}
+                {!debugInfo.promptReceived && (
+                  <div className="absolute bottom-1 right-1 bg-orange-500 text-white text-xs px-1 rounded">
+                    Manual
+                  </div>
+                )}
               </Button>
             )}
 
@@ -305,11 +417,43 @@ const StaffInstallPage = () => {
             <span className="text-yellow-700">
               The app works offline and is much faster than using the website!
             </span>
+            <br />
+            <span className="text-xs text-yellow-600">
+              Attempts: {installationAttempts} • Installable: {isInstallable ? '✅' : '❌'} • Prompt: {debugInfo.promptReceived ? '✅' : '❌'}
+            </span>
           </AlertDescription>
         </Alert>
 
+        {/* Enhanced Debug Alert for Chrome */}
+        {deviceInfo.isChrome && (
+          <Alert className={`${debugInfo.promptReceived ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
+            <Chrome className="h-4 w-4" />
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>Chrome PWA Status:</strong> {' '}
+                  {debugInfo.promptReceived ? '✅ Install prompt ready!' : '⏳ Waiting for install prompt...'}
+                  <br />
+                  <span className="text-sm">
+                    {debugInfo.chromeInstallHints.slice(0, 2).join('. ')}
+                  </span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDebugToggle}
+                  className="ml-2"
+                >
+                  <Bug className="h-3 w-3 mr-1" />
+                  {showDebug ? 'Hide' : 'Debug'}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Browser Recommendation */}
-        {!deviceInfo.isChrome && !deviceInfo.isSafari && (
+        {!deviceInfo.isChrome && !deviceInfo.isSafari && !deviceInfo.isEdge && (
           <Alert className="bg-orange-50 border-orange-200">
             <Chrome className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
@@ -355,6 +499,51 @@ const StaffInstallPage = () => {
             )}
           </div>
         </div>
+
+        {/* Debug Info Panel */}
+        {showDebug && (
+          <Card className="border-orange-200 bg-orange-50">
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center">
+                <Bug className="h-4 w-4 mr-2" />
+                PWA Debug Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-xs">
+                <div>
+                  <h4 className="font-medium">Device Info:</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>Android: {deviceInfo.isAndroid ? '✅' : '❌'}</li>
+                    <li>iOS: {deviceInfo.isIOS ? '✅' : '❌'}</li>
+                    <li>Chrome: {deviceInfo.isChrome ? '✅' : '❌'}</li>
+                    <li>Safari: {deviceInfo.isSafari ? '✅' : '❌'}</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium">PWA Status:</h4>
+                  <ul className="space-y-1 text-gray-600">
+                    <li>Service Worker: {debugInfo.hasServiceWorker ? '✅' : '❌'}</li>
+                    <li>Manifest: {debugInfo.hasManifest ? '✅' : '❌'}</li>
+                    <li>HTTPS: {debugInfo.isHTTPS ? '✅' : '❌'}</li>
+                    <li>Install Prompt: {debugInfo.promptReceived ? '✅' : '❌'}</li>
+                    <li>Installable: {isInstallable ? '✅' : '❌'}</li>
+                    <li>Installed: {isInstalled ? '✅' : '❌'}</li>
+                  </ul>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => window.location.reload()}
+                className="mt-3"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Refresh Page
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Install Buttons Section */}
         {renderInstallButtons()}

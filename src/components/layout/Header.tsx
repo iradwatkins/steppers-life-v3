@@ -71,7 +71,7 @@ const Header = () => {
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
             {/* PWA Install Button */}
-            <PWAInstallButton variant="ghost" size="sm" />
+            <PWAInstallButton variant="ghost" size="sm" showDebug={true} />
             
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -168,7 +168,7 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center space-x-2">
-            <PWAInstallButton variant="ghost" size="icon" showText={false} />
+            <PWAInstallButton variant="ghost" size="icon" showText={false} showDebug={true} />
             <ThemeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}

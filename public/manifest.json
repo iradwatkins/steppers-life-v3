@@ -1,14 +1,14 @@
 {
   "name": "SteppersLife - Event Management PWA",
   "short_name": "SteppersLife",
-  "description": "Progressive Web App for SteppersLife event organizers and staff to manage on-site events efficiently with offline capability.",
+  "description": "Progressive Web App for SteppersLife event management with offline capability.",
   "theme_color": "#2563eb",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/pwa/",
-  "id": "/pwa/",
+  "start_url": "/",
+  "id": "/",
   "categories": ["productivity", "business", "utilities"],
   "lang": "en-US",
   "dir": "ltr",
@@ -88,13 +88,13 @@
       ]
     },
     {
-      "name": "Attendance Reports",
-      "short_name": "Reports",
-      "description": "View attendance and event reports",
-      "url": "/pwa/reports",
+      "name": "Staff Install Guide",
+      "short_name": "Install Guide",
+      "description": "Staff installation instructions",
+      "url": "/staff-install",
       "icons": [
         {
-          "src": "/icons/reports-icon-96x96.png",
+          "src": "/icons/icon-96x96.png",
           "sizes": "96x96"
         }
       ]
@@ -131,10 +131,5 @@
   "handle_links": "preferred",
   "launch_handler": {
     "client_mode": ["navigate-existing", "auto"]
-  },
-  "scope_extensions": [
-    {
-      "origin": "https://stepperslife.com"
-    }
-  ]
+  }
 } 
