@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,32 +7,25 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { usePWAAuth } from '@/hooks/usePWAAuth';
 import { toast } from '@/components/ui/sonner';
 import {
   QrCode,
-  Scan,
-  Camera,
-  CameraOff,
-  User,
-  CheckCircle,
-  XCircle,
   Search,
   Clock,
   Users,
   AlertCircle,
-  Flashlight,
-  FlashlightOff
+  CheckCircle,
+  BarChart3,
+  AlertTriangle,
+  UserCheck,
+  Crown,
+  RefreshCw,
+  Zap
 } from 'lucide-react';
-
-interface AttendeeRecord {
-  id: string;
-  name: string;
-  email: string;
-  ticketType: string;
-  checkedIn: boolean;
-  checkInTime?: string;
-}
+import PWAQRScanner from '@/components/pwa/PWAQRScanner';
+import { pwaCheckinService, PWATicketData, PWACheckinResult, PWAEventStats } from '@/services/pwaCheckinService';
 
 const PWACheckinPage: React.FC = () => {
   const navigate = useNavigate();
@@ -40,51 +33,13 @@ const PWACheckinPage: React.FC = () => {
   const { user, hasPermission, isOnline } = usePWAAuth();
   
   const [selectedEvent, setSelectedEvent] = useState(searchParams.get('event') || '1');
-  const [isScanning, setIsScanning] = useState(false);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [flashlightOn, setFlashlightOn] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [lastScanResult, setLastScanResult] = useState<string | null>(null);
-  
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  // Mock attendee data
-  const [attendees] = useState<AttendeeRecord[]>([
-    {
-      id: '1',
-      name: 'John Smith',
-      email: 'john.smith@email.com',
-      ticketType: 'General Admission',
-      checkedIn: false
-    },
-    {
-      id: '2',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      ticketType: 'VIP',
-      checkedIn: true,
-      checkInTime: '2024-12-19T18:30:00Z'
-    },
-    {
-      id: '3',
-      name: 'Mike Wilson',
-      email: 'mike.w@email.com',
-      ticketType: 'Student',
-      checkedIn: false
-    },
-    {
-      id: '4',
-      name: 'Emily Davis',
-      email: 'emily.davis@email.com',
-      ticketType: 'General Admission',
-      checkedIn: false
-    }
-  ]);
-
-  const [checkedInAttendees, setCheckedInAttendees] = useState<AttendeeRecord[]>(
-    attendees.filter(a => a.checkedIn)
-  );
+  const [searchResults, setSearchResults] = useState<PWATicketData[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [eventStats, setEventStats] = useState<PWAEventStats | null>(null);
+  const [recentCheckins, setRecentCheckins] = useState<PWACheckinResult[]>([]);
+  const [emergencyName, setEmergencyName] = useState('');
+  const [emergencyReason, setEmergencyReason] = useState('');
 
   // Check permissions
   useEffect(() => {
@@ -94,107 +49,144 @@ const PWACheckinPage: React.FC = () => {
     }
   }, [hasPermission, navigate]);
 
-  // Start camera for QR scanning
-  const startCamera = async () => {
+  // Initialize service and load stats
+  useEffect(() => {
+    const initializeService = async () => {
+      try {
+        await pwaCheckinService.initializeDB();
+        await loadEventStats();
+      } catch (error) {
+        console.error('Service initialization error:', error);
+      }
+    };
+
+    initializeService();
+  }, [selectedEvent]);
+
+  // Auto-sync when coming online
+  useEffect(() => {
+    if (isOnline) {
+      handleSync();
+    }
+  }, [isOnline]);
+
+  // Load event statistics
+  const loadEventStats = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' } // Use back camera
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setIsCameraActive(true);
-        setIsScanning(true);
+      const stats = await pwaCheckinService.getEventStats(selectedEvent);
+      setEventStats(stats);
+    } catch (error) {
+      console.error('Failed to load event stats:', error);
+    }
+  };
+
+  // Handle successful check-in
+  const handleCheckinSuccess = (result: PWACheckinResult) => {
+    setRecentCheckins(prev => [result, ...prev.slice(0, 19)]); // Keep last 20
+    loadEventStats(); // Refresh stats
+    
+    // Auto-clear after brief display
+    setTimeout(() => {
+      // Could clear the success message or do other cleanup
+    }, 3000);
+  };
+
+  // Handle check-in error
+  const handleCheckinError = (error: string) => {
+    // Error handling is already done in the scanner component
+    console.log('Check-in error:', error);
+  };
+
+  // Search attendees manually
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await pwaCheckinService.searchAttendees(searchQuery, selectedEvent);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Search error:', error);
+      toast.error('Search failed');
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Manual check-in from search results
+  const handleManualCheckin = async (ticket: PWATicketData) => {
+    try {
+      const result = await pwaCheckinService.performCheckin(
+        ticket,
+        user?.id || 'unknown',
+        isOnline
+      );
+
+      if (result.success) {
+        handleCheckinSuccess(result);
+        // Remove from search results
+        setSearchResults(prev => prev.filter(t => t.ticketId !== ticket.ticketId));
+      } else {
+        toast.error(result.message);
       }
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      toast.error('Unable to access camera. Please check permissions.');
+      console.error('Manual check-in error:', error);
+      toast.error('Manual check-in failed');
     }
   };
 
-  // Stop camera
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
+  // Emergency check-in
+  const handleEmergencyCheckin = async () => {
+    if (!emergencyName.trim() || !emergencyReason.trim()) {
+      toast.error('Please provide both name and reason for emergency entry');
+      return;
     }
-    setIsCameraActive(false);
-    setIsScanning(false);
-    setFlashlightOn(false);
-  };
 
-  // Toggle flashlight
-  const toggleFlashlight = async () => {
-    if (streamRef.current) {
-      const track = streamRef.current.getVideoTracks()[0];
-      const capabilities = track.getCapabilities();
-      
-      if (capabilities.torch) {
-        try {
-          await track.applyConstraints({
-            advanced: [{ torch: !flashlightOn }]
-          });
-          setFlashlightOn(!flashlightOn);
-        } catch (error) {
-          toast.error('Flashlight not available on this device');
-        }
+    try {
+      const result = await pwaCheckinService.emergencyCheckin(
+        emergencyName,
+        emergencyReason,
+        user?.id || 'unknown',
+        selectedEvent
+      );
+
+      if (result.success) {
+        handleCheckinSuccess(result);
+        setEmergencyName('');
+        setEmergencyReason('');
+        toast.success('Emergency check-in completed');
       } else {
-        toast.error('Flashlight not supported on this device');
+        toast.error(result.message);
       }
+    } catch (error) {
+      console.error('Emergency check-in error:', error);
+      toast.error('Emergency check-in failed');
     }
   };
 
-  // Simulate QR code scan
-  const simulateQRScan = (attendeeId: string) => {
-    setLastScanResult(attendeeId);
-    processCheckIn(attendeeId);
-  };
-
-  // Process check-in
-  const processCheckIn = (attendeeId: string) => {
-    const attendee = attendees.find(a => a.id === attendeeId);
-    
-    if (!attendee) {
-      toast.error('Invalid ticket. Attendee not found.');
-      return;
-    }
-
-    if (attendee.checkedIn) {
-      toast.warning(`${attendee.name} is already checked in.`);
-      return;
-    }
-
-    // Update attendee record
-    attendee.checkedIn = true;
-    attendee.checkInTime = new Date().toISOString();
-    
-    // Add to checked-in list
-    setCheckedInAttendees(prev => [...prev, attendee]);
-    
-    toast.success(`${attendee.name} checked in successfully!`, {
-      description: `Ticket: ${attendee.ticketType}`
-    });
-
-    // Store offline for sync later
+  // Sync offline check-ins
+  const handleSync = async () => {
     if (!isOnline) {
-      // In a real app, store in IndexedDB for later sync
-      console.log('Stored offline check-in for sync:', attendee);
+      toast.error('Cannot sync while offline');
+      return;
+    }
+
+    try {
+      await pwaCheckinService.syncOfflineCheckins();
+      await loadEventStats();
+    } catch (error) {
+      console.error('Sync error:', error);
+      toast.error('Sync failed');
     }
   };
 
-  // Manual check-in by search
-  const handleManualCheckIn = (attendee: AttendeeRecord) => {
-    processCheckIn(attendee.id);
-  };
+  // Get offline queue status
+  const offlineStatus = pwaCheckinService.getOfflineQueueStatus();
 
-  // Filter attendees for search
-  const filteredAttendees = attendees.filter(attendee =>
-    attendee.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    attendee.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const formatCheckInTime = (timeString: string) => {
+  const formatTime = (timeString: string) => {
     return new Date(timeString).toLocaleTimeString([], { 
       hour: '2-digit', 
       minute: '2-digit' 
@@ -208,26 +200,105 @@ const PWACheckinPage: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900">Event Check-in</h1>
         <div className="flex items-center space-x-2 text-sm text-gray-600">
           <Badge variant="outline">Event {selectedEvent}</Badge>
-          <span>•</span>
-          <span>{checkedInAttendees.length} checked in</span>
+          {eventStats && (
+            <>
+              <span>•</span>
+              <span>{eventStats.checkedInCount}/{eventStats.totalCapacity} checked in</span>
+              <span>•</span>
+              <span>{eventStats.arrivedInLastHour} in last hour</span>
+            </>
+          )}
         </div>
       </div>
 
-      {/* Offline Warning */}
+      {/* Offline Warning & Sync Status */}
       {!isOnline && (
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             You're offline. Check-ins will be saved and synced when connection is restored.
+            {offlineStatus.pending > 0 && (
+              <span className="block mt-1 font-medium">
+                {offlineStatus.pending} check-ins pending sync
+              </span>
+            )}
           </AlertDescription>
         </Alert>
       )}
 
+      {/* Sync Button */}
+      {isOnline && offlineStatus.pending > 0 && (
+        <Alert>
+          <RefreshCw className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{offlineStatus.pending} offline check-ins ready to sync</span>
+            <Button size="sm" onClick={handleSync}>
+              Sync Now
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Event Stats Dashboard */}
+      {eventStats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-blue-500" />
+                <div>
+                  <p className="text-2xl font-bold">{eventStats.checkedInCount}</p>
+                  <p className="text-xs text-gray-500">Checked In</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <BarChart3 className="w-4 h-4 text-green-500" />
+                <div>
+                  <p className="text-2xl font-bold">
+                    {Math.round((eventStats.checkedInCount / eventStats.totalCapacity) * 100)}%
+                  </p>
+                  <p className="text-xs text-gray-500">Capacity</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-amber-500" />
+                <div>
+                  <p className="text-2xl font-bold">{eventStats.arrivedInLastHour}</p>
+                  <p className="text-xs text-gray-500">Last Hour</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2">
+                <Crown className="w-4 h-4 text-purple-500" />
+                <div>
+                  <p className="text-2xl font-bold">{eventStats.vipCount}</p>
+                  <p className="text-xs text-gray-500">VIP</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Tabs defaultValue="scanner" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="scanner">
             <QrCode className="w-4 h-4 mr-2" />
-            QR Scanner
+            Scanner
           </TabsTrigger>
           <TabsTrigger value="manual">
             <Search className="w-4 h-4 mr-2" />
@@ -237,95 +308,19 @@ const PWACheckinPage: React.FC = () => {
             <Clock className="w-4 h-4 mr-2" />
             Recent
           </TabsTrigger>
+          <TabsTrigger value="emergency">
+            <AlertTriangle className="w-4 h-4 mr-2" />
+            Emergency
+          </TabsTrigger>
         </TabsList>
 
         {/* QR Scanner Tab */}
         <TabsContent value="scanner" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Scan className="w-5 h-5" />
-                <span>QR Code Scanner</span>
-              </CardTitle>
-              <CardDescription>
-                Point the camera at the attendee's QR code to check them in
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Camera View */}
-              <div className="relative bg-gray-900 rounded-lg overflow-hidden aspect-video">
-                {isCameraActive ? (
-                  <video
-                    ref={videoRef}
-                    autoPlay
-                    playsInline
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-white">
-                    <div className="text-center">
-                      <Camera className="w-12 h-12 mx-auto mb-2" />
-                      <p>Camera inactive</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Scanner Overlay */}
-                {isScanning && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-48 h-48 border-2 border-white rounded-lg opacity-50">
-                      <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-blue-500"></div>
-                      <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-blue-500"></div>
-                      <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-blue-500"></div>
-                      <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-blue-500"></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Camera Controls */}
-              <div className="flex justify-center space-x-3">
-                {!isCameraActive ? (
-                  <Button onClick={startCamera}>
-                    <Camera className="w-4 h-4 mr-2" />
-                    Start Camera
-                  </Button>
-                ) : (
-                  <>
-                    <Button variant="outline" onClick={stopCamera}>
-                      <CameraOff className="w-4 h-4 mr-2" />
-                      Stop Camera
-                    </Button>
-                    <Button variant="outline" onClick={toggleFlashlight}>
-                      {flashlightOn ? (
-                        <FlashlightOff className="w-4 h-4 mr-2" />
-                      ) : (
-                        <Flashlight className="w-4 h-4 mr-2" />
-                      )}
-                      Flash
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Demo Scan Buttons */}
-              <div className="border-t pt-4">
-                <p className="text-sm text-gray-600 mb-3">Demo: Simulate QR code scan</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {attendees.filter(a => !a.checkedIn).slice(0, 4).map((attendee) => (
-                    <Button
-                      key={attendee.id}
-                      variant="outline"
-                      size="sm"
-                      onClick={() => simulateQRScan(attendee.id)}
-                    >
-                      Scan {attendee.name}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <PWAQRScanner
+            eventId={selectedEvent}
+            onCheckinSuccess={handleCheckinSuccess}
+            onCheckinError={handleCheckinError}
+          />
         </TabsContent>
 
         {/* Manual Check-in Tab */}
@@ -333,71 +328,74 @@ const PWACheckinPage: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <User className="w-5 h-5" />
-                <span>Manual Check-in</span>
+                <Search className="w-5 h-5" />
+                <span>Manual Lookup</span>
               </CardTitle>
               <CardDescription>
-                Search for attendees by name or email to check them in manually
+                Search for attendees by name, email, phone number, or ticket ID
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Search */}
               <div className="space-y-2">
                 <Label htmlFor="search">Search Attendees</Label>
-                <Input
-                  id="search"
-                  type="text"
-                  placeholder="Enter name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="h-12"
-                />
+                <div className="flex space-x-2">
+                  <Input
+                    id="search"
+                    type="text"
+                    placeholder="Name, email, phone, or ticket ID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                    className="h-12"
+                  />
+                  <Button onClick={handleSearch} disabled={isSearching}>
+                    {isSearching ? (
+                      <Zap className="w-4 h-4 animate-pulse" />
+                    ) : (
+                      <Search className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
-              {/* Attendee List */}
+              {/* Search Results */}
               <div className="space-y-2 max-h-96 overflow-y-auto">
-                {filteredAttendees.map((attendee) => (
+                {searchResults.map((ticket) => (
                   <div
-                    key={attendee.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                    key={ticket.ticketId}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
                   >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <p className="font-medium">{attendee.name}</p>
-                        {attendee.checkedIn ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        ) : null}
+                        <UserCheck className="w-4 h-4 text-gray-500" />
+                        <p className="font-medium">{ticket.attendeeName}</p>
+                        {ticket.isVIP && <Crown className="w-4 h-4 text-amber-500" />}
                       </div>
-                      <p className="text-sm text-gray-600">{attendee.email}</p>
-                      <p className="text-xs text-gray-500">{attendee.ticketType}</p>
-                      {attendee.checkedIn && attendee.checkInTime && (
-                        <p className="text-xs text-green-600">
-                          Checked in at {formatCheckInTime(attendee.checkInTime)}
+                      <p className="text-sm text-gray-600">{ticket.attendeeEmail}</p>
+                      {ticket.attendeePhone && (
+                        <p className="text-sm text-gray-600">{ticket.attendeePhone}</p>
+                      )}
+                      <p className="text-xs text-gray-500">{ticket.ticketType}</p>
+                      {ticket.specialNotes && (
+                        <p className="text-xs text-amber-600 font-medium">
+                          Note: {ticket.specialNotes}
                         </p>
                       )}
                     </div>
                     
                     <Button
                       size="sm"
-                      disabled={attendee.checkedIn}
-                      onClick={() => handleManualCheckIn(attendee)}
-                      variant={attendee.checkedIn ? "outline" : "default"}
+                      onClick={() => handleManualCheckin(ticket)}
                     >
-                      {attendee.checkedIn ? (
-                        <>
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          Checked In
-                        </>
-                      ) : (
-                        'Check In'
-                      )}
+                      Check In
                     </Button>
                   </div>
                 ))}
                 
-                {filteredAttendees.length === 0 && searchQuery && (
+                {searchResults.length === 0 && searchQuery && !isSearching && (
                   <div className="text-center py-8 text-gray-500">
-                    <User className="w-8 h-8 mx-auto mb-2" />
+                    <Search className="w-8 h-8 mx-auto mb-2" />
                     <p>No attendees found for "{searchQuery}"</p>
                   </div>
                 )}
@@ -411,43 +409,49 @@ const PWACheckinPage: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Users className="w-5 h-5" />
+                <Clock className="w-5 h-5" />
                 <span>Recent Check-ins</span>
               </CardTitle>
               <CardDescription>
-                Recently checked-in attendees ({checkedInAttendees.length} total)
+                Recently processed check-ins ({recentCheckins.length} shown)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {checkedInAttendees.length > 0 ? (
+              {recentCheckins.length > 0 ? (
                 <div className="space-y-3">
-                  {checkedInAttendees
-                    .sort((a, b) => new Date(b.checkInTime || 0).getTime() - new Date(a.checkInTime || 0).getTime())
-                    .map((attendee) => (
-                      <div
-                        key={attendee.id}
-                        className="flex items-center justify-between p-3 border rounded-lg bg-green-50"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                          <div>
-                            <p className="font-medium">{attendee.name}</p>
-                            <p className="text-sm text-gray-600">{attendee.ticketType}</p>
+                  {recentCheckins.map((checkin, index) => (
+                    <div
+                      key={`${checkin.ticket?.ticketId}-${index}`}
+                      className="flex items-center justify-between p-3 border rounded-lg bg-green-50"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <p className="font-medium">{checkin.ticket?.attendeeName}</p>
+                            {checkin.ticket?.isVIP && <Crown className="w-4 h-4 text-amber-500" />}
                           </div>
+                          <p className="text-sm text-gray-600">{checkin.ticket?.ticketType}</p>
+                          {!isOnline && (
+                            <Badge variant="secondary" className="text-xs mt-1">
+                              Offline
+                            </Badge>
+                          )}
                         </div>
-                        
-                        {attendee.checkInTime && (
-                          <div className="text-right">
-                            <p className="text-sm font-medium">
-                              {formatCheckInTime(attendee.checkInTime)}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(attendee.checkInTime).toLocaleDateString()}
-                            </p>
-                          </div>
-                        )}
                       </div>
-                    ))}
+                      
+                      {checkin.timestamp && (
+                        <div className="text-right">
+                          <p className="text-sm font-medium">
+                            {formatTime(checkin.timestamp)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {new Date(checkin.timestamp).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-8 text-gray-500">
@@ -455,6 +459,58 @@ const PWACheckinPage: React.FC = () => {
                   <p>No recent check-ins</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Emergency Check-in Tab */}
+        <TabsContent value="emergency" className="space-y-4">
+          <Card className="border-red-200">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-red-700">
+                <AlertTriangle className="w-5 h-5" />
+                <span>Emergency Manual Override</span>
+              </CardTitle>
+              <CardDescription className="text-red-600">
+                Use only for technical issues or special circumstances. All emergency entries are logged.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="emergency-name">Attendee Name</Label>
+                <Input
+                  id="emergency-name"
+                  value={emergencyName}
+                  onChange={(e) => setEmergencyName(e.target.value)}
+                  placeholder="Enter attendee name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="emergency-reason">Reason for Emergency Entry</Label>
+                <Input
+                  id="emergency-reason"
+                  value={emergencyReason}
+                  onChange={(e) => setEmergencyReason(e.target.value)}
+                  placeholder="e.g., damaged QR code, technical issues"
+                />
+              </div>
+
+              <Button 
+                onClick={handleEmergencyCheckin}
+                disabled={!emergencyName.trim() || !emergencyReason.trim()}
+                className="w-full bg-red-600 hover:bg-red-700"
+              >
+                <AlertTriangle className="w-4 h-4 mr-2" />
+                Complete Emergency Check-in
+              </Button>
+
+              <Alert className="border-amber-200 bg-amber-50">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  Emergency entries require supervisor approval and are subject to audit.
+                </AlertDescription>
+              </Alert>
             </CardContent>
           </Card>
         </TabsContent>
