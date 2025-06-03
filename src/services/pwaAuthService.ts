@@ -128,6 +128,31 @@ class PWAAuthService {
     return user.events.includes(eventId) || user.role === 'organizer';
   }
 
+  // Check biometric availability
+  async isBiometricAvailable(): Promise<{ available: boolean; types: string[] }> {
+    try {
+      if (!('navigator' in window) || !('credentials' in navigator)) {
+        return { available: false, types: [] };
+      }
+
+      // Check for WebAuthn support
+      if ('PublicKeyCredential' in window) {
+        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+        if (available) {
+          return { 
+            available: true, 
+            types: ['fingerprint', 'face-id', 'touch-id'] 
+          };
+        }
+      }
+
+      return { available: false, types: [] };
+    } catch (error) {
+      console.error('Error checking biometric availability:', error);
+      return { available: false, types: [] };
+    }
+  }
+
   // Authenticate with biometric (if available)
   async authenticateWithBiometric(): Promise<BiometricAuthResult> {
     try {
@@ -286,12 +311,38 @@ class PWAAuthService {
       
       request.onsuccess = () => {
         const db = request.result;
-        const transaction = db.transaction(['auth'], 'readwrite');
-        const store = transaction.objectStore('auth');
         
-        store.put(data, key);
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
+        // Ensure the object store exists before creating transaction
+        if (!db.objectStoreNames.contains('auth')) {
+          // If object store doesn't exist, reject instead of creating invalid transaction
+          reject(new Error('Auth object store not found'));
+          return;
+        }
+        
+        try {
+          const transaction = db.transaction(['auth'], 'readwrite');
+          const store = transaction.objectStore('auth');
+          
+          const putRequest = store.put(data, key);
+          
+          transaction.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          
+          transaction.onerror = () => {
+            db.close();
+            reject(transaction.error);
+          };
+          
+          putRequest.onerror = () => {
+            db.close();
+            reject(putRequest.error);
+          };
+        } catch (error) {
+          db.close();
+          reject(error);
+        }
       };
     });
   }
@@ -302,14 +353,47 @@ class PWAAuthService {
       
       request.onerror = () => reject(request.error);
       
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('auth')) {
+          db.createObjectStore('auth');
+        }
+      };
+      
       request.onsuccess = () => {
         const db = request.result;
-        const transaction = db.transaction(['auth'], 'readonly');
-        const store = transaction.objectStore('auth');
         
-        const getRequest = store.get(key);
-        getRequest.onsuccess = () => resolve(getRequest.result);
-        getRequest.onerror = () => reject(getRequest.error);
+        // Ensure the object store exists before creating transaction
+        if (!db.objectStoreNames.contains('auth')) {
+          db.close();
+          resolve(null);
+          return;
+        }
+        
+        try {
+          const transaction = db.transaction(['auth'], 'readonly');
+          const store = transaction.objectStore('auth');
+          
+          const getRequest = store.get(key);
+          
+          getRequest.onsuccess = () => {
+            db.close();
+            resolve(getRequest.result || null);
+          };
+          
+          getRequest.onerror = () => {
+            db.close();
+            reject(getRequest.error);
+          };
+          
+          transaction.onerror = () => {
+            db.close();
+            reject(transaction.error);
+          };
+        } catch (error) {
+          db.close();
+          reject(error);
+        }
       };
     });
   }
@@ -320,14 +404,47 @@ class PWAAuthService {
       
       request.onerror = () => reject(request.error);
       
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result;
+        if (!db.objectStoreNames.contains('auth')) {
+          db.createObjectStore('auth');
+        }
+      };
+      
       request.onsuccess = () => {
         const db = request.result;
-        const transaction = db.transaction(['auth'], 'readwrite');
-        const store = transaction.objectStore('auth');
         
-        store.delete(key);
-        transaction.oncomplete = () => resolve();
-        transaction.onerror = () => reject(transaction.error);
+        // Ensure the object store exists before creating transaction
+        if (!db.objectStoreNames.contains('auth')) {
+          db.close();
+          resolve();
+          return;
+        }
+        
+        try {
+          const transaction = db.transaction(['auth'], 'readwrite');
+          const store = transaction.objectStore('auth');
+          
+          const deleteRequest = store.delete(key);
+          
+          transaction.oncomplete = () => {
+            db.close();
+            resolve();
+          };
+          
+          transaction.onerror = () => {
+            db.close();
+            reject(transaction.error);
+          };
+          
+          deleteRequest.onerror = () => {
+            db.close();
+            reject(deleteRequest.error);
+          };
+        } catch (error) {
+          db.close();
+          reject(error);
+        }
       };
     });
   }

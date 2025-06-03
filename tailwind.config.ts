@@ -17,6 +17,26 @@ export default {
 				'2xl': '1400px'
 			}
 		},
+		screens: {
+			'xs': '320px',
+			'sm': '640px',
+			'md': '768px',
+			'lg': '1024px',
+			'xl': '1280px',
+			'2xl': '1536px',
+			// Foldable device breakpoints
+			'fold-closed': '374px', // Samsung Galaxy Z Fold closed
+			'fold-open': '884px',   // Samsung Galaxy Z Fold open
+			'ultra-narrow': '360px', // Very small phones
+			'ultra-wide': '932px',   // Foldables in landscape
+			// Specific device breakpoints
+			'iphone-se': '375px',    // iPhone SE and similar
+			'iphone-std': '390px',   // iPhone 12/13/14/15 standard
+			'iphone-plus': '428px',  // iPhone Plus models
+			'iphone-pro-max': '430px', // iPhone Pro Max models
+			'samsung-std': '412px',  // Samsung Galaxy standard
+			'pixel-std': '393px',    // Google Pixel standard
+		},
 		extend: {
 			colors: {
 				border: 'hsl(var(--border))',

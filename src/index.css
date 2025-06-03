@@ -141,5 +141,113 @@
 
   body {
     @apply bg-background text-foreground;
+    /* Mobile optimizations */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Prevent horizontal scrolling on small screens */
+    overflow-x: hidden;
+  }
+
+  /* Touch-friendly mobile optimizations */
+  button, 
+  [role="button"], 
+  input[type="submit"], 
+  input[type="button"] {
+    /* Minimum touch target size for accessibility */
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Small screen optimizations */
+  @media (max-width: 374px) {
+    button, 
+    [role="button"] {
+      min-height: 40px;
+      font-size: 0.875rem;
+    }
+  }
+
+  /* Foldable device optimizations */
+  @media (min-width: 374px) and (max-width: 884px) {
+    /* Samsung Galaxy Z Fold closed to open range */
+    .container {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+
+  /* Ultra-wide foldable landscape mode */
+  @media (min-width: 884px) and (orientation: landscape) and (max-height: 600px) {
+    /* Optimize for foldable devices in landscape mode */
+    .hero-section {
+      padding-top: 2rem;
+      padding-bottom: 2rem;
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      line-height: 1.1;
+    }
+  }
+
+  /* Prevent zoom on inputs for iOS */
+  @media screen and (max-width: 767px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="tel"],
+    input[type="url"],
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Safe area for notched devices */
+  .app-layout {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Smooth scrolling for better mobile experience */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Better touch scrolling for iOS */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent text selection on buttons and interactive elements */
+  button,
+  [role="button"] {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Focus styles for keyboard navigation */
+  button:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid hsl(var(--brand-primary));
+    outline-offset: 2px;
+  }
+
+  /* Hide focus outline on touch devices */
+  @media (hover: none) and (pointer: coarse) {
+    button:focus,
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+    }
   }
 }

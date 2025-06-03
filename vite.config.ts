@@ -18,6 +18,11 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [
+          /^\/api\//,
+          /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot)$/
+        ],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.stepperslife\.com\/.*$/,
@@ -42,7 +47,25 @@ export default defineConfig(({ mode }) => ({
             }
           },
           {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'google-fonts-stylesheets'
+            }
+          },
+          {
+            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-webfonts',
+              expiration: {
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
+              }
+            }
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'images-cache',
@@ -50,6 +73,14 @@ export default defineConfig(({ mode }) => ({
                 maxEntries: 100,
                 maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
               }
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/pwa/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pwa-pages-cache',
+              networkTimeoutSeconds: 3
             }
           }
         ]
@@ -70,21 +101,46 @@ export default defineConfig(({ mode }) => ({
           {
             src: '/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'maskable any'
           },
           {
             src: '/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'maskable any'
+          }
+        ],
+        shortcuts: [
+          {
+            name: 'Dashboard',
+            short_name: 'Dashboard',
+            description: 'View event overview and quick actions',
+            url: '/pwa/dashboard',
+            icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Check-in',
+            short_name: 'Check-in',
+            description: 'Scan QR codes and check in attendees',
+            url: '/pwa/checkin',
+            icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
+          },
+          {
+            name: 'Attendance',
+            short_name: 'Attendance',
+            description: 'Monitor real-time attendance',
+            url: '/pwa/attendance',
+            icons: [{ src: '/icons/icon-192x192.png', sizes: '192x192' }]
           }
         ]
       },
       devOptions: {
         enabled: mode === 'development',
         type: 'module'
-      }
+      },
+      injectRegister: 'auto',
+      includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png']
     })
   ].filter(Boolean),
   resolve: {

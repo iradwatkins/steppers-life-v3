@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,23 +15,23 @@ const GlobalSearchForm = () => {
   };
 
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 max-w-4xl mx-auto">
-      <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-4">
+    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 xs:p-6 max-w-4xl mx-auto">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-col fold-open:flex-row lg:flex-row gap-3 xs:gap-4">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 xs:h-5 xs:w-5 text-text-secondary" />
           <Input
             type="text"
             placeholder="Search events, classes, instructors..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 h-12 bg-white border-border-default focus:border-brand-primary"
+            className="pl-9 xs:pl-10 h-10 xs:h-12 bg-white border-border-default focus:border-brand-primary text-sm xs:text-base"
           />
         </div>
         
-        <div className="relative min-w-48">
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary z-10 pointer-events-none" />
+        <div className="relative w-full fold-open:min-w-48 lg:min-w-48">
+          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 xs:h-5 xs:w-5 text-text-secondary z-10 pointer-events-none" />
           <Select value={location} onValueChange={setLocation}>
-            <SelectTrigger className="h-12 pl-10 bg-white border-border-default">
+            <SelectTrigger className="h-10 xs:h-12 pl-9 xs:pl-10 bg-white border-border-default text-sm xs:text-base">
               <SelectValue placeholder="Location" />
             </SelectTrigger>
             <SelectContent>
@@ -46,10 +45,10 @@ const GlobalSearchForm = () => {
           </Select>
         </div>
 
-        <div className="relative min-w-48">
-          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-secondary z-10 pointer-events-none" />
+        <div className="relative w-full fold-open:min-w-48 lg:min-w-48">
+          <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 xs:h-5 xs:w-5 text-text-secondary z-10 pointer-events-none" />
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger className="h-12 pl-10 bg-white border-border-default">
+            <SelectTrigger className="h-10 xs:h-12 pl-9 xs:pl-10 bg-white border-border-default text-sm xs:text-base">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -63,8 +62,8 @@ const GlobalSearchForm = () => {
           </Select>
         </div>
 
-        <Button type="submit" size="lg" className="h-12 px-8 bg-brand-primary hover:bg-brand-primary-hover text-white">
-          <Search className="mr-2 h-5 w-5" />
+        <Button type="submit" size="lg" className="h-10 xs:h-12 px-6 xs:px-8 bg-brand-primary hover:bg-brand-primary-hover text-white text-sm xs:text-base w-full fold-open:w-auto lg:w-auto">
+          <Search className="mr-2 h-4 w-4 xs:h-5 xs:w-5" />
           Search
         </Button>
       </form>
