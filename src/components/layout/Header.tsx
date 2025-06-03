@@ -11,27 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const { isAdmin } = useAdminCheck();
   const location = useLocation();
-
-  useEffect(() => {
-    if (user) {
-      checkAdminStatus();
-    }
-  }, [user]);
-
-  const checkAdminStatus = async () => {
-    if (!user) return;
-    
-    // For now, hardcode admin check for the specified email
-    // In a real app, this would check against the user_roles table
-    const adminEmails = ['iradwatkins@gmail.com'];
-    setIsAdmin(adminEmails.includes(user.email || ''));
-  };
 
   const handleSignOut = async () => {
     await signOut();
