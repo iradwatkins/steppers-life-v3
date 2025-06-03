@@ -55,7 +55,7 @@ const CheckoutPaymentPage = () => {
       if (eventId) {
         navigate(`/checkout/${eventId}/details`); // Go back to details if no order data
       } else {
-        navigate('/explore');
+        navigate('/events');
       }
     }
   }, [location.state, navigate, eventId]);

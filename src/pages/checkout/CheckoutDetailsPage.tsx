@@ -44,7 +44,7 @@ const CheckoutDetailsPage = () => {
         if (eventId) {
           navigate(`/event/${eventId}/tickets`);
         } else {
-          navigate('/explore');
+          navigate('/events');
         }
       }
     } else {
@@ -52,7 +52,7 @@ const CheckoutDetailsPage = () => {
       if (eventId) {
         navigate(`/event/${eventId}/tickets`);
       } else {
-        navigate('/explore');
+        navigate('/events');
       }
     }
   }, [location.state, navigate, eventId]);

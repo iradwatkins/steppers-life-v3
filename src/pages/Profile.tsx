@@ -229,7 +229,7 @@ const Profile = () => {
                     <h3 className="font-semibold text-text-primary mb-2">No Tickets Yet</h3>
                     <p className="text-text-secondary mb-6">You haven't purchased any tickets for upcoming events.</p>
                     <Button asChild className="bg-brand-primary hover:bg-brand-primary-hover">
-                      <Link to="/explore">Browse Events</Link>
+                      <Link to="/events">Browse Events</Link>
                     </Button>
                   </div>
                 ) : (

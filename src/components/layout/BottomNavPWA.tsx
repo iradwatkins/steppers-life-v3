@@ -1,14 +1,12 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Search, Calendar, Users, BookOpen, User } from 'lucide-react';
+import { Home, Calendar, Users, BookOpen, User } from 'lucide-react';
 
 const BottomNavPWA = () => {
   const location = useLocation();
 
   const navItems = [
     { icon: Home, label: 'Home', path: '/' },
-    { icon: Search, label: 'Explore', path: '/explore' },
     { icon: Calendar, label: 'Events', path: '/events' },
     { icon: BookOpen, label: 'Classes', path: '/classes' },
     { icon: Users, label: 'Community', path: '/community' },
@@ -17,7 +15,7 @@ const BottomNavPWA = () => {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface-card border-t border-border-default z-50">
-      <div className="grid grid-cols-6 h-16">
+      <div className="grid grid-cols-5 h-16">
         {navItems.map(({ icon: Icon, label, path }) => {
           const isActive = location.pathname === path;
           return (

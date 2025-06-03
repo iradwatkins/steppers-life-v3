@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -130,7 +129,7 @@ const Index = () => {
               </Link>
               <Link to="/events">
                 <Button size="lg" variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary/10">
-                  Explore Events
+                  Browse Events
                 </Button>
               </Link>
             </div>

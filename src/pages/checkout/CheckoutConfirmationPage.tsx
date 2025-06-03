@@ -70,8 +70,8 @@ const CheckoutConfirmationPage = () => {
       // Schedule notifications after successful purchase
       scheduleNotifications(state.orderDetails);
     } else {
-      console.warn('No confirmation data found. Redirecting to explore...');
-      navigate('/explore');
+      console.warn('No confirmation data found. Redirecting to events...');
+      navigate('/events');
     }
   }, [location.state, navigate]);
 
@@ -184,8 +184,8 @@ const CheckoutConfirmationPage = () => {
                     </Link>
                   </Button>
                   <Button asChild className="w-full bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary">
-                    <Link to="/explore">
-                      <Home className="mr-2 h-4 w-4" /> Explore More Events
+                    <Link to="/events">
+                      <Home className="mr-2 h-4 w-4" /> Browse More Events
                     </Link>
                   </Button>
                 </div>

@@ -6,7 +6,6 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
-import Explore from "./pages/Explore";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
 import Community from "./pages/Community";
@@ -55,7 +54,6 @@ const App = () => (
           {/* Protected routes with layout */}
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Index />} />
-            <Route path="/explore" element={<Explore />} />
             <Route path="/events" element={<Events />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/community" element={<Community />} />

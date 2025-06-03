@@ -241,7 +241,7 @@ const ManageEventPage = () => {
             </div>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" onClick={() => navigate('/explore')} className="mr-auto">
+            <Button variant="outline" onClick={() => navigate('/events')} className="mr-auto">
                 <Eye className="mr-2 h-4 w-4" /> View Public Page (Placeholder)
             </Button>
           </CardFooter>

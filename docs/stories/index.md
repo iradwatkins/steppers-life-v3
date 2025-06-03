@@ -1,4 +1,4 @@
-# User Stories Index - Epic A, Epic B & Epic C
+# User Stories Index - Epic A, Epic B, Epic C & Epic D
 
 ## Overview
 
@@ -93,7 +93,7 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **Status:** In Progress (Ready for Implementation)  
 **Summary:** Comprehensive check-in system with QR code scanner, real-time ticket verification, offline capability, self-check-in kiosks, live attendance dashboard, manual check-in, analytics with CSV export, waitlist management, and integration with notification system for welcome messages.
 
-## Epic C: Event Promotion & Marketing (for Organizers) - ✅ 3 Done, 🔄 1 In Progress
+## Epic C: Event Promotion & Marketing (for Organizers) - ✅ 4 Done, 🔄 0 In Progress
 
 ### ✅ C.001: Social Media Sharing Tools & Public Event URLs
 **File:** [C.001.story.md](./C.001.story.md)  
@@ -107,10 +107,15 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [C.003.story.md](./C.003.story.md)  
 **Summary:** Created comprehensive event collections/listings management system with EventCollectionsPage featuring tabbed interface for collections, series, templates, and analytics. Built complete eventCollectionsService with full CRUD operations, drag-and-drop functionality using react-beautiful-dnd, bulk operations, collection branding and customization, event series with template generation, analytics dashboards, and export functionality. Implemented collection sharing, search/filtering, multiple view modes, and integration with existing event management workflow.
 
-### 🔄 C.004: Event Sales QR Code Generation & Display
+### ✅ C.004: Event Sales QR Code Generation & Display
 **File:** [C.004.story.md](./C.004.story.md)  
-**Status:** In Progress (Ready for Implementation)  
-**Summary:** Comprehensive QR code generation and display tools for event sales pages with customizable design options, multiple formats for different use cases, tracking analytics, branded customization, batch generation, testing tools, social media integration, and complete marketing toolkit with templates and best practices.
+**Summary:** Created comprehensive QR code generation and display tools for event sales pages with customizable design options, multiple formats for different use cases, tracking analytics, branded customization, batch generation, testing tools, social media integration, and complete marketing toolkit with templates and best practices.
+
+## Epic D: On-Site Event Management (PWA) - 📋 1 Ready, 🔄 0 In Progress
+
+### 📋 D.001: PWA Setup & Secure Login for Organizers & Staff
+**File:** [D.001.story.md](./D.001.story.md)  
+**Summary:** Progressive web app infrastructure with secure login, role-based authentication for organizers and staff, offline capability, biometric support, and mobile-optimized interface for on-site event management.
 
 ## Story Template
 
@@ -119,19 +124,38 @@ All stories follow the BMAD method story template located at: `bmad-agent/templa
 ## Story Statistics
 
 - **Epic A Completed:** 7 stories (1 deferred)
-- **Epic B Completed:** 13 stories (1 in progress → B.014 now completed)
-- **Epic C Completed:** 3 stories (1 in progress → C.004 ready for implementation)
-- **Total Completed:** 23 stories
-- **Total Documented:** 24 stories
-- **Total Acceptance Criteria:** 240+ ACs across all stories
-- **Total Tasks/Subtasks:** 130+ major tasks with 450+ subtasks
-- **Coverage:** Complete Epic A event creation, comprehensive Epic B buyer experience with inventory/reviews/notifications/check-in, and substantial Epic C event promotion foundation
+- **Epic B Completed:** 14 stories (all completed)
+- **Epic C Completed:** 4 stories (all completed)
+- **Epic D Ready:** 1 story (PWA foundation)
+- **Total Completed:** 25 stories
+- **Total Documented:** 26 stories (1 deferred)
+- **Total Acceptance Criteria:** 292+ ACs across all stories
+- **Total Tasks/Subtasks:** 156+ major tasks with 530+ subtasks
+- **Coverage:** Complete Epic A event creation, comprehensive Epic B buyer experience with inventory/reviews/notifications/check-in, complete Epic C event promotion foundation, and Epic D PWA foundation ready for implementation
 
 ## Next Steps
 
-1. Implement C.004 Event Sales QR Code Generation & Display (In Progress - Current Task)
-2. Continue with remaining Epic C features (additional promotion and marketing tools)
-3. Begin Epic D (On-Site Event Management) or other priority epics per implementation plan
+🚀 **Epic D Development Starting!** 
+
+With Epics A, B, and C fully implemented, we're now beginning Epic D (On-Site Event Management PWA):
+
+**Current Epic D Status:**
+- ✅ D.001 Story Created: PWA Setup & Secure Login foundation ready for implementation
+- 🔄 Next Stories: D.002 (PWA Check-in), D.003 (Attendee List), D.004 (Live Stats), D.005 (On-site Payments), D.006 (Offline Sync)
+
+**Platform Status:**
+- Complete event creation and management workflows (Epic A)
+- Comprehensive buyer experience with ticketing, check-in, and engagement features (Epic B)
+- Full event promotion and marketing toolkit (Epic C)
+- PWA foundation and secure login ready for Epic D implementation
+
+**Recommended Implementation Order:**
+1. **Epic D (On-Site Event Management PWA)** - Start with D.001 PWA Setup & Secure Login
+2. Epic E (Organizer Reporting & Analytics) for advanced business intelligence
+3. Epic F (Team & Sales Agents) for collaborative event management
+4. Epic G (Enhanced Attendee Experience) for additional user engagement
+
+All foundational platform features are complete and Epic D provides the critical on-site management tools for event execution.
 
 ## Related Documentation
 
