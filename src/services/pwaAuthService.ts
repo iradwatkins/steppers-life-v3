@@ -248,6 +248,168 @@ class PWAAuthService {
     }
   }
 
+  // Upgrade user role (for event coordinators)
+  async upgradeUserRole(
+    targetUserId: string, 
+    targetEmail: string,
+    newRole: PWAUserRole, 
+    eventId: string,
+    coordinatorUserId: string
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      // Verify coordinator has permission to upgrade roles
+      const coordinatorAuth = await this.getCachedAuthData();
+      if (!coordinatorAuth || !this.hasUpgradePermission(coordinatorAuth.user.role)) {
+        return { 
+          success: false, 
+          error: 'Insufficient permissions to upgrade user roles' 
+        };
+      }
+
+      // In a real implementation, this would call your API
+      // For now, we'll simulate the upgrade process
+      const upgradeResult = await this.performRoleUpgrade(
+        targetUserId,
+        targetEmail,
+        newRole,
+        eventId,
+        coordinatorUserId
+      );
+
+      if (upgradeResult.success) {
+        return {
+          success: true,
+          message: `User ${targetEmail} successfully upgraded to ${newRole} for event ${eventId}`
+        };
+      }
+
+      return upgradeResult;
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Check if current user can upgrade roles
+  private hasUpgradePermission(role?: PWAUserRole): boolean {
+    return role === 'organizer' || role === 'sales_agent';
+  }
+
+  // Perform the actual role upgrade (mock implementation)
+  private async performRoleUpgrade(
+    targetUserId: string,
+    targetEmail: string,
+    newRole: PWAUserRole,
+    eventId: string,
+    coordinatorUserId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Mock API call - in real implementation this would:
+      // 1. Validate coordinator permissions
+      // 2. Update user role in database
+      // 3. Grant event access
+      // 4. Send notification to target user
+      // 5. Log the role change for audit
+
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Mock validation - check if target user exists
+      if (!targetEmail.includes('@')) {
+        return { success: false, error: 'Invalid email address' };
+      }
+
+      // Mock success response
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to upgrade user role' };
+    }
+  }
+
+  // Send role upgrade invitation
+  async sendRoleUpgradeInvitation(
+    email: string,
+    role: PWAUserRole,
+    eventId: string,
+    eventName: string,
+    coordinatorName: string
+  ): Promise<{
+    success: boolean;
+    message?: string;
+    error?: string;
+  }> {
+    try {
+      // Mock email invitation system
+      const invitationData = {
+        to: email,
+        role,
+        eventId,
+        eventName,
+        coordinatorName,
+        inviteUrl: `${window.location.origin}/staff-install?invite=${btoa(JSON.stringify({ email, role, eventId }))}`
+      };
+
+      // In real implementation, this would send an actual email
+      console.log('Role upgrade invitation:', invitationData);
+
+      return {
+        success: true,
+        message: `Invitation sent to ${email} to become ${role} for ${eventName}`
+      };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Process role upgrade invitation (when user clicks invite link)
+  async processRoleUpgradeInvitation(inviteToken: string): Promise<{
+    success: boolean;
+    invitation?: any;
+    error?: string;
+  }> {
+    try {
+      const inviteData = JSON.parse(atob(inviteToken));
+      
+      // Validate invitation data
+      if (!inviteData.email || !inviteData.role || !inviteData.eventId) {
+        return { success: false, error: 'Invalid invitation token' };
+      }
+
+      // In real implementation, verify invitation is still valid
+      // Check expiration, already used status, etc.
+
+      return {
+        success: true,
+        invitation: inviteData
+      };
+    } catch (error) {
+      return { success: false, error: 'Failed to process invitation' };
+    }
+  }
+
+  // Get available roles for upgrade
+  getAvailableUpgradeRoles(currentRole?: PWAUserRole): PWAUserRole[] {
+    switch (currentRole) {
+      case 'organizer':
+        return ['sales_agent', 'event_staff']; // Can assign any role
+      case 'sales_agent':
+        return ['event_staff']; // Can only assign staff roles
+      case 'event_staff':
+        return []; // Cannot assign roles
+      default:
+        return [];
+    }
+  }
+
+  // Check if user can be upgraded to specific role
+  canUpgradeToRole(currentRole?: PWAUserRole, targetRole?: PWAUserRole): boolean {
+    const availableRoles = this.getAvailableUpgradeRoles(currentRole);
+    return targetRole ? availableRoles.includes(targetRole) : false;
+  }
+
   // Validate session for sensitive operations
   async validateSessionForOperation(operation: string): Promise<boolean> {
     try {
