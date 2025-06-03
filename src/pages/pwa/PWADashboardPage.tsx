@@ -21,7 +21,10 @@ import {
   Plus,
   ArrowRight,
   Smartphone,
-  Wifi
+  Wifi,
+  UserCheck,
+  List,
+  CreditCard
 } from 'lucide-react';
 
 interface EventSummary {
@@ -110,22 +113,40 @@ const PWADashboardPage: React.FC = () => {
       permission: 'check_in'
     },
     {
+      id: 'payments',
+      label: 'Payment Processing',
+      description: 'Process on-site payments and transactions',
+      icon: CreditCard,
+      path: '/pwa/payments',
+      color: 'bg-emerald-500',
+      permission: 'process_payments'
+    },
+    {
+      id: 'statistics',
+      label: 'Live Statistics',
+      description: 'Monitor real-time event statistics',
+      icon: BarChart3,
+      path: '/pwa/statistics',
+      color: 'bg-green-500',
+      permission: 'view_reports'
+    },
+    {
+      id: 'attendees',
+      label: 'Attendee List',
+      description: 'View and manage event attendees',
+      icon: List,
+      path: '/pwa/attendees',
+      color: 'bg-indigo-500',
+      permission: 'view_attendance'
+    },
+    {
       id: 'attendance',
       label: 'View Attendance',
       description: 'Monitor real-time attendance data',
       icon: Users,
       path: '/pwa/attendance',
-      color: 'bg-green-500',
-      permission: 'view_attendance'
-    },
-    {
-      id: 'reports',
-      label: 'Reports',
-      description: 'Generate event and attendance reports',
-      icon: BarChart3,
-      path: '/pwa/reports',
       color: 'bg-purple-500',
-      permission: 'view_reports'
+      permission: 'view_attendance'
     },
     {
       id: 'manual-checkin',
@@ -229,11 +250,24 @@ const PWADashboardPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {visibleActions.map((action) => {
             const Icon = action.icon;
+            
+            const handleActionClick = () => {
+              if (action.id === 'payments') {
+                // For payments, we need to select an event first
+                // Navigate to the first active event, or show a selector
+                const activeEvent = events.find(e => e.status === 'active');
+                const eventId = activeEvent?.id || events[0]?.id || '1';
+                navigate(`/pwa/payments/${eventId}`);
+              } else {
+                navigate(action.path);
+              }
+            };
+            
             return (
               <Card 
                 key={action.id}
                 className="cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => navigate(action.path)}
+                onClick={handleActionClick}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start space-x-3">
@@ -332,11 +366,39 @@ const PWADashboardPage: React.FC = () => {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/pwa/attendance?event=${event.id}`);
+                          navigate(`/pwa/attendees/${event.id}`);
+                        }}
+                      >
+                        <List className="w-3 h-3 mr-1" />
+                        Attendees
+                      </Button>
+                    )}
+                    
+                    {hasPermission('view_reports') && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/pwa/statistics/${event.id}`);
                         }}
                       >
                         <BarChart3 className="w-3 h-3 mr-1" />
-                        View Stats
+                        Statistics
+                      </Button>
+                    )}
+                    
+                    {hasPermission('view_attendance') && (
+                      <Button 
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/pwa/attendance?event=${event.id}`);
+                        }}
+                      >
+                        <Users className="w-3 h-3 mr-1" />
+                        Attendance
                       </Button>
                     )}
                   </div>

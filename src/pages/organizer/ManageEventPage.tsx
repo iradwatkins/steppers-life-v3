@@ -143,6 +143,12 @@ const ManageEventPage = () => {
       path: `/organizer/event/${eventId}/email-campaigns`,
     },
     {
+      label: 'Performance Analytics',
+      icon: <BarChart3 className="h-5 w-5 text-brand-primary" />,
+      description: 'View comprehensive analytics and performance metrics for your event.',
+      path: `/organizer/event/${eventId}/performance`,
+    },
+    {
       label: 'Event Collections',
       icon: <FolderPlus className="h-5 w-5 text-brand-primary" />,
       description: 'Organize events into collections, create series, and manage templates.',

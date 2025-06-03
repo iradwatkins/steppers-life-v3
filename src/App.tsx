@@ -35,6 +35,7 @@ import EventPromoCodesPage from "./pages/organizer/EventPromoCodesPage";
 import EventRefundsPage from "./pages/organizer/EventRefundsPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
 import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
+import EventPerformancePage from "./pages/organizer/EventPerformancePage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
@@ -45,6 +46,9 @@ import PWADashboardPage from "./pages/pwa/PWADashboardPage";
 import PWACheckinPage from "./pages/pwa/PWACheckinPage";
 import PWAAttendancePage from "./pages/pwa/PWAAttendancePage";
 import PWASettingsPage from "./pages/pwa/PWASettingsPage";
+import PWAAttendeeListPage from "./pages/pwa/PWAAttendeeListPage";
+import PWAStatisticsPage from "./pages/pwa/PWAStatisticsPage";
+import PWAPaymentPage from "./components/pwa/PWAPaymentPage";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +71,9 @@ const App = () => (
             <Route path="dashboard" element={<PWADashboardPage />} />
             <Route path="checkin" element={<PWACheckinPage />} />
             <Route path="attendance" element={<PWAAttendancePage />} />
+            <Route path="attendees/:eventId" element={<PWAAttendeeListPage />} />
+            <Route path="statistics/:eventId" element={<PWAStatisticsPage />} />
+            <Route path="payments/:eventId" element={<PWAPaymentPage />} />
             <Route path="settings" element={<PWASettingsPage />} />
             {/* Redirect PWA root to dashboard */}
             <Route index element={<PWADashboardPage />} />
@@ -136,6 +143,11 @@ const App = () => (
             <Route path="/organizer/event/:eventId/email-campaigns" element={
               <ProtectedRoute>
                 <EventEmailCampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/performance" element={
+              <ProtectedRoute>
+                <EventPerformancePage />
               </ProtectedRoute>
             } />
             <Route path="/organizer/collections" element={

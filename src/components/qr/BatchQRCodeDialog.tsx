@@ -52,7 +52,7 @@ export const BatchQRCodeDialog: React.FC<BatchQRCodeDialogProps> = ({
   const { templates, batchCreateQRCodes, isGenerating } = useQRCodes(eventId);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState('manual');
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('default');
   const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
   const [csvData, setCsvData] = useState('');
   const [globalSettings, setGlobalSettings] = useState({
@@ -198,7 +198,7 @@ Business Card QR,https://example.com/event/123?utm_source=business_card,Business
     setProcessProgress(0);
     setResults({ success: 0, errors: 0 });
     
-    const template = templates.find(t => t.id === selectedTemplate);
+    const template = selectedTemplate === 'default' ? undefined : templates.find(t => t.id === selectedTemplate);
     let successCount = 0;
     let errorCount = 0;
     
@@ -520,7 +520,7 @@ Business Card QR,https://example.com/event/123?utm_source=business_card,Business
                           <SelectValue placeholder="Select template" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Default Settings</SelectItem>
+                          <SelectItem value="default">Default Settings</SelectItem>
                           {templates.map(template => (
                             <SelectItem key={template.id} value={template.id}>
                               {template.name}

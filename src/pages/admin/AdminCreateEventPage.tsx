@@ -24,11 +24,12 @@ const AdminCreateEventPage = () => {
   const [eventLocation, setEventLocation] = useState('');
   const [eventCategory, setEventCategory] = useState('');
   const [eventImage, setEventImage] = useState<File | null>(null);
-  const [assignedPromoterId, setAssignedPromoterId] = useState<string | null>(null);
+  const [assignedPromoterId, setAssignedPromoterId] = useState<string>('none');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newEventId = `admin-evt-${Date.now().toString().slice(-5)}`;
+    const finalAssignedPromoterId = assignedPromoterId === 'none' ? null : assignedPromoterId;
     console.log('Admin creating and assigning event:', {
       newEventId,
       eventName,
@@ -38,9 +39,9 @@ const AdminCreateEventPage = () => {
       eventLocation,
       eventCategory,
       eventImage,
-      assignedPromoterId,
+      assignedPromoterId: finalAssignedPromoterId,
     });
-    alert(`Event "${eventName}" created with ID ${newEventId} and assigned to promoter ID: ${assignedPromoterId || 'None'}. (Mock action)`);
+    alert(`Event "${eventName}" created with ID ${newEventId} and assigned to promoter ID: ${finalAssignedPromoterId || 'None'}. (Mock action)`);
     // navigate(`/admin/events`); // Or to a page listing admin-created events
   };
 
@@ -106,10 +107,10 @@ const AdminCreateEventPage = () => {
               <h3 className="text-lg font-semibold text-text-primary border-b pb-2 my-6 flex items-center"><UserCheck className="mr-2 h-5 w-5 text-text-secondary"/>Assign to Promoter (Optional)</h3>
               <div>
                 <Label htmlFor="assignedPromoterId" className="text-text-primary font-medium">Select Promoter</Label>
-                <Select onValueChange={setAssignedPromoterId} value={assignedPromoterId || ''}>
+                <Select onValueChange={setAssignedPromoterId} value={assignedPromoterId}>
                   <SelectTrigger className="w-full mt-1"><SelectValue placeholder="Select a promoter to assign this event to" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None (Event remains claimable or unassigned)</SelectItem>
+                    <SelectItem value="none">None (Event remains claimable or unassigned)</SelectItem>
                     {mockPromoters.map(promoter => (
                       <SelectItem key={promoter.id} value={promoter.id}>{promoter.name}</SelectItem>
                     ))}
