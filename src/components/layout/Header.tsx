@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -83,6 +84,9 @@ const Header = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+            
             {user ? (
               <>
                 {/* Post Content Dropdown */}
@@ -171,12 +175,15 @@ const Header = () => {
           </div>
 
           {/* Mobile menu button */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="md:hidden p-2 rounded-md text-header-text hover:bg-gray-100"
-          >
-            {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-          </button>
+          <div className="md:hidden flex items-center space-x-2">
+            <ThemeToggle />
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-md text-header-text hover:bg-gray-100 dark:hover:bg-gray-800"
+            >
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}

@@ -49,6 +49,28 @@
     --sidebar-border: 220 13% 91%;
 
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* SteppersLife Brand Colors - Light Mode */
+    --brand-primary: 194 91% 47%; /* #13BAD8 */
+    --brand-primary-hover: 219 84% 16%; /* #061A40 */
+    --background-main: 0 0% 98%; /* #FAFAFA */
+    --surface-contrast: 240 4% 94%; /* #F0F0F5 */
+    --surface-card: 0 0% 100%; /* #FFFFFF */
+    --text-primary: 0 0% 10%; /* #1A1A1A */
+    --text-secondary: 219 11% 43%; /* #5F6B7A */
+    --text-on-primary: 0 0% 100%; /* #FFFFFF */
+    --text-on-dark: 0 0% 98%; /* #FAFAFA */
+    --border-default: 218 19% 90%; /* #DDE1E6 */
+    --border-input: 218 19% 90%; /* #DDE1E6 */
+    --border-input-focus: 194 91% 47%; /* #13BAD8 */
+    --feedback-success: 145 63% 42%; /* #2ECC71 */
+    --feedback-warning: 35 84% 62%; /* #F39C12 */
+    --feedback-error: 6 78% 57%; /* #E74C3C */
+    --header-bg: 0 0% 100%; /* #FFFFFF */
+    --header-text: 0 0% 10%; /* #1A1A1A */
+    --header-link-active: 194 91% 47%; /* #13BAD8 */
+    --footer-bg: 219 84% 16%; /* #061A40 */
+    --footer-text: 0 0% 98%; /* #FAFAFA */
   }
 
   .dark {
@@ -87,6 +109,28 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* SteppersLife Brand Colors - Dark Mode */
+    --brand-primary: 194 91% 55%; /* Slightly brighter for dark mode */
+    --brand-primary-hover: 194 91% 47%; /* Original brand color */
+    --background-main: 0 0% 7%; /* Dark background */
+    --surface-contrast: 0 0% 10%; /* Dark surface */
+    --surface-card: 0 0% 9%; /* Dark card */
+    --text-primary: 0 0% 95%; /* Light text */
+    --text-secondary: 218 11% 65%; /* Lighter secondary text */
+    --text-on-primary: 0 0% 100%; /* White text on primary */
+    --text-on-dark: 0 0% 95%; /* Light text on dark */
+    --border-default: 217 32% 17%; /* Dark border */
+    --border-input: 217 32% 17%; /* Dark input border */
+    --border-input-focus: 194 91% 55%; /* Bright focus border */
+    --feedback-success: 145 63% 49%; /* Brighter success */
+    --feedback-warning: 35 84% 65%; /* Brighter warning */
+    --feedback-error: 6 78% 60%; /* Brighter error */
+    --header-bg: 0 0% 9%; /* Dark header */
+    --header-text: 0 0% 95%; /* Light header text */
+    --header-link-active: 194 91% 55%; /* Bright active link */
+    --footer-bg: 0 0% 7%; /* Dark footer */
+    --footer-text: 0 0% 95%; /* Light footer text */
   }
 }
 

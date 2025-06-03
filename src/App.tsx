@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import AppLayout from "./components/layout/AppLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -38,114 +39,116 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Toaster />
-    <Sonner />
-    <BrowserRouter>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/auth/login" element={<Login />} />
-        <Route path="/auth/register" element={<Register />} />
-        
-        {/* Protected routes with layout */}
-        <Route path="/" element={<AppLayout />}>
-          <Route index element={<Index />} />
-          <Route path="/explore" element={<Explore />} />
-          <Route path="/events" element={<Events />} />
-          <Route path="/classes" element={<Classes />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/instructors" element={<Instructors />} />
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <Profile />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin" element={
-            <ProtectedRoute>
-              <Admin />
-            </ProtectedRoute>
-          } />
-          <Route path="/docs" element={
-            <ProtectedRoute>
-              <Docs />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/events/create" element={
-            <ProtectedRoute>
-              <CreateEventPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/ticketing" element={
-            <ProtectedRoute>
-              <EventTicketingPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/seating" element={
-            <ProtectedRoute>
-              <EventSeatingPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/custom-questions" element={
-            <ProtectedRoute>
-              <EventCustomQuestionsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/manage" element={
-            <ProtectedRoute>
-              <ManageEventPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/promo-codes" element={
-            <ProtectedRoute>
-              <EventPromoCodesPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/refunds" element={
-            <ProtectedRoute>
-              <EventRefundsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/organizer/event/:eventId/cash-payments" element={
-            <ProtectedRoute>
-              <EventCashPaymentPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/promoter/events/claim" element={
-            <ProtectedRoute>
-              <ClaimableEventsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/event-claims" element={
-            <ProtectedRoute>
-              <EventClaimsPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/events/create-assign" element={
-            <ProtectedRoute>
-              <AdminCreateEventPage />
-            </ProtectedRoute>
-          } />
-          {/* Public route for ticket selection */}
-          <Route path="/event/:eventId/tickets" element={<TicketSelectionPage />} />
-          {/* Public route for checkout details */}
-          <Route path="/checkout/:eventId/details" element={<CheckoutDetailsPage />} />
-          {/* Public route for mock payment */}
-          <Route path="/checkout/:eventId/payment" element={<CheckoutPaymentPage />} />
-          {/* Public route for mock order confirmation */}
-          <Route path="/checkout/:eventId/confirmation" element={<CheckoutConfirmationPage />} />
-          {/* Public route for cash payment setup */}
-          <Route path="/event/:eventId/cash-payment" element={<CashPaymentPage />} />
-          {/* Protected route for ticket history */}
-          <Route path="/tickets/history" element={
-            <ProtectedRoute>
-              <TicketHistoryPage />
-            </ProtectedRoute>
-          } />
-        </Route>
-        
-        {/* Catch-all route */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/register" element={<Register />} />
+          
+          {/* Protected routes with layout */}
+          <Route path="/" element={<AppLayout />}>
+            <Route index element={<Index />} />
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/events" element={<Events />} />
+            <Route path="/classes" element={<Classes />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/instructors" element={<Instructors />} />
+            <Route path="/profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin" element={
+              <ProtectedRoute>
+                <Admin />
+              </ProtectedRoute>
+            } />
+            <Route path="/docs" element={
+              <ProtectedRoute>
+                <Docs />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/events/create" element={
+              <ProtectedRoute>
+                <CreateEventPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/ticketing" element={
+              <ProtectedRoute>
+                <EventTicketingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/seating" element={
+              <ProtectedRoute>
+                <EventSeatingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/custom-questions" element={
+              <ProtectedRoute>
+                <EventCustomQuestionsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/manage" element={
+              <ProtectedRoute>
+                <ManageEventPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/promo-codes" element={
+              <ProtectedRoute>
+                <EventPromoCodesPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/refunds" element={
+              <ProtectedRoute>
+                <EventRefundsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/cash-payments" element={
+              <ProtectedRoute>
+                <EventCashPaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/promoter/events/claim" element={
+              <ProtectedRoute>
+                <ClaimableEventsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/event-claims" element={
+              <ProtectedRoute>
+                <EventClaimsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/events/create-assign" element={
+              <ProtectedRoute>
+                <AdminCreateEventPage />
+              </ProtectedRoute>
+            } />
+            {/* Public route for ticket selection */}
+            <Route path="/event/:eventId/tickets" element={<TicketSelectionPage />} />
+            {/* Public route for checkout details */}
+            <Route path="/checkout/:eventId/details" element={<CheckoutDetailsPage />} />
+            {/* Public route for mock payment */}
+            <Route path="/checkout/:eventId/payment" element={<CheckoutPaymentPage />} />
+            {/* Public route for mock order confirmation */}
+            <Route path="/checkout/:eventId/confirmation" element={<CheckoutConfirmationPage />} />
+            {/* Public route for cash payment setup */}
+            <Route path="/event/:eventId/cash-payment" element={<CashPaymentPage />} />
+            {/* Protected route for ticket history */}
+            <Route path="/tickets/history" element={
+              <ProtectedRoute>
+                <TicketHistoryPage />
+              </ProtectedRoute>
+            } />
+          </Route>
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
