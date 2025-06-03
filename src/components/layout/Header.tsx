@@ -5,6 +5,7 @@ import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Use
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
+import PWAInstallButton from '@/components/PWAInstallButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +70,9 @@ const Header = () => {
 
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* PWA Install Button */}
+            <PWAInstallButton variant="ghost" size="sm" />
+            
             {/* Theme Toggle */}
             <ThemeToggle />
             
@@ -164,6 +168,7 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center space-x-2">
+            <PWAInstallButton variant="ghost" size="icon" showText={false} />
             <ThemeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -192,6 +197,11 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
+              
+              {/* Mobile PWA Install */}
+              <div className="px-3 py-2">
+                <PWAInstallButton variant="outline" size="sm" className="w-full" />
+              </div>
               
               {user ? (
                 <>

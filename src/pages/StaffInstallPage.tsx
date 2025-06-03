@@ -16,18 +16,19 @@ import {
   Apple,
   Chrome
 } from 'lucide-react';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
+import PWAInstallButton from '@/components/PWAInstallButton';
 
 const StaffInstallPage = () => {
-  const [isAndroid, setIsAndroid] = useState(false);
-  const [isIOS, setIsIOS] = useState(false);
-  const [isMac, setIsMac] = useState(false);
-  const [isWindows, setIsWindows] = useState(false);
-  const [isChrome, setIsChrome] = useState(false);
-  const [isSafari, setIsSafari] = useState(false);
-  const [isInstallable, setIsInstallable] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [installStatus, setInstallStatus] = useState<'available' | 'installing' | 'installed' | 'not-available'>('not-available');
+  const { 
+    isInstallable, 
+    isInstalled, 
+    isInstalling, 
+    install, 
+    getInstallInstructions,
+    deviceInfo 
+  } = usePWAInstall();
 
   useEffect(() => {
     // Add blinking animation styles to the document
@@ -97,47 +98,15 @@ const StaffInstallPage = () => {
     `;
     document.head.appendChild(style);
 
-    // Detect device and browser type
-    const userAgent = navigator.userAgent.toLowerCase();
-    
-    // Device detection
-    setIsAndroid(userAgent.includes('android'));
-    setIsIOS(/ipad|iphone|ipod/.test(userAgent));
-    setIsMac(userAgent.includes('mac') && !userAgent.includes('iphone') && !userAgent.includes('ipad'));
-    setIsWindows(userAgent.includes('windows'));
-    
-    // Browser detection
-    setIsChrome(userAgent.includes('chrome') && !userAgent.includes('edg'));
-    setIsSafari(userAgent.includes('safari') && !userAgent.includes('chrome'));
-
-    // PWA install prompt detection
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setIsInstallable(true);
-      setInstallStatus('available');
-    };
-
-    // Check if already installed
-    const checkIfInstalled = () => {
-      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
-        setInstallStatus('installed');
-      }
-    };
-
     // Online/offline detection
     const handleOnlineStatusChange = () => {
       setIsOnline(navigator.onLine);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('online', handleOnlineStatusChange);
     window.addEventListener('offline', handleOnlineStatusChange);
-    
-    checkIfInstalled();
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('online', handleOnlineStatusChange);
       window.removeEventListener('offline', handleOnlineStatusChange);
       // Clean up the style element
@@ -145,142 +114,19 @@ const StaffInstallPage = () => {
     };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      setInstallStatus('installing');
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        setInstallStatus('installed');
-        setIsInstallable(false);
-      } else {
-        setInstallStatus('available');
-      }
-      setDeferredPrompt(null);
-    }
-  };
-
   const handlePlatformInstall = async () => {
     // Try auto-install first if available
-    if (deferredPrompt) {
-      setInstallStatus('installing');
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        setInstallStatus('installed');
-        setIsInstallable(false);
-      } else {
-        setInstallStatus('available');
-      }
-      setDeferredPrompt(null);
-    } else {
+    const success = await install();
+    if (!success) {
       // Fall back to scrolling to instructions if auto-install not available
       document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const handleManualInstall = () => {
-    // Scroll to instructions
-    document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const getDeviceInstructions = () => {
-    if (isAndroid && isChrome) {
-      return {
-        title: "Android Chrome Installation",
-        steps: [
-          "Look for the 'Add SteppersLife to Home screen' banner at the bottom",
-          "Tap the [Add] button",
-          "Or tap the three-dot menu → 'Add to Home screen'",
-          "The app will appear on your home screen",
-          "Open from home screen for full-screen experience"
-        ],
-        icon: "🤖",
-        autoInstall: true
-      };
-    } else if (isAndroid) {
-      return {
-        title: "Android Installation",
-        steps: [
-          "Open this page in Chrome browser for best experience",
-          "Tap the three-dot menu → 'Add to Home screen'",
-          "Name the shortcut 'SteppersLife Staff'",
-          "Tap 'Add' to create home screen icon"
-        ],
-        icon: "🤖",
-        autoInstall: false
-      };
-    } else if (isIOS && isSafari) {
-      return {
-        title: "iPhone/iPad Installation (Safari)",
-        steps: [
-          "Tap the Share button (□↗) at the bottom of Safari",
-          "Scroll down and tap 'Add to Home Screen'",
-          "Edit the name to 'SteppersLife Staff' if desired",
-          "Tap 'Add' in the top-right corner",
-          "Find the app icon on your home screen"
-        ],
-        icon: "🍎",
-        autoInstall: false
-      };
-    } else if (isIOS) {
-      return {
-        title: "iPhone/iPad Installation",
-        steps: [
-          "Open this page in Safari browser (not Chrome)",
-          "Tap the Share button at the bottom",
-          "Scroll down and tap 'Add to Home Screen'",
-          "Tap 'Add' to install the app"
-        ],
-        icon: "🍎",
-        autoInstall: false
-      };
-    } else if (isMac && isSafari) {
-      return {
-        title: "Mac Safari Installation",
-        steps: [
-          "Look for 'Install SteppersLife...' in the File menu",
-          "Or check the address bar for an install icon",
-          "Follow the prompts to install",
-          "The app will appear in your Applications folder"
-        ],
-        icon: "🍎",
-        autoInstall: false
-      };
-    } else if ((isMac || isWindows) && isChrome) {
-      return {
-        title: "Desktop Chrome Installation",
-        steps: [
-          "Look for the install icon (⊕) in the address bar",
-          "Click the install button",
-          "Click 'Install' in the confirmation dialog",
-          "The app will open in its own window",
-          "Find it in your applications or on desktop"
-        ],
-        icon: "💻",
-        autoInstall: true
-      };
-    } else {
-      return {
-        title: "Desktop Installation",
-        steps: [
-          "Use Chrome, Edge, or Safari for best PWA support",
-          "Look for an install option in the browser menu",
-          "Or bookmark this page for quick access",
-          "Consider using Chrome for full PWA features"
-        ],
-        icon: "💻",
-        autoInstall: false
-      };
-    }
-  };
-
-  const instructions = getDeviceInstructions();
+  const instructions = getInstallInstructions();
 
   const renderInstallButtons = () => {
-    if (installStatus === 'installed') {
+    if (isInstalled) {
       return (
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle className="h-4 w-4 text-green-600" />
@@ -294,7 +140,7 @@ const StaffInstallPage = () => {
     return (
       <div className="space-y-4">
         {/* Primary Install Button */}
-        {isInstallable && deferredPrompt ? (
+        {isInstallable && instructions.canAutoInstall ? (
           <Alert className="bg-blue-50 border-blue-200 relative overflow-hidden">
             <Download className="h-4 w-4 text-blue-600" />
             <AlertDescription className="flex items-center justify-between">
@@ -302,12 +148,12 @@ const StaffInstallPage = () => {
                 🎉 Ready to install! One-click installation available.
               </span>
               <Button 
-                onClick={handleInstallClick} 
+                onClick={install} 
                 className="ml-4 blink-blue-yellow text-white font-bold"
-                disabled={installStatus === 'installing'}
+                disabled={isInstalling}
                 size="lg"
               >
-                {installStatus === 'installing' ? (
+                {isInstalling ? (
                   <>🔄 Installing...</>
                 ) : (
                   <>
@@ -322,125 +168,125 @@ const StaffInstallPage = () => {
           // Platform-specific install buttons
           <div className="grid gap-4">
             {/* Android Install Button */}
-            {isAndroid && (
+            {deviceInfo.isAndroid && (
               <Button 
                 size="lg" 
                 onClick={handlePlatformInstall}
                 className="h-20 blink-green-yellow text-white font-bold text-lg relative overflow-hidden"
-                disabled={installStatus === 'installing'}
+                disabled={isInstalling}
               >
                 <Smartphone className="h-8 w-8 mr-4" />
                 <div className="text-left">
                   <div className="font-bold text-xl">
-                    {installStatus === 'installing' ? '🔄 INSTALLING...' : '📱 INSTALL ON ANDROID'}
+                    {isInstalling ? '🔄 INSTALLING...' : '📱 INSTALL ON ANDROID'}
                   </div>
                   <div className="text-sm opacity-90 font-medium">
-                    {deferredPrompt ? 'Click for instant install!' : 'Tap to see how → Add to Home Screen'}
+                    {isInstallable ? 'Click for instant install!' : 'Tap to see how → Add to Home Screen'}
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className="text-2xl animate-bounce">
-                    {deferredPrompt ? '⚡' : '⬇️'}
+                    {isInstallable ? '⚡' : '⬇️'}
                   </span>
                 </div>
               </Button>
             )}
 
             {/* iOS Install Button */}
-            {isIOS && (
+            {deviceInfo.isIOS && (
               <Button 
                 size="lg" 
                 onClick={handlePlatformInstall}
                 className="h-20 blink-gray-yellow text-white font-bold text-lg relative overflow-hidden"
-                disabled={installStatus === 'installing'}
+                disabled={isInstalling}
               >
                 <Apple className="h-8 w-8 mr-4" />
                 <div className="text-left">
                   <div className="font-bold text-xl">
-                    {installStatus === 'installing' ? '🔄 INSTALLING...' : '🍎 INSTALL ON iPHONE/iPAD'}
+                    {isInstalling ? '🔄 INSTALLING...' : '🍎 INSTALL ON iPHONE/iPAD'}
                   </div>
                   <div className="text-sm opacity-90 font-medium">
-                    {deferredPrompt ? 'Click for instant install!' : 'Tap to see how → Safari Share Button'}
+                    {isInstallable ? 'Click for instant install!' : 'Tap to see how → Safari Share Button'}
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className="text-2xl animate-bounce">
-                    {deferredPrompt ? '⚡' : '⬇️'}
+                    {isInstallable ? '⚡' : '⬇️'}
                   </span>
                 </div>
               </Button>
             )}
 
             {/* Mac Install Button */}
-            {isMac && !isIOS && (
+            {deviceInfo.isMac && !deviceInfo.isIOS && (
               <Button 
                 size="lg" 
                 onClick={handlePlatformInstall}
                 className="h-20 blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
-                disabled={installStatus === 'installing'}
+                disabled={isInstalling}
               >
                 <Monitor className="h-8 w-8 mr-4" />
                 <div className="text-left">
                   <div className="font-bold text-xl">
-                    {installStatus === 'installing' ? '🔄 INSTALLING...' : '💻 INSTALL ON MAC'}
+                    {isInstalling ? '🔄 INSTALLING...' : '💻 INSTALL ON MAC'}
                   </div>
                   <div className="text-sm opacity-90 font-medium">
-                    {deferredPrompt ? 'Click for instant install!' : `Tap to see how → ${isChrome ? 'Chrome Install Button' : 'Safari File Menu'}`}
+                    {isInstallable ? 'Click for instant install!' : `Tap to see how → ${deviceInfo.isChrome ? 'Chrome Install Button' : 'Safari File Menu'}`}
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className="text-2xl animate-bounce">
-                    {deferredPrompt ? '⚡' : '⬇️'}
+                    {isInstallable ? '⚡' : '⬇️'}
                   </span>
                 </div>
               </Button>
             )}
 
             {/* Windows Install Button */}
-            {isWindows && (
+            {deviceInfo.isWindows && (
               <Button 
                 size="lg" 
                 onClick={handlePlatformInstall}
                 className="h-20 blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
-                disabled={installStatus === 'installing'}
+                disabled={isInstalling}
               >
                 <Monitor className="h-8 w-8 mr-4" />
                 <div className="text-left">
                   <div className="font-bold text-xl">
-                    {installStatus === 'installing' ? '🔄 INSTALLING...' : '🖥️ INSTALL ON WINDOWS'}
+                    {isInstalling ? '🔄 INSTALLING...' : '🖥️ INSTALL ON WINDOWS'}
                   </div>
                   <div className="text-sm opacity-90 font-medium">
-                    {deferredPrompt ? 'Click for instant install!' : `Tap to see how → ${isChrome ? 'Chrome Install Button' : 'Browser Menu Option'}`}
+                    {isInstallable ? 'Click for instant install!' : `Tap to see how → ${deviceInfo.isChrome ? 'Chrome Install Button' : 'Browser Menu Option'}`}
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className="text-2xl animate-bounce">
-                    {deferredPrompt ? '⚡' : '⬇️'}
+                    {isInstallable ? '⚡' : '⬇️'}
                   </span>
                 </div>
               </Button>
             )}
 
             {/* Generic Install Button */}
-            {!isAndroid && !isIOS && !isMac && !isWindows && (
+            {!deviceInfo.isAndroid && !deviceInfo.isIOS && !deviceInfo.isMac && !deviceInfo.isWindows && (
               <Button 
                 size="lg" 
                 onClick={handlePlatformInstall}
                 className="h-20 blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
-                disabled={installStatus === 'installing'}
+                disabled={isInstalling}
               >
                 <Download className="h-8 w-8 mr-4" />
                 <div className="text-left">
                   <div className="font-bold text-xl">
-                    {installStatus === 'installing' ? '🔄 INSTALLING...' : '📲 INSTALL PWA'}
+                    {isInstalling ? '🔄 INSTALLING...' : '📲 INSTALL PWA'}
                   </div>
                   <div className="text-sm opacity-90 font-medium">
-                    {deferredPrompt ? 'Click for instant install!' : 'Tap to see instructions below'}
+                    {isInstallable ? 'Click for instant install!' : 'Tap to see instructions below'}
                   </div>
                 </div>
                 <div className="absolute top-2 right-2">
                   <span className="text-2xl animate-bounce">
-                    {deferredPrompt ? '⚡' : '⬇️'}
+                    {isInstallable ? '⚡' : '⬇️'}
                   </span>
                 </div>
               </Button>
@@ -463,7 +309,7 @@ const StaffInstallPage = () => {
         </Alert>
 
         {/* Browser Recommendation */}
-        {!isChrome && !isSafari && (
+        {!deviceInfo.isChrome && !deviceInfo.isSafari && (
           <Alert className="bg-orange-50 border-orange-200">
             <Chrome className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
@@ -518,11 +364,16 @@ const StaffInstallPage = () => {
           <Card id="install-instructions">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <span className="text-2xl">{instructions.icon}</span>
+                <span className="text-2xl">
+                  {deviceInfo.isAndroid ? '🤖' : 
+                   deviceInfo.isIOS ? '🍎' : 
+                   deviceInfo.isMac ? '🍎' : 
+                   deviceInfo.isWindows ? '🖥️' : '💻'}
+                </span>
                 <span>{instructions.title}</span>
               </CardTitle>
               <CardDescription>
-                {instructions.autoInstall 
+                {instructions.canAutoInstall 
                   ? "Automatic installation should be available - check for install prompts!"
                   : "Follow these steps to install the app on your device"
                 }
@@ -540,7 +391,7 @@ const StaffInstallPage = () => {
                 ))}
               </ol>
               
-              {instructions.autoInstall && (
+              {instructions.canAutoInstall && (
                 <Alert className="mt-4 bg-green-50 border-green-200">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
@@ -665,17 +516,17 @@ const StaffInstallPage = () => {
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             <strong>Detected:</strong> {
-              isAndroid ? 'Android' : 
-              isIOS ? 'iOS' : 
-              isMac ? 'Mac' : 
-              isWindows ? 'Windows' : 
+              deviceInfo.isAndroid ? 'Android' : 
+              deviceInfo.isIOS ? 'iOS' : 
+              deviceInfo.isMac ? 'Mac' : 
+              deviceInfo.isWindows ? 'Windows' : 
               'Unknown'
             } • {
-              isChrome ? 'Chrome' : 
-              isSafari ? 'Safari' : 
+              deviceInfo.isChrome ? 'Chrome' : 
+              deviceInfo.isSafari ? 'Safari' : 
               'Other Browser'
             } • 
-            <strong>PWA Support:</strong> {instructions.autoInstall ? 'Full' : 'Manual'} • 
+            <strong>PWA Support:</strong> {instructions.canAutoInstall ? 'Full' : 'Manual'} • 
             <strong>Offline:</strong> Full functionality available without internet
           </AlertDescription>
         </Alert>

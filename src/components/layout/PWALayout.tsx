@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { usePWAAuth } from '@/hooks/usePWAAuth';
 import { toast } from '@/components/ui/sonner';
+import PWAInstallButton from '@/components/PWAInstallButton';
 import {
   Shield,
   Home,
@@ -159,6 +160,9 @@ const PWALayout: React.FC = () => {
 
             {/* Status and User Menu */}
             <div className="flex items-center space-x-3">
+              {/* PWA Install Button */}
+              <PWAInstallButton variant="ghost" size="sm" className="hidden sm:flex" />
+              
               {/* Connection Status */}
               <div className="hidden sm:flex items-center space-x-2">
                 {isOnline ? (
@@ -288,6 +292,11 @@ const PWALayout: React.FC = () => {
               })}
               
               <Separator className="my-2" />
+              
+              {/* Mobile PWA Install */}
+              <div className="px-3 py-2">
+                <PWAInstallButton variant="outline" size="sm" className="w-full" />
+              </div>
               
               {/* Mobile Status */}
               <div className="flex items-center justify-between px-3 py-2">
