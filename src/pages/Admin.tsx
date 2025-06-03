@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
-import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare } from 'lucide-react';
 import GitHubSync from '@/components/GitHubSync';
+import { Link } from 'react-router-dom';
 
 interface DashboardStats {
   totalUsers: number;
@@ -219,6 +219,36 @@ const Admin = () => {
                 <p className="text-xs text-text-secondary">All systems operational</p>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Admin Management Links */}
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-text-primary mb-4">Management Tools</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Link to="/admin/event-claims">
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Event Claims</CardTitle>
+                    <Info className="h-4 w-4 text-text-secondary" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-text-secondary">Review and approve/reject event claims made by promoters.</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/admin/events/create-assign">
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Create & Assign Event</CardTitle>
+                    <PlusSquare className="h-4 w-4 text-text-secondary" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-text-secondary">Directly create an event and assign it to a specific promoter.</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              {/* Add more admin tool links here as needed */}
+            </div>
           </div>
 
           {/* Recent Activity */}

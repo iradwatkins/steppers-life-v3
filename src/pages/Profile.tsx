@@ -1,12 +1,27 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, MapPin, Star, Calendar, Users, Award, Edit, Settings } from 'lucide-react';
+import { User, MapPin, Star, Calendar, Users, Award, Edit, Settings, Briefcase, BookOpen, Handshake, Ticket as TicketIcon } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { Link } from 'react-router-dom';
+
+interface MockPurchasedTicket {
+  id: string;
+  eventId: string;
+  eventName: string;
+  eventDate: string;
+  eventLocation: string;
+  ticketType: string;
+  quantity: number;
+  purchaseDate: string;
+  qrCodePlaceholder?: string; // URL or data for a mock QR
+}
 
 const Profile = () => {
+  const { user } = useAuth();
+
   const userProfile = {
     name: 'Sarah Mitchell',
     title: 'Stepping Enthusiast',
@@ -17,8 +32,41 @@ const Profile = () => {
     classesCompleted: 12,
     verified: true,
     joinDate: 'January 2023',
-    specialties: ['Beginner Classes', 'Social Dancing', 'Line Step']
+    specialties: ['Beginner Classes', 'Social Dancing', 'Line Step'],
+    role: 'instructor'
   };
+
+  let profileTitle = 'Stepping Enthusiast';
+  if (userProfile.role === 'promoter') {
+    profileTitle = 'Event Promoter';
+  } else if (userProfile.role === 'instructor') {
+    profileTitle = 'Dance Instructor';
+  }
+
+  const mockPurchasedTickets: MockPurchasedTicket[] = [
+    {
+      id: 'ticket001',
+      eventId: 'evt987',
+      eventName: 'Grand Steppers Ball 2025',
+      eventDate: 'Saturday, October 25, 2025 - 7:00 PM',
+      eventLocation: 'The Elegant Ballroom, Downtown',
+      ticketType: 'VIP Ticket',
+      quantity: 2,
+      purchaseDate: 'July 15, 2024',
+      qrCodePlaceholder: 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=SLTICKET001GRANDBALL'
+    },
+    {
+      id: 'ticket002',
+      eventId: 'evt002',
+      eventName: 'Lakeside Smooth Groove Night',
+      eventDate: 'Friday, August 15, 2025 - 8:00 PM',
+      eventLocation: 'Lakeview Pavilion',
+      ticketType: 'General Admission',
+      quantity: 1,
+      purchaseDate: 'July 20, 2024',
+      qrCodePlaceholder: 'https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=SLTICKET002LAKESIDE'
+    }
+  ];
 
   const recentActivity = [
     {
@@ -64,7 +112,7 @@ const Profile = () => {
             
             <div className="text-center md:text-left flex-1">
               <h1 className="font-serif text-3xl font-bold mb-2">{userProfile.name}</h1>
-              <p className="text-xl text-text-on-primary/90 mb-2">{userProfile.title}</p>
+              <p className="text-xl text-text-on-primary/90 mb-2">{profileTitle}</p>
               <div className="flex items-center justify-center md:justify-start space-x-4 mb-4">
                 <div className="flex items-center">
                   <MapPin className="h-4 w-4 mr-1" />
@@ -122,11 +170,17 @@ const Profile = () => {
       <section className="py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs defaultValue="activity" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className={`grid w-full ${userProfile.role === 'attendee' || !userProfile.role ? 'grid-cols-4' : 'grid-cols-5'}`}>
               <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-              <TabsTrigger value="events">My Events</TabsTrigger>
+              <TabsTrigger value="tickets">My Tickets</TabsTrigger>
               <TabsTrigger value="classes">My Classes</TabsTrigger>
               <TabsTrigger value="achievements">Achievements</TabsTrigger>
+              {userProfile.role === 'promoter' && (
+                <TabsTrigger value="promoter-dashboard">Promoter Tools</TabsTrigger>
+              )}
+              {userProfile.role === 'instructor' && (
+                <TabsTrigger value="instructor-dashboard">Instructor Tools</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="activity" className="mt-8">
@@ -153,14 +207,57 @@ const Profile = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="events" className="mt-8">
-              <div className="text-center py-12">
-                <Calendar className="h-12 w-12 text-text-secondary mx-auto mb-4" />
-                <h3 className="font-semibold text-text-primary mb-2">No Upcoming Events</h3>
-                <p className="text-text-secondary mb-6">You haven't registered for any upcoming events yet.</p>
-                <Button className="bg-brand-primary hover:bg-brand-primary-hover">
-                  Browse Events
-                </Button>
+            <TabsContent value="tickets" className="mt-8">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-text-primary mb-6 flex items-center">
+                  <TicketIcon className="mr-3 h-7 w-7 text-brand-primary" />
+                  My Tickets
+                </h2>
+                {mockPurchasedTickets.length === 0 ? (
+                  <div className="text-center py-12 bg-surface-card border border-border-default rounded-lg">
+                    <TicketIcon className="h-12 w-12 text-text-secondary mx-auto mb-4" />
+                    <h3 className="font-semibold text-text-primary mb-2">No Tickets Yet</h3>
+                    <p className="text-text-secondary mb-6">You haven't purchased any tickets for upcoming events.</p>
+                    <Button asChild className="bg-brand-primary hover:bg-brand-primary-hover">
+                      <Link to="/explore">Browse Events</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {mockPurchasedTickets.map((ticket) => (
+                      <Card key={ticket.id} className="bg-surface-card border-border-default overflow-hidden shadow-md">
+                        <CardHeader className="pb-3 bg-background-main border-b border-border-default">
+                          <CardTitle className="text-xl font-semibold text-text-primary">{ticket.eventName}</CardTitle>
+                          <CardDescription className="text-sm text-text-secondary">
+                            {ticket.eventDate} @ {ticket.eventLocation}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="p-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
+                          <div className="md:col-span-2 space-y-2">
+                            <p className="text-sm text-text-secondary"><strong className="text-text-primary">Ticket Type:</strong> {ticket.ticketType}</p>
+                            <p className="text-sm text-text-secondary"><strong className="text-text-primary">Quantity:</strong> {ticket.quantity}</p>
+                            <p className="text-sm text-text-secondary"><strong className="text-text-primary">Purchased:</strong> {ticket.purchaseDate}</p>
+                            <p className="text-sm text-text-secondary"><strong className="text-text-primary">Ticket ID:</strong> {ticket.id}</p>
+                          </div>
+                          <div className="flex justify-center md:justify-end items-center">
+                            {ticket.qrCodePlaceholder ? (
+                              <img src={ticket.qrCodePlaceholder} alt="Mock QR Code" className="w-24 h-24 border border-border-default rounded-md p-1" />
+                            ) : (
+                              <div className="w-24 h-24 border border-border-default rounded-md flex items-center justify-center text-text-secondary bg-muted text-xs p-2">
+                                QR Placeholder
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                        <CardFooter className="bg-background-main border-t border-border-default p-3 flex justify-end">
+                           <Button variant="outline" size="sm" asChild>
+                             <Link to={`/event/${ticket.eventId}/tickets`}>View Event</Link>
+                           </Button>
+                        </CardFooter>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             </TabsContent>
 
@@ -182,6 +279,41 @@ const Profile = () => {
                 <p className="text-text-secondary mb-6">Complete classes and attend events to unlock achievements.</p>
               </div>
             </TabsContent>
+
+            {userProfile.role === 'promoter' && (
+              <TabsContent value="promoter-dashboard" className="mt-8">
+                <div className="text-center py-12">
+                  <Briefcase className="h-12 w-12 text-text-secondary mx-auto mb-4" />
+                  <h3 className="font-semibold text-text-primary mb-2">Promoter Dashboard</h3>
+                  <p className="text-text-secondary mb-6">Access tools to manage your promoted events, view sales, and find new events to claim.</p>
+                  <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <Link to="/promoter/events/claim" className="w-full sm:w-auto">
+                      <Button className="bg-brand-primary hover:bg-brand-primary-hover w-full">
+                        <Handshake className="mr-2 h-4 w-4" /> Browse & Claim Events
+                      </Button>
+                    </Link>
+                    <Link to="#" className="w-full sm:w-auto"> {/* Placeholder for future Promoter dashboard link */}
+                      <Button variant="outline" className="w-full">
+                        My Promoted Events (Coming Soon)
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </TabsContent>
+            )}
+
+            {userProfile.role === 'instructor' && (
+              <TabsContent value="instructor-dashboard" className="mt-8">
+                <div className="text-center py-12">
+                  <BookOpen className="h-12 w-12 text-text-secondary mx-auto mb-4" />
+                  <h3 className="font-semibold text-text-primary mb-2">Instructor Dashboard</h3>
+                  <p className="text-text-secondary mb-6">Manage your classes, view student enrollment, and access teaching resources.</p>
+                  <Button className="bg-brand-primary hover:bg-brand-primary-hover">
+                    Go to Instructor Tools
+                  </Button>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </section>

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, LogOut, Shield } from 'lucide-react';
+import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import {
   DropdownMenu,
@@ -85,40 +84,78 @@ const Header = () => {
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span>{user.email}</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/docs" className="flex items-center">
-                      <span>Docs</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  {isAdmin && (
+              <>
+                {/* Post Content Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full text-header-text hover:text-header-link-active">
+                      <Plus className="h-5 w-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuItem asChild>
-                      <Link to="/admin" className="flex items-center">
-                        <Shield className="mr-2 h-4 w-4" />
-                        <span>Admin Dashboard</span>
+                      <Link to="/organizer/events/create" className="flex items-center">
+                        <CalendarPlus className="mr-2 h-4 w-4" />
+                        <span>Post Event</span>
                       </Link>
                     </DropdownMenuItem>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Sign Out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem asChild>
+                      <Link to="#" className="flex items-center">
+                        <ListPlus className="mr-2 h-4 w-4" />
+                        <span>List Class</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="#" className="flex items-center">
+                        <Store className="mr-2 h-4 w-4" />
+                        <span>Add Store/Service</span>
+                      </Link>
+                    </DropdownMenuItem>
+                     <DropdownMenuItem asChild>
+                      <Link to="#" className="flex items-center">
+                        <Users2 className="mr-2 h-4 w-4" />
+                        <span>Create Community</span>
+                      </Link>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+
+                {/* User Profile Dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-2">
+                      <User className="h-4 w-4" />
+                      <span>{user.email}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="flex items-center">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/docs" className="flex items-center">
+                        <span>Docs</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin" className="flex items-center">
+                          <Shield className="mr-2 h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <div className="flex items-center space-x-2">
                 <Link to="/auth/login">
@@ -187,6 +224,42 @@ const Header = () => {
                       Admin Dashboard
                     </Link>
                   )}
+                  {/* Mobile Post Content Options */}
+                  <div className="pt-2 border-t border-border-default mt-2">
+                     <Link
+                        to="/organizer/events/create"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <CalendarPlus className="mr-2 h-4 w-4" />
+                        <span>Post Event</span>
+                      </Link>
+                      <Link
+                        to="#"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <ListPlus className="mr-2 h-4 w-4" />
+                        <span>List Class</span>
+                      </Link>
+                      <Link
+                        to="#"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Store className="mr-2 h-4 w-4" />
+                        <span>Add Store/Service</span>
+                      </Link>
+                      <Link
+                        to="#"
+                        className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        <Users2 className="mr-2 h-4 w-4" />
+                        <span>Create Community</span>
+                      </Link>
+                  </div>
+
                   <button
                     onClick={() => {
                       handleSignOut();
