@@ -21,6 +21,7 @@ import EventTicketingPage from "./pages/organizer/EventTicketingPage";
 import EventSeatingPage from "./pages/organizer/EventSeatingPage";
 import EventCustomQuestionsPage from "./pages/organizer/EventCustomQuestionsPage";
 import ManageEventPage from "./pages/organizer/ManageEventPage";
+import EventCollectionsPage from "./pages/organizer/EventCollectionsPage";
 import ClaimableEventsPage from "./pages/promoter/ClaimableEventsPage";
 import EventClaimsPage from "./pages/admin/EventClaimsPage";
 import AdminCreateEventPage from "./pages/admin/AdminCreateEventPage";
@@ -33,6 +34,7 @@ import CheckoutConfirmationPage from "./pages/checkout/CheckoutConfirmationPage"
 import EventPromoCodesPage from "./pages/organizer/EventPromoCodesPage";
 import EventRefundsPage from "./pages/organizer/EventRefundsPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
+import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
@@ -110,6 +112,16 @@ const App = () => (
             <Route path="/organizer/event/:eventId/cash-payments" element={
               <ProtectedRoute>
                 <EventCashPaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/email-campaigns" element={
+              <ProtectedRoute>
+                <EventEmailCampaignsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/collections" element={
+              <ProtectedRoute>
+                <EventCollectionsPage />
               </ProtectedRoute>
             } />
             <Route path="/promoter/events/claim" element={

@@ -22,7 +22,9 @@ import {
   BarChart3,
   Copy,
   Download,
-  ExternalLink
+  ExternalLink,
+  Mail,
+  FolderPlus
 } from 'lucide-react';
 import SocialShareButtons from '@/components/SocialShareButtons';
 import { createEventURL, createShortURL, addTrackingParams } from '@/utils/urlUtils';
@@ -133,6 +135,18 @@ const ManageEventPage = () => {
       icon: <DollarSign className="h-5 w-5 text-brand-primary" />,
       description: 'Generate codes for cash payments and verify transactions.',
       path: `/organizer/event/${eventId}/cash-payments`,
+    },
+    {
+      label: 'Email Campaigns',
+      icon: <Mail className="h-5 w-5 text-brand-primary" />,
+      description: 'Send updates, reminders, and promotional emails to attendees.',
+      path: `/organizer/event/${eventId}/email-campaigns`,
+    },
+    {
+      label: 'Event Collections',
+      icon: <FolderPlus className="h-5 w-5 text-brand-primary" />,
+      description: 'Organize events into collections, create series, and manage templates.',
+      path: `/organizer/collections`,
     },
   ];
 
