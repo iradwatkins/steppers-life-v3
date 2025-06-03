@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from '@/components/ui/separator';
-import { ChevronRight, Edit, Settings, Eye, Send, Archive, CalendarCheck2, Ticket, Armchair, MessageSquarePlus, Tag as TagIcon, RefreshCw } from 'lucide-react';
+import { ChevronRight, Edit, Settings, Eye, Send, Archive, CalendarCheck2, Ticket, Armchair, MessageSquarePlus, Tag as TagIcon, RefreshCw, DollarSign } from 'lucide-react';
 
 // Mock event data structure
 interface MockEvent {
@@ -104,6 +104,12 @@ const ManageEventPage = () => {
       icon: <RefreshCw className="h-5 w-5 text-brand-primary" />,
       description: 'Process refund requests and handle ticket cancellations.',
       path: `/organizer/event/${eventId}/refunds`,
+    },
+    {
+      label: 'Cash Payment Management',
+      icon: <DollarSign className="h-5 w-5 text-brand-primary" />,
+      description: 'Generate codes for cash payments and verify transactions.',
+      path: `/organizer/event/${eventId}/cash-payments`,
     },
   ];
 

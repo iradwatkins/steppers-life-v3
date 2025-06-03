@@ -30,6 +30,9 @@ import CheckoutPaymentPage from "./pages/checkout/CheckoutPaymentPage";
 import CheckoutConfirmationPage from "./pages/checkout/CheckoutConfirmationPage";
 import EventPromoCodesPage from "./pages/organizer/EventPromoCodesPage";
 import EventRefundsPage from "./pages/organizer/EventRefundsPage";
+import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
+import CashPaymentPage from "./pages/buyer/CashPaymentPage";
+import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
 
 const queryClient = new QueryClient();
 
@@ -101,6 +104,11 @@ const App = () => (
               <EventRefundsPage />
             </ProtectedRoute>
           } />
+          <Route path="/organizer/event/:eventId/cash-payments" element={
+            <ProtectedRoute>
+              <EventCashPaymentPage />
+            </ProtectedRoute>
+          } />
           <Route path="/promoter/events/claim" element={
             <ProtectedRoute>
               <ClaimableEventsPage />
@@ -124,6 +132,14 @@ const App = () => (
           <Route path="/checkout/:eventId/payment" element={<CheckoutPaymentPage />} />
           {/* Public route for mock order confirmation */}
           <Route path="/checkout/:eventId/confirmation" element={<CheckoutConfirmationPage />} />
+          {/* Public route for cash payment setup */}
+          <Route path="/event/:eventId/cash-payment" element={<CashPaymentPage />} />
+          {/* Protected route for ticket history */}
+          <Route path="/tickets/history" element={
+            <ProtectedRoute>
+              <TicketHistoryPage />
+            </ProtectedRoute>
+          } />
         </Route>
         
         {/* Catch-all route */}

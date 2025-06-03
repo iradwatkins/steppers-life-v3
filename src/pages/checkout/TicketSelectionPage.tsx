@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input"; // For quantity
 import { Separator } from "@/components/ui/separator";
-import { Ticket, ShoppingCart, CalendarDays, MapPin, MinusCircle, PlusCircle, Percent, Tag } from 'lucide-react';
+import { Ticket, ShoppingCart, CalendarDays, MapPin, MinusCircle, PlusCircle, Percent, Tag, DollarSign } from 'lucide-react';
 
 // Mock event data including ticket types
 interface TicketType {
@@ -204,13 +204,28 @@ const TicketSelectionPage = () => {
               <div className="text-xl font-bold text-text-primary">${calculateTotal().toFixed(2)}</div>
             </div>
 
-            <Button onClick={handleProceedToCheckout} size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary w-full mt-4" disabled={cart.length === 0}>
-              <ShoppingCart className="mr-2 h-5 w-5" /> Proceed to Checkout
-            </Button>
+            <div className="w-full flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mt-4">
+              <Button onClick={handleProceedToCheckout} size="lg" className="bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary flex-1" disabled={cart.length === 0}>
+                <ShoppingCart className="mr-2 h-5 w-5" /> Proceed to Checkout
+              </Button>
+              
+              <Button 
+                onClick={() => navigate(`/event/${eventId}/cash-payment`)} 
+                size="lg" 
+                variant="outline" 
+                className="flex-1 border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-text-on-primary"
+              >
+                <DollarSign className="mr-2 h-5 w-5" /> Pay with Cash
+              </Button>
+            </div>
+
+            <p className="text-xs text-text-tertiary text-center mt-2">
+              Choose "Pay with Cash" to generate a payment code for in-person transactions
+            </p>
           </CardFooter>
         </Card>
       </div>
-      <style jsx global>{`
+      <style>{`
         .hide-arrows::-webkit-outer-spin-button,
         .hide-arrows::-webkit-inner-spin-button {
           -webkit-appearance: none;

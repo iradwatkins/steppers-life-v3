@@ -209,10 +209,18 @@ const Profile = () => {
 
             <TabsContent value="tickets" className="mt-8">
               <div>
-                <h2 className="font-serif text-2xl font-bold text-text-primary mb-6 flex items-center">
-                  <TicketIcon className="mr-3 h-7 w-7 text-brand-primary" />
-                  My Tickets
-                </h2>
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="font-serif text-2xl font-bold text-text-primary flex items-center">
+                    <TicketIcon className="mr-3 h-7 w-7 text-brand-primary" />
+                    My Tickets
+                  </h2>
+                  <Button asChild variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-text-on-primary">
+                    <Link to="/tickets/history">
+                      <TicketIcon className="mr-2 h-4 w-4" />
+                      View Full History
+                    </Link>
+                  </Button>
+                </div>
                 {mockPurchasedTickets.length === 0 ? (
                   <div className="text-center py-12 bg-surface-card border border-border-default rounded-lg">
                     <TicketIcon className="h-12 w-12 text-text-secondary mx-auto mb-4" />
@@ -256,6 +264,13 @@ const Profile = () => {
                         </CardFooter>
                       </Card>
                     ))}
+                    <div className="text-center pt-4">
+                      <Button asChild variant="outline" className="border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-text-on-primary">
+                        <Link to="/tickets/history">
+                          View Complete Ticket History & Downloads
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>
