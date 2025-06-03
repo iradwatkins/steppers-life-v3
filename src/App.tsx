@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import AppLayout from "./components/layout/AppLayout";
+import PWALayout from "./components/layout/PWALayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import Events from "./pages/Events";
@@ -40,6 +41,10 @@ import EventDetailsPage from "./pages/EventDetailsPage";
 
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
+import PWADashboardPage from "./pages/pwa/PWADashboardPage";
+import PWACheckinPage from "./pages/pwa/PWACheckinPage";
+import PWAAttendancePage from "./pages/pwa/PWAAttendancePage";
+import PWASettingsPage from "./pages/pwa/PWASettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +61,16 @@ const App = () => (
           
           {/* PWA-specific routes (standalone, no layout) */}
           <Route path="/pwa/login" element={<PWALoginPage />} />
+          
+          {/* PWA routes with PWA layout */}
+          <Route path="/pwa" element={<PWALayout />}>
+            <Route path="dashboard" element={<PWADashboardPage />} />
+            <Route path="checkin" element={<PWACheckinPage />} />
+            <Route path="attendance" element={<PWAAttendancePage />} />
+            <Route path="settings" element={<PWASettingsPage />} />
+            {/* Redirect PWA root to dashboard */}
+            <Route index element={<PWADashboardPage />} />
+          </Route>
           
           {/* Protected routes with layout */}
           <Route path="/" element={<AppLayout />}>
