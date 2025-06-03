@@ -25,6 +25,7 @@ import ClaimableEventsPage from "./pages/promoter/ClaimableEventsPage";
 import EventClaimsPage from "./pages/admin/EventClaimsPage";
 import AdminCreateEventPage from "./pages/admin/AdminCreateEventPage";
 import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
+import CheckinManagementPage from "./pages/admin/CheckinManagementPage";
 import TicketSelectionPage from "./pages/checkout/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/checkout/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/checkout/CheckoutPaymentPage";
@@ -129,6 +130,11 @@ const App = () => (
             <Route path="/admin/inventory" element={
               <ProtectedRoute>
                 <InventoryDashboardPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/event/:eventId/checkin" element={
+              <ProtectedRoute>
+                <CheckinManagementPage />
               </ProtectedRoute>
             } />
             

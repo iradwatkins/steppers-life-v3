@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, MapPin, Star, Calendar, Users, Award, Edit, Settings, Briefcase, BookOpen, Handshake, Ticket as TicketIcon } from 'lucide-react';
+import { User, MapPin, Star, Calendar, Users, Award, Edit, Settings, Briefcase, BookOpen, Handshake, Ticket as TicketIcon, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
+import NotificationPreferencesComponent from '@/components/notifications/NotificationPreferences';
 
 interface MockPurchasedTicket {
   id: string;
@@ -170,11 +171,12 @@ const Profile = () => {
       <section className="py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs defaultValue="activity" className="w-full">
-            <TabsList className={`grid w-full ${userProfile.role === 'attendee' || !userProfile.role ? 'grid-cols-4' : 'grid-cols-5'}`}>
+            <TabsList className={`grid w-full ${userProfile.role === 'attendee' || !userProfile.role ? 'grid-cols-5' : 'grid-cols-6'}`}>
               <TabsTrigger value="activity">Recent Activity</TabsTrigger>
               <TabsTrigger value="tickets">My Tickets</TabsTrigger>
               <TabsTrigger value="classes">My Classes</TabsTrigger>
               <TabsTrigger value="achievements">Achievements</TabsTrigger>
+              <TabsTrigger value="notifications">Notifications</TabsTrigger>
               {userProfile.role === 'promoter' && (
                 <TabsTrigger value="promoter-dashboard">Promoter Tools</TabsTrigger>
               )}
@@ -293,6 +295,10 @@ const Profile = () => {
                 <h3 className="font-semibold text-text-primary mb-2">Your Achievements</h3>
                 <p className="text-text-secondary mb-6">Complete classes and attend events to unlock achievements.</p>
               </div>
+            </TabsContent>
+
+            <TabsContent value="notifications" className="mt-8">
+              <NotificationPreferencesComponent />
             </TabsContent>
 
             {userProfile.role === 'promoter' && (

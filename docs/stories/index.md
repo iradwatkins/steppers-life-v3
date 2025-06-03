@@ -38,7 +38,7 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [A.008.story.md](./A.008.story.md)  
 **Summary:** Created AdminCreateEventPage.tsx allowing admins to create events and assign to mock promoters. Added link from Admin dashboard.
 
-## Epic B: Core Platform Features (Buyer Experience) - ✅ 10 Done
+## Epic B: Core Platform Features (Buyer Experience) - ✅ 12 Done, 🔄 1 In Progress
 
 ### ✅ B.002: Complete Checkout Flow
 **File:** [B.002.story.md](./B.002.story.md)  
@@ -80,6 +80,19 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [B.011.story.md](./B.011.story.md)  
 **Summary:** Created comprehensive real-time inventory management system with thread-safe operations, automatic hold management (15-min checkout, 4-hour cash payment), conflict resolution with partial fulfillment, admin dashboard with audit trail and bulk tools, real-time UI updates and inventory notifications, full integration with ticket selection and checkout flows, and complete audit logging with CSV export functionality.
 
+### ✅ B.012: Event Ratings & Reviews System
+**File:** [B.012.story.md](./B.012.story.md)  
+**Summary:** Created comprehensive review system with StarRating components, ReviewForm with validation, ReviewList with sorting/filtering, ReviewsSection integration, review moderation system with reporting, organizer reply functionality, 30-day edit window, verification badges, rating breakdown visualization, and full integration with EventDetailsPage replacing static reviews.
+
+### ✅ B.013: Event Notifications & Reminders System
+**File:** [B.013.story.md](./B.013.story.md)  
+**Summary:** Created comprehensive notification system with NotificationCenter (bell icon, unread badges, tabbed interface), NotificationPreferences for user customization, CalendarIntegration for multiple platforms, NotificationManagementPage for organizers, multi-channel delivery (email/SMS/push), automatic scheduling of confirmations and reminders, and integration with checkout confirmation and event details pages.
+
+### 🔄 B.014: Event Check-in & Attendance Tracking System
+**File:** [B.014.story.md](./B.014.story.md)  
+**Status:** In Progress (Ready for Implementation)  
+**Summary:** Comprehensive check-in system with QR code scanner, real-time ticket verification, offline capability, self-check-in kiosks, live attendance dashboard, manual check-in, analytics with CSV export, waitlist management, and integration with notification system for welcome messages.
+
 ## Epic C: Event Promotion & Marketing (for Organizers) - 📋 1 Ready for Implementation
 
 ### 📋 C.001: Social Media Sharing Tools & Public Event URLs
@@ -94,13 +107,13 @@ All stories follow the BMAD method story template located at: `bmad-agent/templa
 ## Story Statistics
 
 - **Epic A Completed:** 7 stories (1 deferred)
-- **Epic B Completed:** 10 stories
+- **Epic B Completed:** 12 stories (1 in progress)
 - **Epic C Ready:** 1 story (ready for implementation)
-- **Total Completed:** 17 stories
-- **Total Documented:** 18 stories
-- **Total Acceptance Criteria:** 174+ ACs across all stories
-- **Total Tasks/Subtasks:** 90+ major tasks with 300+ subtasks
-- **Coverage:** Complete Epic A event creation, Epic B buyer experience with inventory management, and initial Epic C event promotion foundation
+- **Total Completed:** 19 stories
+- **Total Documented:** 21 stories
+- **Total Acceptance Criteria:** 204+ ACs across all stories
+- **Total Tasks/Subtasks:** 110+ major tasks with 400+ subtasks
+- **Coverage:** Complete Epic A event creation, comprehensive Epic B buyer experience with inventory/reviews/notifications, and initial Epic C event promotion foundation
 
 ## Next Steps
 

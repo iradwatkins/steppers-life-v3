@@ -36,6 +36,8 @@ import EventCard from '@/components/EventCard';
 import { CompactShareButton } from '@/components/SocialShareButtons';
 import { useEventMetaTags } from '@/hooks/useMetaTags';
 import type { EventData } from '@/services/socialSharingService';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
+import CalendarIntegration from '@/components/notifications/CalendarIntegration';
 
 const EventDetailsPage = () => {
   const { eventId } = useParams();
@@ -509,66 +511,7 @@ Whether you're a seasoned competitor or just starting your stepping journey, thi
               </TabsContent>
 
               <TabsContent value="reviews">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Reviews ({event.totalReviews})</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center gap-4 mb-6">
-                        <div className="text-center">
-                          <div className="text-4xl font-bold text-text-primary">{event.rating}</div>
-                          <div className="flex justify-center">
-                            {[1,2,3,4,5].map((star) => (
-                              <Star 
-                                key={star} 
-                                className={`w-4 h-4 ${star <= event.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
-                              />
-                            ))}
-                          </div>
-                          <div className="text-sm text-text-secondary">{event.totalReviews} reviews</div>
-                        </div>
-                      </div>
-                      
-                      <div className="space-y-4">
-                        {event.reviews.map((review) => (
-                          <div key={review.id} className="border-b border-border-default pb-4 last:border-b-0">
-                            <div className="flex items-start gap-3">
-                              <Avatar className="w-10 h-10">
-                                <AvatarFallback>{review.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <span className="font-medium text-text-primary">{review.name}</span>
-                                  {review.verified && (
-                                    <Badge variant="outline" className="text-xs">
-                                      <CheckCircle className="w-3 h-3 mr-1" />
-                                      Verified
-                                    </Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="flex">
-                                    {[1,2,3,4,5].map((star) => (
-                                      <Star 
-                                        key={star} 
-                                        className={`w-4 h-4 ${star <= review.rating ? 'text-yellow-500 fill-current' : 'text-gray-300'}`} 
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-sm text-text-secondary">
-                                    {new Date(review.date).toLocaleDateString()}
-                                  </span>
-                                </div>
-                                <p className="text-text-secondary">{review.comment}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                <ReviewsSection eventId={event.id.toString()} />
               </TabsContent>
             </Tabs>
 
@@ -704,6 +647,18 @@ Whether you're a seasoned competitor or just starting your stepping journey, thi
                 </div>
               </CardContent>
             </Card>
+
+            {/* Calendar Integration */}
+            <CalendarIntegration
+              eventDetails={{
+                title: event.title,
+                description: event.description,
+                startDate: new Date(`${event.date} ${event.time}`),
+                endDate: new Date(`${event.date} ${event.endTime}`),
+                location: event.venue.name,
+                address: event.address
+              }}
+            />
           </div>
         </div>
       </div>

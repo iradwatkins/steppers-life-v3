@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +75,9 @@ const Header = () => {
             
             {user ? (
               <>
+                {/* Notification Center */}
+                <NotificationCenter />
+                
                 {/* Post Content Dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
