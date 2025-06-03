@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/hooks/useAuth';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare } from 'lucide-react';
@@ -18,40 +20,19 @@ interface DashboardStats {
 
 const Admin = () => {
   const { user } = useAuth();
+  const { isAdmin, loading } = useAdminCheck();
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     totalFiles: 0,
-    adminUsers: 1, // Hardcoded for now since we don't have user_roles table
+    adminUsers: 1,
     recentActivity: []
   });
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    checkAdminStatus();
-    if (user) {
+    if (user && isAdmin) {
       loadDashboardStats();
     }
-  }, [user]);
-
-  const checkAdminStatus = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
-    
-    try {
-      // For now, hardcode admin check for the specified email
-      const adminEmails = ['iradwatkins@gmail.com'];
-      const userIsAdmin = adminEmails.includes(user.email || '');
-      setIsAdmin(userIsAdmin);
-    } catch (error) {
-      console.log('Error checking admin status:', error);
-      setIsAdmin(false);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, isAdmin]);
 
   const loadDashboardStats = async () => {
     try {
@@ -60,10 +41,16 @@ const Admin = () => {
         .from('uploaded_files')
         .select('*', { count: 'exact', head: true });
 
+      // Get admin users count
+      const { count: adminCount } = await supabase
+        .from('user_roles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'admin');
+
       setStats({
         totalUsers: 1, // Hardcoded since we can't access auth.users
         totalFiles: fileCount || 0,
-        adminUsers: 1, // Hardcoded for now
+        adminUsers: adminCount || 0,
         recentActivity: []
       });
     } catch (error) {
@@ -166,7 +153,7 @@ const Admin = () => {
                   <div className="flex items-center justify-between">
                     <span>Admin Access</span>
                     <Badge variant="outline" className="text-feedback-success border-feedback-success">
-                      iradwatkins@gmail.com
+                      Database-Driven Roles
                     </Badge>
                   </div>
                 </div>
@@ -247,7 +234,6 @@ const Admin = () => {
                   </CardContent>
                 </Card>
               </Link>
-              {/* Add more admin tool links here as needed */}
             </div>
           </div>
 
@@ -258,6 +244,14 @@ const Admin = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-feedback-success/10 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-feedback-success" />
+                  <div>
+                    <p className="font-medium">Database-Driven Admin Roles</p>
+                    <p className="text-sm text-text-secondary">Moved from hardcoded emails to flexible user roles system</p>
+                  </div>
+                </div>
+                
                 <div className="flex items-center gap-3 p-4 bg-feedback-success/10 rounded-lg">
                   <CheckCircle className="h-5 w-5 text-feedback-success" />
                   <div>
