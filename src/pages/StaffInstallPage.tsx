@@ -26,6 +26,8 @@ const StaffInstallPage = () => {
   const [showDebug, setShowDebug] = useState(false);
   const [installationAttempts, setInstallationAttempts] = useState(0);
   const [showInstallPopup, setShowInstallPopup] = useState(false);
+  const [showFullPageModal, setShowFullPageModal] = useState(false);
+  const [showDownloadMessage, setShowDownloadMessage] = useState(false);
   const { 
     isInstallable, 
     isInstalled, 
@@ -36,6 +38,73 @@ const StaffInstallPage = () => {
     debugInfo,
     checkPWAReadiness
   } = usePWAInstall();
+
+  // Define functions before they're used in useEffect to prevent temporal dead zone errors
+  const handlePlatformInstall = async () => {
+    setInstallationAttempts(prev => prev + 1);
+    console.log(`🚀 Install attempt #${installationAttempts + 1}`);
+    
+    // Show download message immediately
+    setShowDownloadMessage(true);
+    
+    // Force user engagement for instant install
+    sessionStorage.setItem('pwa-engagement', 'true');
+    sessionStorage.setItem('user-interacted', 'true');
+    localStorage.setItem('pwa-visited', 'true');
+    
+    // Try auto-install first if available
+    const success = await install();
+    if (!success) {
+      console.log('❌ Auto-install failed, showing manual instructions');
+      // Hide download message and show instructions
+      setShowDownloadMessage(false);
+      // Fall back to scrolling to instructions if auto-install not available
+      document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      // Hide the modal after successful install
+      setTimeout(() => {
+        setShowFullPageModal(false);
+        setShowDownloadMessage(false);
+      }, 3000);
+    }
+  };
+
+  const handleDebugToggle = () => {
+    setShowDebug(!showDebug);
+    if (!showDebug) {
+      // Show debug info when enabling
+      const readiness = checkPWAReadiness();
+      console.log('🔍 PWA Debug Info:', readiness);
+    }
+  };
+
+  const forceInstallPromptCheck = () => {
+    console.log('🔄 Forcing install prompt check...');
+    
+    // Simulate user engagement
+    sessionStorage.setItem('pwa-engagement', 'true');
+    sessionStorage.setItem('user-interacted', 'true');
+    
+    // Trigger custom events
+    window.dispatchEvent(new CustomEvent('beforeinstallprompt-check'));
+    window.dispatchEvent(new Event('scroll'));
+    window.dispatchEvent(new Event('click'));
+    
+    // Force service worker update
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+          console.log('🔄 Updating service worker...');
+          registration.update();
+        });
+      });
+    }
+    
+    toast.info('🔄 Forced PWA check', {
+      description: 'Triggered install prompt check and user engagement. Wait 10-30 seconds.',
+      duration: 5000,
+    });
+  };
 
   useEffect(() => {
     // Add blinking animation styles to the document
@@ -91,6 +160,17 @@ const StaffInstallPage = () => {
         }
       }
       
+      @keyframes slideInUp {
+        from {
+          transform: translateY(100%);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
+      }
+      
       .blink-blue-yellow {
         animation: blinkBlueYellow 1.5s infinite, pulse 2s infinite;
       }
@@ -101,6 +181,10 @@ const StaffInstallPage = () => {
       
       .blink-gray-yellow {
         animation: blinkGrayYellow 1.5s infinite, pulse 2s infinite;
+      }
+      
+      .slide-in-up {
+        animation: slideInUp 0.5s ease-out;
       }
     `;
     document.head.appendChild(style);
@@ -113,89 +197,255 @@ const StaffInstallPage = () => {
     window.addEventListener('online', handleOnlineStatusChange);
     window.addEventListener('offline', handleOnlineStatusChange);
 
-    // Install popup timer - show after 30 seconds if not installed
+    // Install popup timer - show full page modal after 5 seconds if not installed
     const popupTimer = setTimeout(() => {
-      if (!isInstalled && !isInstallable && !showInstallPopup) {
-        setShowInstallPopup(true);
-        toast.info('📲 Download the SteppersLife App?', {
-          description: 'Install our app for faster performance and offline access!',
-          action: {
-            label: 'Install Now',
-            onClick: () => {
-              setShowInstallPopup(false);
-              handlePlatformInstall();
-            }
-          },
-          duration: 10000,
+      if (!isInstalled && !showFullPageModal) {
+        setShowFullPageModal(true);
+        toast.info('📲 Ready to Install SteppersLife App!', {
+          description: 'Click the install button to download the app to your device.',
+          duration: 5000,
         });
       }
-    }, 30000); // 30 seconds
+    }, 5000); // 5 seconds
+
+    // Also show modal when user scrolls to bottom
+    const handleScroll = () => {
+      const scrolled = window.scrollY;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercentage = scrolled / maxScroll;
+      
+      // Show modal when user scrolls 50% down the page
+      if (scrollPercentage > 0.5 && !isInstalled && !showFullPageModal) {
+        setShowFullPageModal(true);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
 
     return () => {
       window.removeEventListener('online', handleOnlineStatusChange);
       window.removeEventListener('offline', handleOnlineStatusChange);
+      window.removeEventListener('scroll', handleScroll);
       clearTimeout(popupTimer);
       // Clean up the style element
       document.head.removeChild(style);
     };
-  }, [isInstalled, isInstallable, showInstallPopup]);
-
-  const handlePlatformInstall = async () => {
-    setInstallationAttempts(prev => prev + 1);
-    console.log(`🚀 Install attempt #${installationAttempts + 1}`);
-    
-    // Force user engagement for instant install
-    sessionStorage.setItem('pwa-engagement', 'true');
-    sessionStorage.setItem('user-interacted', 'true');
-    localStorage.setItem('pwa-visited', 'true');
-    
-    // Try auto-install first if available
-    const success = await install();
-    if (!success) {
-      console.log('❌ Auto-install failed, showing manual instructions');
-      // Fall back to scrolling to instructions if auto-install not available
-      document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleDebugToggle = () => {
-    setShowDebug(!showDebug);
-    if (!showDebug) {
-      // Show debug info when enabling
-      const readiness = checkPWAReadiness();
-      console.log('🔍 PWA Debug Info:', readiness);
-    }
-  };
-
-  const forceInstallPromptCheck = () => {
-    console.log('🔄 Forcing install prompt check...');
-    
-    // Simulate user engagement
-    sessionStorage.setItem('pwa-engagement', 'true');
-    sessionStorage.setItem('user-interacted', 'true');
-    
-    // Trigger custom events
-    window.dispatchEvent(new CustomEvent('beforeinstallprompt-check'));
-    window.dispatchEvent(new Event('scroll'));
-    window.dispatchEvent(new Event('click'));
-    
-    // Force service worker update
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(registrations => {
-        registrations.forEach(registration => {
-          console.log('🔄 Updating service worker...');
-          registration.update();
-        });
-      });
-    }
-    
-    toast.info('🔄 Forced PWA check', {
-      description: 'Triggered install prompt check and user engagement. Wait 10-30 seconds.',
-      duration: 5000,
-    });
-  };
+  }, [isInstalled, showFullPageModal]);
 
   const instructions = getInstallInstructions();
+
+  const renderFullPageModal = () => {
+    if (!showFullPageModal || isInstalled) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-60 z-[9999] flex items-center justify-center p-4">
+        <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto slide-in-up border-4 border-yellow-400">
+          {/* Modal Header */}
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500 text-white p-8 rounded-t-3xl text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-20 animate-pulse"></div>
+            <div className="relative z-10">
+              <div className="text-6xl mb-4 animate-bounce">📲</div>
+              <h2 className="text-3xl font-black mb-2">Install SteppersLife App</h2>
+              <p className="text-blue-100 text-lg font-medium">Fast, offline-capable event management</p>
+              <div className="flex justify-center mt-4">
+                <div className="bg-white bg-opacity-20 rounded-full px-6 py-2">
+                  <span className="text-sm font-bold">⚡ ONE-CLICK INSTALL ⚡</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Download Message */}
+          {showDownloadMessage && (
+            <div className="bg-green-50 border-l-8 border-green-400 p-6 m-4 rounded-lg">
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-green-600 mr-4"></div>
+                <div>
+                  <h3 className="text-green-800 font-bold text-xl">Download will begin shortly...</h3>
+                  <p className="text-green-600 text-lg mt-2">Please follow any browser prompts to complete installation.</p>
+                  <p className="text-green-500 text-sm mt-2">✅ Installation process started successfully!</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Install Button */}
+          {!showDownloadMessage && (
+            <div className="p-8 space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                  Ready to install on your {
+                    deviceInfo.isAndroid ? 'Android Device' : 
+                    deviceInfo.isIOS ? 'iPhone/iPad' : 
+                    deviceInfo.isMac ? 'Mac Computer' : 
+                    deviceInfo.isWindows ? 'Windows Computer' : 
+                    'device'
+                  }
+                </h3>
+                <p className="text-gray-600 text-lg">
+                  {isInstallable ? 
+                    '🎉 One-click installation available!' : 
+                    '📋 Follow the instructions after clicking install.'
+                  }
+                </p>
+              </div>
+
+              {/* Platform-specific install button */}
+              <div className="space-y-4">
+                {/* Android Install Button */}
+                {deviceInfo.isAndroid && (
+                  <Button 
+                    size="lg" 
+                    onClick={handlePlatformInstall}
+                    className="h-20 w-full blink-green-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
+                    disabled={isInstalling}
+                  >
+                    <Smartphone className="h-8 w-8 mr-4" />
+                    <div className="text-center flex-1">
+                      <div className="font-black text-2xl">
+                        {isInstalling ? '🔄 INSTALLING...' : '📱 INSTALL ON ANDROID'}
+                      </div>
+                      <div className="text-lg opacity-90 font-medium">
+                        {isInstallable ? 'Instant install available!' : 'Add to Home Screen'}
+                      </div>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="text-4xl animate-bounce">⚡</span>
+                    </div>
+                  </Button>
+                )}
+
+                {/* iOS Install Button */}
+                {deviceInfo.isIOS && (
+                  <Button 
+                    size="lg" 
+                    onClick={handlePlatformInstall}
+                    className="h-20 w-full blink-gray-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
+                    disabled={isInstalling}
+                  >
+                    <Apple className="h-8 w-8 mr-4" />
+                    <div className="text-center flex-1">
+                      <div className="font-black text-2xl">
+                        {isInstalling ? '🔄 INSTALLING...' : '🍎 INSTALL ON iPHONE/iPAD'}
+                      </div>
+                      <div className="text-lg opacity-90 font-medium">
+                        Safari Share Button Method
+                      </div>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="text-4xl animate-bounce">🍎</span>
+                    </div>
+                  </Button>
+                )}
+
+                {/* Mac Install Button */}
+                {deviceInfo.isMac && !deviceInfo.isIOS && (
+                  <Button 
+                    size="lg" 
+                    onClick={handlePlatformInstall}
+                    className="h-20 w-full blink-blue-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
+                    disabled={isInstalling}
+                  >
+                    <Monitor className="h-8 w-8 mr-4" />
+                    <div className="text-center flex-1">
+                      <div className="font-black text-2xl">
+                        {isInstalling ? '🔄 INSTALLING...' : '💻 INSTALL ON MAC'}
+                      </div>
+                      <div className="text-lg opacity-90 font-medium">
+                        {deviceInfo.isChrome ? 'Chrome Install Available' : 'Safari File Menu'}
+                      </div>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="text-4xl animate-bounce">💻</span>
+                    </div>
+                  </Button>
+                )}
+
+                {/* Windows Install Button */}
+                {deviceInfo.isWindows && (
+                  <Button 
+                    size="lg" 
+                    onClick={handlePlatformInstall}
+                    className="h-20 w-full blink-blue-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
+                    disabled={isInstalling}
+                  >
+                    <Monitor className="h-8 w-8 mr-4" />
+                    <div className="text-center flex-1">
+                      <div className="font-black text-2xl">
+                        {isInstalling ? '🔄 INSTALLING...' : '🖥️ INSTALL ON WINDOWS'}
+                      </div>
+                      <div className="text-lg opacity-90 font-medium">
+                        Browser Install Button Available
+                      </div>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="text-4xl animate-bounce">🖥️</span>
+                    </div>
+                  </Button>
+                )}
+
+                {/* Generic Install Button */}
+                {!deviceInfo.isAndroid && !deviceInfo.isIOS && !deviceInfo.isMac && !deviceInfo.isWindows && (
+                  <Button 
+                    size="lg" 
+                    onClick={handlePlatformInstall}
+                    className="h-20 w-full blink-blue-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
+                    disabled={isInstalling}
+                  >
+                    <Download className="h-8 w-8 mr-4" />
+                    <div className="text-center flex-1">
+                      <div className="font-black text-2xl">
+                        {isInstalling ? '🔄 INSTALLING...' : '📲 INSTALL PWA'}
+                      </div>
+                      <div className="text-lg opacity-90 font-medium">
+                        Install Progressive Web App
+                      </div>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <span className="text-4xl animate-bounce">📲</span>
+                    </div>
+                  </Button>
+                )}
+              </div>
+
+              {/* Modal Actions */}
+              <div className="flex space-x-4 pt-6 border-t-2 border-gray-200">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-12 text-lg font-semibold"
+                  onClick={() => setShowFullPageModal(false)}
+                >
+                  ⏰ Maybe Later
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-12 text-lg font-semibold"
+                  onClick={() => {
+                    setShowFullPageModal(false);
+                    document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  📋 See Instructions
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Close button */}
+          {!showDownloadMessage && (
+            <button
+              onClick={() => setShowFullPageModal(false)}
+              className="absolute top-6 right-6 text-white hover:text-gray-200 transition-colors z-20 bg-black bg-opacity-30 rounded-full p-2"
+            >
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderInstallButtons = () => {
     if (isInstalled) {
@@ -210,211 +460,89 @@ const StaffInstallPage = () => {
     }
 
     return (
-      <div className="space-y-4">
-        {/* Primary Install Button - Only show if no platform-specific button will be shown */}
-        {isInstallable && instructions.canAutoInstall && !deviceInfo.isAndroid && !deviceInfo.isIOS && !deviceInfo.isMac && !deviceInfo.isWindows ? (
-          <Alert className="bg-blue-50 border-blue-200 relative overflow-hidden">
-            <Download className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="flex items-center justify-between">
-              <span className="text-blue-800 font-medium">
-                🎉 Ready to install! One-click installation available.
+      <div className="space-y-6">
+        {/* Main Install Button - Direct Installation */}
+        <div className="text-center space-y-6 relative">
+          {/* Show download message overlay if installing */}
+          {showDownloadMessage && (
+            <div className="absolute inset-0 bg-green-50 border-4 border-green-400 rounded-2xl z-10 flex items-center justify-center p-6">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-green-600 mx-auto mb-4"></div>
+                <h3 className="text-green-800 font-bold text-2xl mb-2">Download will begin shortly...</h3>
+                <p className="text-green-600 text-lg">Please follow any browser prompts to complete installation.</p>
+                <p className="text-green-500 text-sm mt-2">✅ Installation process started!</p>
+              </div>
+            </div>
+          )}
+
+          <Button 
+            size="lg" 
+            onClick={handlePlatformInstall}
+            className="h-24 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500 hover:from-blue-700 hover:via-purple-700 hover:to-yellow-600 text-white font-black text-2xl relative overflow-hidden transform transition-all duration-300 hover:scale-105 border-4 border-yellow-400 shadow-2xl"
+            disabled={isInstalling}
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-0 hover:opacity-30 transition-opacity duration-300"></div>
+            <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-transparent via-white to-transparent opacity-10"></div>
+            <Download className="h-10 w-10 mr-6 animate-bounce" />
+            <div className="text-center flex-1 relative z-10">
+              <div className="font-black text-3xl mb-1">
+                {isInstalling ? '🔄 INSTALLING...' : '⚡ INSTALL STEPPERS APP'}
+              </div>
+              <div className="text-lg opacity-95 font-bold">
+                {isInstalling ? 'Please wait...' : `${deviceInfo.isAndroid ? '📱 Android' : deviceInfo.isIOS ? '🍎 iOS' : deviceInfo.isMac ? '💻 Mac' : deviceInfo.isWindows ? '🖥️ Windows' : '📲 Device'} Installation`}
+              </div>
+            </div>
+            <div className="absolute top-4 right-4">
+              <span className="text-5xl animate-bounce">
+                {isInstalling ? '🔄' : '⚡'}
               </span>
-              <Button 
-                size="sm" 
-                onClick={handlePlatformInstall}
-                className="ml-4 bg-blue-600 hover:bg-blue-700"
-                disabled={isInstalling}
-              >
-                {isInstalling ? '🔄 Installing...' : '📲 Install Now'}
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : null}
+            </div>
+            <div className="absolute bottom-2 right-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold">
+              {isInstallable ? 'ONE-CLICK' : 'GUIDED'}
+            </div>
+          </Button>
 
-        {/* Platform-specific install buttons - only one will show based on device */}
-        <div className="space-y-2">
-          {/* Android Install Button */}
-          {deviceInfo.isAndroid && (
-            <Button 
-              size="lg" 
-              onClick={handlePlatformInstall}
-              className="h-20 w-full blink-green-yellow text-white font-bold text-lg relative overflow-hidden"
-              disabled={isInstalling}
-            >
-              <Smartphone className="h-8 w-8 mr-4" />
-              <div className="text-left flex-1">
-                <div className="font-bold text-xl">
-                  {isInstalling ? '🔄 INSTALLING...' : '📱 INSTALL ON ANDROID'}
-                </div>
-                <div className="text-sm opacity-90 font-medium">
-                  {isInstallable ? 'Click for instant install!' : 'Tap to see how → Add to Home Screen'}
-                </div>
-                <div className="text-xs opacity-75">
-                  Attempt #{installationAttempts + 1} • {deviceInfo.isChrome ? `Chrome ${deviceInfo.chromeVersion}` : 'Other Browser'}
-                </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <span className="text-2xl animate-bounce">
-                  {isInstallable ? '⚡' : isInstalling ? '🔄' : '⬇️'}
-                </span>
-              </div>
-              {!debugInfo.promptReceived && (
-                <div className="absolute bottom-1 right-1 bg-orange-500 text-white text-xs px-1 rounded">
-                  Manual
-                </div>
-              )}
-            </Button>
-          )}
+          <div className="space-y-2">
+            <p className="text-gray-700 text-lg font-semibold">
+              🎯 <strong>Click above to start installation!</strong>
+            </p>
+            <p className="text-gray-600 text-sm">
+              Works offline • Faster than website • Home screen access
+            </p>
+          </div>
 
-          {/* iOS Install Button */}
-          {deviceInfo.isIOS && (
-            <Button 
-              size="lg" 
-              onClick={handlePlatformInstall}
-              className="h-20 w-full blink-gray-yellow text-white font-bold text-lg relative overflow-hidden"
-              disabled={isInstalling}
-            >
-              <Apple className="h-8 w-8 mr-4" />
-              <div className="text-left flex-1">
-                <div className="font-bold text-xl">
-                  {isInstalling ? '🔄 INSTALLING...' : '🍎 INSTALL ON iPHONE/iPAD'}
-                </div>
-                <div className="text-sm opacity-90 font-medium">
-                  {isInstallable ? 'Click for instant install!' : 'Tap to see how → Safari Share Button'}
-                </div>
-                <div className="text-xs opacity-75">
-                  Attempt #{installationAttempts + 1} • Safari Installation
-                </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <span className="text-2xl animate-bounce">
-                  {isInstallable ? '⚡' : isInstalling ? '🔄' : '⬇️'}
-                </span>
-              </div>
-            </Button>
-          )}
-
-          {/* Mac Install Button */}
-          {deviceInfo.isMac && !deviceInfo.isIOS && (
-            <Button 
-              size="lg" 
-              onClick={handlePlatformInstall}
-              className="h-20 w-full blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
-              disabled={isInstalling}
-            >
-              <Monitor className="h-8 w-8 mr-4" />
-              <div className="text-left flex-1">
-                <div className="font-bold text-xl">
-                  {isInstalling ? '🔄 INSTALLING...' : '💻 INSTALL ON MAC'}
-                </div>
-                <div className="text-sm opacity-90 font-medium">
-                  {isInstallable ? 'Click for instant install!' : `Tap to see how → ${deviceInfo.isChrome ? 'Chrome Install Button' : 'Safari File Menu'}`}
-                </div>
-                <div className="text-xs opacity-75">
-                  Attempt #{installationAttempts + 1} • {deviceInfo.isChrome ? `Chrome ${deviceInfo.chromeVersion}` : 'Other Browser'}
-                </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <span className="text-2xl animate-bounce">
-                  {isInstallable ? '⚡' : isInstalling ? '🔄' : '⬇️'}
-                </span>
-              </div>
-              {/* Status indicators */}
-              {debugInfo.promptReceived && (
-                <div className="absolute bottom-1 right-1 bg-green-500 text-white text-xs px-1 rounded">
-                  Ready
-                </div>
-              )}
-              {!debugInfo.promptReceived && deviceInfo.isChrome && (
-                <div className="absolute bottom-1 right-1 bg-orange-500 text-white text-xs px-1 rounded">
-                  Waiting
-                </div>
-              )}
-            </Button>
-          )}
-
-          {/* Windows Install Button */}
-          {deviceInfo.isWindows && (
-            <Button 
-              size="lg" 
-              onClick={handlePlatformInstall}
-              className="h-20 w-full blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
-              disabled={isInstalling}
-            >
-              <Monitor className="h-8 w-8 mr-4" />
-              <div className="text-left flex-1">
-                <div className="font-bold text-xl">
-                  {isInstalling ? '🔄 INSTALLING...' : '🖥️ INSTALL ON WINDOWS'}
-                </div>
-                <div className="text-sm opacity-90 font-medium">
-                  {isInstallable ? 'Click for instant install!' : `Tap to see how → ${deviceInfo.isChrome ? 'Chrome Install Button' : 'Browser Menu Option'}`}
-                </div>
-                <div className="text-xs opacity-75">
-                  Attempt #{installationAttempts + 1} • {deviceInfo.isChrome ? `Chrome ${deviceInfo.chromeVersion}` : 'Other Browser'}
-                </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <span className="text-2xl animate-bounce">
-                  {isInstallable ? '⚡' : isInstalling ? '🔄' : '⬇️'}
-                </span>
-              </div>
-            </Button>
-          )}
-
-          {/* Generic Install Button - only if no platform detected */}
-          {!deviceInfo.isAndroid && !deviceInfo.isIOS && !deviceInfo.isMac && !deviceInfo.isWindows && (
-            <Button 
-              size="lg" 
-              onClick={handlePlatformInstall}
-              className="h-20 w-full blink-blue-yellow text-white font-bold text-lg relative overflow-hidden"
-              disabled={isInstalling}
-            >
-              <Download className="h-8 w-8 mr-4" />
-              <div className="text-left flex-1">
-                <div className="font-bold text-xl">
-                  {isInstalling ? '🔄 INSTALLING...' : '📲 INSTALL PWA'}
-                </div>
-                <div className="text-sm opacity-90 font-medium">
-                  {isInstallable ? 'Click for instant install!' : 'Tap to see instructions below'}
-                </div>
-                <div className="text-xs opacity-75">
-                  Attempt #{installationAttempts + 1} • Generic Platform
-                </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <span className="text-2xl animate-bounce">
-                  {isInstallable ? '⚡' : isInstalling ? '🔄' : '⬇️'}
-                </span>
-              </div>
-            </Button>
-          )}
-
-          {/* Force check button for debugging */}
-          {deviceInfo.isChrome && !isInstallable && (
-            <Button 
-              variant="outline"
-              onClick={forceInstallPromptCheck}
-              className="w-full"
-            >
-              🔄 Force Install Check (Debug)
-            </Button>
-          )}
+          {/* Alternative modal trigger button for those who prefer guided experience */}
+          <Button 
+            variant="outline"
+            size="lg" 
+            onClick={() => setShowFullPageModal(true)}
+            className="h-16 w-full border-2 border-blue-400 hover:bg-blue-50 text-blue-700 font-bold text-lg"
+          >
+            <Monitor className="h-6 w-6 mr-3" />
+            🔍 Show Guided Installation Experience
+          </Button>
         </div>
 
         {/* Attention Banner */}
-        <Alert className="bg-gradient-to-r from-yellow-100 to-blue-100 border-yellow-300 border-2">
-          <AlertCircle className="h-5 w-5 text-yellow-600 animate-pulse" />
+        <Alert className="bg-gradient-to-r from-yellow-100 via-orange-100 to-red-100 border-orange-400 border-3">
+          <AlertCircle className="h-6 w-6 text-orange-600 animate-pulse" />
           <AlertDescription className="text-center">
-            <span className="font-bold text-yellow-800 text-lg">
-              👆 CLICK THE BUTTON ABOVE TO INSTALL THE APP! 👆
+            <span className="font-black text-orange-800 text-xl">
+              ⬆️ CLICK THE BIG BUTTON ABOVE FOR INSTANT INSTALL! ⬆️
             </span>
             <br />
-            <span className="text-yellow-700">
+            <span className="text-orange-700 font-semibold text-lg">
               The app works offline and is much faster than using the website!
             </span>
             <br />
-            <span className="text-xs text-yellow-600">
-              Attempts: {installationAttempts} • Installable: {isInstallable ? '✅' : '❌'} • Prompt: {debugInfo.promptReceived ? '✅' : '❌'}
+            <span className="text-sm text-orange-600 font-medium">
+              Attempts: {installationAttempts} • Platform: {
+                deviceInfo.isAndroid ? '📱 Android' : 
+                deviceInfo.isIOS ? '🍎 iOS' : 
+                deviceInfo.isMac ? '💻 Mac' : 
+                deviceInfo.isWindows ? '🖥️ Windows' : 
+                '❓ Unknown'
+              } • Ready: {isInstallable ? '✅' : '⏳'}
             </span>
           </AlertDescription>
         </Alert>
@@ -447,12 +575,25 @@ const StaffInstallPage = () => {
           </Alert>
         )}
 
+        {/* Force check button for debugging */}
+        {deviceInfo.isChrome && !isInstallable && (
+          <div className="text-center">
+            <Button 
+              variant="outline"
+              onClick={forceInstallPromptCheck}
+              className="w-full h-12 text-lg"
+            >
+              🔄 Force Install Check (Debug Mode)
+            </Button>
+          </div>
+        )}
+
         {/* Browser Recommendation */}
         {!deviceInfo.isChrome && !deviceInfo.isSafari && !deviceInfo.isEdge && (
           <Alert className="bg-orange-50 border-orange-200">
             <Chrome className="h-4 w-4 text-orange-600" />
             <AlertDescription className="text-orange-800">
-              <strong>Tip:</strong> For the best PWA experience, try opening this page in Chrome (Android/Windows/Mac) or Safari (iOS/Mac).
+              <strong>💡 Tip:</strong> For the best PWA experience, try opening this page in Chrome (Android/Windows/Mac) or Safari (iOS/Mac).
             </AlertDescription>
           </Alert>
         )}
@@ -539,9 +680,6 @@ const StaffInstallPage = () => {
             </CardContent>
           </Card>
         )}
-
-        {/* Install Buttons Section */}
-        {renderInstallButtons()}
 
         <div className="grid md:grid-cols-2 gap-6">
           {/* Installation Instructions */}
@@ -673,6 +811,9 @@ const StaffInstallPage = () => {
           </CardContent>
         </Card>
 
+        {/* Install Buttons Section - Moved to bottom for better UX */}
+        {renderInstallButtons()}
+
         {/* Quick Access Buttons */}
         <div className="grid md:grid-cols-2 gap-4">
           <Button 
@@ -715,6 +856,9 @@ const StaffInstallPage = () => {
           </AlertDescription>
         </Alert>
       </div>
+
+      {/* Full Page Modal */}
+      {renderFullPageModal()}
     </div>
   );
 };
