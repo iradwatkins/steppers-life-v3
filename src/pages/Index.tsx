@@ -264,6 +264,53 @@ const Index = () => {
         </div>
       </section>
 
+      {/* App Download Section - New */}
+      <section className="py-12 xs:py-14 sm:py-16 px-3 xs:px-4">
+        <div className="container mx-auto max-w-4xl">
+          <div className="text-center space-y-6 xs:space-y-8">
+            <div className="space-y-3 xs:space-y-4">
+              <h2 className="font-serif text-2xl xs:text-3xl font-bold text-text-primary">
+                📱 Get the SteppersLife App
+              </h2>
+              <p className="text-base xs:text-lg text-text-secondary max-w-2xl mx-auto">
+                Install our Progressive Web App for faster access, offline capability, and a native app experience on your device.
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-3 gap-4 xs:gap-6 max-w-3xl mx-auto">
+              <div className="text-center p-4 xs:p-6 bg-surface-card rounded-lg border border-border-default">
+                <div className="text-3xl xs:text-4xl mb-2 xs:mb-3">⚡</div>
+                <h3 className="font-medium text-text-primary text-sm xs:text-base mb-1 xs:mb-2">Lightning Fast</h3>
+                <p className="text-xs xs:text-sm text-text-secondary">3x faster than the website with instant loading</p>
+              </div>
+              
+              <div className="text-center p-4 xs:p-6 bg-surface-card rounded-lg border border-border-default">
+                <div className="text-3xl xs:text-4xl mb-2 xs:mb-3">📴</div>
+                <h3 className="font-medium text-text-primary text-sm xs:text-base mb-1 xs:mb-2">Works Offline</h3>
+                <p className="text-xs xs:text-sm text-text-secondary">Access your events and profile without internet</p>
+              </div>
+              
+              <div className="text-center p-4 xs:p-6 bg-surface-card rounded-lg border border-border-default sm:col-span-1">
+                <div className="text-3xl xs:text-4xl mb-2 xs:mb-3">🏠</div>
+                <h3 className="font-medium text-text-primary text-sm xs:text-base mb-1 xs:mb-2">Home Screen</h3>
+                <p className="text-xs xs:text-sm text-text-secondary">Add to your device like a native app</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col xs:flex-row sm:flex-row gap-3 xs:gap-4 justify-center items-center">
+              <Link to="/staff-install" className="w-full xs:w-auto">
+                <Button size="lg" className="w-full xs:w-auto bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary text-sm xs:text-base">
+                  📲 Install App
+                </Button>
+              </Link>
+              <p className="text-xs xs:text-sm text-text-secondary">
+                Available for iPhone, Android, and Desktop
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section - Responsive buttons */}
       {!user && (
         <section className="py-12 xs:py-14 sm:py-16 px-3 xs:px-4 bg-brand-primary text-center">

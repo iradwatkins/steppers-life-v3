@@ -16,7 +16,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
-import StaffInstallPage from "./pages/StaffInstallPage";
+import AppInstallPage from "./pages/AppInstallPage";
 import CreateEventPage from "./pages/organizer/CreateEventPage";
 import EventTicketingPage from "./pages/organizer/EventTicketingPage";
 import EventSeatingPage from "./pages/organizer/EventSeatingPage";
@@ -63,7 +63,7 @@ const App = () => (
           {/* Public routes */}
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
-          <Route path="/staff-install" element={<StaffInstallPage />} />
+          <Route path="/staff-install" element={<AppInstallPage />} />
           
           {/* PWA-specific routes (standalone, no layout) */}
           <Route path="/pwa/login" element={<PWALoginPage />} />

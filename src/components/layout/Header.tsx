@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2 } from 'lucide-react';
+import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2, Smartphone } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
@@ -30,6 +30,7 @@ const Header = () => {
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
+    { name: 'App', href: '/staff-install' },
   ];
 
   const isActiveLink = (href: string) => {
@@ -132,6 +133,12 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/staff-install" className="flex items-center">
+                        <Smartphone className="mr-2 h-4 w-4" />
+                        <span>Download App</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/docs" className="flex items-center">
                         <span>Docs</span>
                       </Link>
@@ -211,6 +218,14 @@ const Header = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Profile
+                  </Link>
+                  <Link
+                    to="/staff-install"
+                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Download App
                   </Link>
                   <Link
                     to="/docs"

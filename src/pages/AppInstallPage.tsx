@@ -14,12 +14,13 @@ import {
   WifiOff,
   Chrome,
   Bug,
-  RefreshCw
+  RefreshCw,
+  Calendar
 } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { toast } from '@/components/ui/sonner';
 
-const StaffInstallPage = () => {
+const AppInstallPage = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showDebug, setShowDebug] = useState(false);
   const [installationAttempts, setInstallationAttempts] = useState(0);
@@ -653,11 +654,11 @@ const StaffInstallPage = () => {
           <div className="flex items-center justify-center space-x-2">
             <Smartphone className="h-8 w-8 text-blue-600 animate-pulse" />
             <h1 className="text-3xl font-bold text-gray-900">
-              SteppersLife Event Staff App
+              SteppersLife Mobile App
             </h1>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Install the Progressive Web App (PWA) on your device for fast, offline-capable event management
+            Install the Progressive Web App (PWA) on your device for fast, offline-capable access to events, classes, and community features
           </p>
           
           {/* Connection Status */}
@@ -899,7 +900,7 @@ const StaffInstallPage = () => {
                 <span>App Features</span>
               </CardTitle>
               <CardDescription>
-                What you can do with the staff app
+                What you can do with the SteppersLife app
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -908,23 +909,31 @@ const StaffInstallPage = () => {
                   <QrCode className="h-5 w-5 text-blue-600 mt-0.5" />
                   <div>
                     <h4 className="font-medium">QR Code Scanning</h4>
-                    <p className="text-sm text-gray-600">Quickly check in attendees with camera scanning</p>
+                    <p className="text-sm text-gray-600">Quickly check into events and classes with camera scanning</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
                   <WifiOff className="h-5 w-5 text-green-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium">Offline Capability</h4>
-                    <p className="text-sm text-gray-600">Works without internet, syncs when connected</p>
+                    <h4 className="font-medium">Offline Access</h4>
+                    <p className="text-sm text-gray-600">View your events and classes without internet, syncs when connected</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-3">
                   <Users className="h-5 w-5 text-purple-600 mt-0.5" />
                   <div>
-                    <h4 className="font-medium">Attendee Management</h4>
-                    <p className="text-sm text-gray-600">Manual lookup, VIP tracking, guest lists</p>
+                    <h4 className="font-medium">Community Features</h4>
+                    <p className="text-sm text-gray-600">Connect with other steppers, find events, and discover classes</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Calendar className="h-5 w-5 text-orange-600 mt-0.5" />
+                  <div>
+                    <h4 className="font-medium">Event Management</h4>
+                    <p className="text-sm text-gray-600">Browse events, purchase tickets, and manage your bookings</p>
                   </div>
                 </div>
               </div>
@@ -932,45 +941,45 @@ const StaffInstallPage = () => {
           </Card>
         </div>
 
-        {/* Staff Roles & Access */}
+        {/* User Types & Features */}
         <Card>
           <CardHeader>
-            <CardTitle>Staff Roles & Access Levels</CardTitle>
+            <CardTitle>User Types & Features</CardTitle>
             <CardDescription>
-              Different access levels for event staff members
+              Different features available for various user types
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid md:grid-cols-3 gap-4">
               <div className="border rounded-lg p-4 space-y-2">
-                <Badge className="bg-blue-100 text-blue-800">Event Staff</Badge>
-                <h4 className="font-medium">Basic Access</h4>
+                <Badge className="bg-blue-100 text-blue-800">Community Member</Badge>
+                <h4 className="font-medium">Free Access</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Attendee check-in</li>
-                  <li>• QR code scanning</li>
-                  <li>• Manual lookup</li>
-                  <li>• View attendance stats</li>
+                  <li>• Browse events and classes</li>
+                  <li>• Join community discussions</li>
+                  <li>• Connect with other steppers</li>
+                  <li>• Basic profile features</li>
                 </ul>
               </div>
               
               <div className="border rounded-lg p-4 space-y-2">
-                <Badge className="bg-green-100 text-green-800">Sales Agent</Badge>
-                <h4 className="font-medium">Sales Access</h4>
+                <Badge className="bg-green-100 text-green-800">Event Attendee</Badge>
+                <h4 className="font-medium">Enhanced Access</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• All staff features</li>
-                  <li>• Cash payment processing</li>
-                  <li>• On-site ticket sales</li>
-                  <li>• Payment code generation</li>
+                  <li>• All community features</li>
+                  <li>• Purchase event tickets</li>
+                  <li>• QR code check-ins</li>
+                  <li>• Event history tracking</li>
                 </ul>
               </div>
               
               <div className="border rounded-lg p-4 space-y-2">
-                <Badge className="bg-purple-100 text-purple-800">Organizer</Badge>
+                <Badge className="bg-purple-100 text-purple-800">Event Organizer</Badge>
                 <h4 className="font-medium">Full Access</h4>
                 <ul className="text-sm text-gray-600 space-y-1">
                   <li>• All features</li>
-                  <li>• Staff management</li>
-                  <li>• Role assignments</li>
+                  <li>• Create & manage events</li>
+                  <li>• Staff management tools</li>
                   <li>• Analytics & reports</li>
                 </ul>
               </div>
@@ -1099,20 +1108,20 @@ const StaffInstallPage = () => {
           <Button 
             size="lg" 
             className="h-16"
-            onClick={() => window.location.href = '/pwa/login'}
+            onClick={() => window.location.href = '/events'}
           >
-            <Smartphone className="h-5 w-5 mr-2" />
-            Go to Staff Login
+            <Calendar className="h-5 w-5 mr-2" />
+            Browse Events
           </Button>
           
           <Button 
             variant="outline" 
             size="lg" 
             className="h-16"
-            onClick={() => window.location.href = '/'}
+            onClick={() => window.location.href = '/classes'}
           >
             <Users className="h-5 w-5 mr-2" />
-            Main Website
+            Find Classes
           </Button>
         </div>
 
@@ -1149,4 +1158,4 @@ const StaffInstallPage = () => {
   );
 };
 
-export default StaffInstallPage; 
+export default AppInstallPage; 
