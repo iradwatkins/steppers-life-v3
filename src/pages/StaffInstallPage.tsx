@@ -12,8 +12,6 @@ import {
   AlertCircle,
   Wifi,
   WifiOff,
-  Monitor,
-  Apple,
   Chrome,
   Bug,
   RefreshCw
@@ -25,10 +23,7 @@ const StaffInstallPage = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showDebug, setShowDebug] = useState(false);
   const [installationAttempts, setInstallationAttempts] = useState(0);
-  const [showInstallPopup, setShowInstallPopup] = useState(false);
-  const [showFullPageModal, setShowFullPageModal] = useState(false);
   const [showDownloadMessage, setShowDownloadMessage] = useState(false);
-  const [modalDismissed, setModalDismissed] = useState(false);
   const { 
     isInstallable, 
     isInstalled, 
@@ -40,7 +35,7 @@ const StaffInstallPage = () => {
     checkPWAReadiness
   } = usePWAInstall();
 
-  // Define functions before they're used in useEffect to prevent temporal dead zone errors
+  // Main install handler
   const handlePlatformInstall = async () => {
     setInstallationAttempts(prev => prev + 1);
     const attemptNumber = installationAttempts + 1;
@@ -101,11 +96,9 @@ const StaffInstallPage = () => {
           duration: 5000,
         });
         
-        // Hide the modal after successful install
+        // Hide the download message after successful install
         setTimeout(() => {
-          setShowFullPageModal(false);
           setShowDownloadMessage(false);
-          setModalDismissed(true); // Don't show again after successful install
         }, 3000);
         
       } else {
@@ -210,88 +203,6 @@ const StaffInstallPage = () => {
   };
 
   useEffect(() => {
-    // Add blinking animation styles to the document
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes blinkBlueYellow {
-        0%, 50% { 
-          background-color: rgb(37, 99, 235); 
-          border-color: rgb(37, 99, 235);
-          box-shadow: 0 0 20px rgba(37, 99, 235, 0.5);
-        }
-        51%, 100% { 
-          background-color: rgb(234, 179, 8); 
-          border-color: rgb(234, 179, 8);
-          box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
-        }
-      }
-      
-      @keyframes blinkGreenYellow {
-        0%, 50% { 
-          background-color: rgb(21, 128, 61); 
-          border-color: rgb(21, 128, 61);
-          box-shadow: 0 0 20px rgba(21, 128, 61, 0.5);
-        }
-        51%, 100% { 
-          background-color: rgb(234, 179, 8); 
-          border-color: rgb(234, 179, 8);
-          box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
-        }
-      }
-      
-      @keyframes blinkGrayYellow {
-        0%, 50% { 
-          background-color: rgb(31, 41, 55); 
-          border-color: rgb(31, 41, 55);
-          box-shadow: 0 0 20px rgba(31, 41, 55, 0.5);
-        }
-        51%, 100% { 
-          background-color: rgb(234, 179, 8); 
-          border-color: rgb(234, 179, 8);
-          box-shadow: 0 0 20px rgba(234, 179, 8, 0.5);
-        }
-      }
-      
-      @keyframes pulse {
-        0%, 100% { 
-          transform: scale(1);
-          box-shadow: 0 0 20px rgba(37, 99, 235, 0.3);
-        }
-        50% { 
-          transform: scale(1.05);
-          box-shadow: 0 0 30px rgba(234, 179, 8, 0.6);
-        }
-      }
-      
-      @keyframes slideInUp {
-        from {
-          transform: translateY(100%);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-      
-      .blink-blue-yellow {
-        animation: blinkBlueYellow 1.5s infinite, pulse 2s infinite;
-      }
-      
-      .blink-green-yellow {
-        animation: blinkGreenYellow 1.5s infinite, pulse 2s infinite;
-      }
-      
-      .blink-gray-yellow {
-        animation: blinkGrayYellow 1.5s infinite, pulse 2s infinite;
-      }
-      
-      .slide-in-up {
-        animation: slideInUp 0.5s ease-out;
-      }
-    `;
-    document.head.appendChild(style);
-
     // Online/offline detection
     const handleOnlineStatusChange = () => {
       setIsOnline(navigator.onLine);
@@ -300,269 +211,13 @@ const StaffInstallPage = () => {
     window.addEventListener('online', handleOnlineStatusChange);
     window.addEventListener('offline', handleOnlineStatusChange);
 
-    // Install popup timer - show full page modal after 15 seconds if not installed and not dismissed
-    const popupTimer = setTimeout(() => {
-      if (!isInstalled && !showFullPageModal && !modalDismissed) {
-        console.log('🎯 Showing auto-popup after 15 seconds - not dismissed');
-        setShowFullPageModal(true);
-        toast.info('📲 Ready to Install SteppersLife App!', {
-          description: 'Click the install button to download the app to your device.',
-          duration: 5000,
-        });
-      } else {
-        console.log('⏭️ Auto-popup skipped:', { isInstalled, showFullPageModal, modalDismissed });
-      }
-    }, 15000); // 15 seconds
-
-    // Also show modal when user scrolls to bottom (only if not dismissed)
-    const handleScroll = () => {
-      const scrolled = window.scrollY;
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      const scrollPercentage = scrolled / maxScroll;
-      
-      // Show modal when user scrolls 50% down the page (only if not dismissed)
-      if (scrollPercentage > 0.5 && !isInstalled && !showFullPageModal && !modalDismissed) {
-        console.log('📜 Showing scroll-triggered popup at 50%');
-        setShowFullPageModal(true);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
     return () => {
       window.removeEventListener('online', handleOnlineStatusChange);
       window.removeEventListener('offline', handleOnlineStatusChange);
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(popupTimer);
-      // Clean up the style element
-      document.head.removeChild(style);
     };
-  }, [isInstalled, showFullPageModal, modalDismissed]);
+  }, []);
 
   const instructions = getInstallInstructions();
-
-  const renderFullPageModal = () => {
-    if (!showFullPageModal || isInstalled) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-60 z-[9999] flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto slide-in-up border-4 border-yellow-400">
-          {/* Modal Header */}
-          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500 text-white p-8 rounded-t-3xl text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-20 animate-pulse"></div>
-            <div className="relative z-10">
-              <div className="text-6xl mb-4 animate-bounce">📲</div>
-              <h2 className="text-3xl font-black mb-2">Install SteppersLife App</h2>
-              <p className="text-blue-100 text-lg font-medium">Fast, offline-capable event management</p>
-              <div className="flex justify-center mt-4">
-                <div className="bg-white bg-opacity-20 rounded-full px-6 py-2">
-                  <span className="text-sm font-bold">⚡ ONE-CLICK INSTALL ⚡</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Download Message */}
-          {showDownloadMessage && (
-            <div className="bg-green-50 border-l-8 border-green-400 p-6 m-4 rounded-lg">
-              <div className="flex items-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-green-600 mr-4"></div>
-                <div>
-                  <h3 className="text-green-800 font-bold text-xl">Download will begin shortly...</h3>
-                  <p className="text-green-600 text-lg mt-2">Please follow any browser prompts to complete installation.</p>
-                  <p className="text-green-500 text-sm mt-2">✅ Installation process started successfully!</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Install Button */}
-          {!showDownloadMessage && (
-            <div className="p-8 space-y-6">
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                  Ready to install on your {
-                    deviceInfo.isAndroid ? 'Android Device' : 
-                    deviceInfo.isIOS ? 'iPhone/iPad' : 
-                    deviceInfo.isMac ? 'Mac Computer' : 
-                    deviceInfo.isWindows ? 'Windows Computer' : 
-                    'device'
-                  }
-                </h3>
-                <p className="text-gray-600 text-lg">
-                  {isInstallable ? 
-                    '🎉 One-click installation available!' : 
-                    '📋 Follow the instructions after clicking install.'
-                  }
-                </p>
-              </div>
-
-              {/* Platform-specific install button */}
-              <div className="space-y-4">
-                {/* Android Install Button */}
-                {deviceInfo.isAndroid && (
-                  <Button 
-                    size="lg" 
-                    onClick={handlePlatformInstall}
-                    className="h-20 w-full blink-green-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
-                    disabled={isInstalling}
-                  >
-                    <Smartphone className="h-8 w-8 mr-4" />
-                    <div className="text-center flex-1">
-                      <div className="font-black text-2xl">
-                        {isInstalling ? '🔄 INSTALLING...' : '📱 INSTALL ON ANDROID'}
-                      </div>
-                      <div className="text-lg opacity-90 font-medium">
-                        {isInstallable ? 'Instant install available!' : 'Add to Home Screen'}
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <span className="text-4xl animate-bounce">⚡</span>
-                    </div>
-                  </Button>
-                )}
-
-                {/* iOS Install Button */}
-                {deviceInfo.isIOS && (
-                  <Button 
-                    size="lg" 
-                    onClick={handlePlatformInstall}
-                    className="h-20 w-full blink-gray-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
-                    disabled={isInstalling}
-                  >
-                    <Apple className="h-8 w-8 mr-4" />
-                    <div className="text-center flex-1">
-                      <div className="font-black text-2xl">
-                        {isInstalling ? '🔄 INSTALLING...' : '🍎 INSTALL ON iPHONE/iPAD'}
-                      </div>
-                      <div className="text-lg opacity-90 font-medium">
-                        Safari Share Button Method
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <span className="text-4xl animate-bounce">🍎</span>
-                    </div>
-                  </Button>
-                )}
-
-                {/* Mac Install Button */}
-                {deviceInfo.isMac && !deviceInfo.isIOS && (
-                  <Button 
-                    size="lg" 
-                    onClick={handlePlatformInstall}
-                    className="h-20 w-full blink-blue-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
-                    disabled={isInstalling}
-                  >
-                    <Monitor className="h-8 w-8 mr-4" />
-                    <div className="text-center flex-1">
-                      <div className="font-black text-2xl">
-                        {isInstalling ? '🔄 INSTALLING...' : '💻 INSTALL ON MAC'}
-                      </div>
-                      <div className="text-lg opacity-90 font-medium">
-                        {deviceInfo.isChrome ? 'Chrome Install Available' : 'Safari File Menu'}
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <span className="text-4xl animate-bounce">💻</span>
-                    </div>
-                  </Button>
-                )}
-
-                {/* Windows Install Button */}
-                {deviceInfo.isWindows && (
-                  <Button 
-                    size="lg" 
-                    onClick={handlePlatformInstall}
-                    className="h-20 w-full blink-blue-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
-                    disabled={isInstalling}
-                  >
-                    <Monitor className="h-8 w-8 mr-4" />
-                    <div className="text-center flex-1">
-                      <div className="font-black text-2xl">
-                        {isInstalling ? '🔄 INSTALLING...' : '🖥️ INSTALL ON WINDOWS'}
-                      </div>
-                      <div className="text-lg opacity-90 font-medium">
-                        Browser Install Button Available
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <span className="text-4xl animate-bounce">🖥️</span>
-                    </div>
-                  </Button>
-                )}
-
-                {/* Generic Install Button */}
-                {!deviceInfo.isAndroid && !deviceInfo.isIOS && !deviceInfo.isMac && !deviceInfo.isWindows && (
-                  <Button 
-                    size="lg" 
-                    onClick={handlePlatformInstall}
-                    className="h-20 w-full blink-blue-yellow text-white font-bold text-xl relative overflow-hidden transform transition-all duration-300 hover:scale-105"
-                    disabled={isInstalling}
-                  >
-                    <Download className="h-8 w-8 mr-4" />
-                    <div className="text-center flex-1">
-                      <div className="font-black text-2xl">
-                        {isInstalling ? '🔄 INSTALLING...' : '📲 INSTALL PWA'}
-                      </div>
-                      <div className="text-lg opacity-90 font-medium">
-                        Install Progressive Web App
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <span className="text-4xl animate-bounce">📲</span>
-                    </div>
-                  </Button>
-                )}
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex space-x-4 pt-6 border-t-2 border-gray-200">
-                <Button 
-                  variant="outline" 
-                  className="flex-1 h-12 text-lg font-semibold"
-                  onClick={() => {
-                    setShowFullPageModal(false);
-                    setModalDismissed(true);
-                    console.log('⏰ User clicked "Maybe Later" - modal dismissed permanently');
-                  }}
-                >
-                  ⏰ Maybe Later
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1 h-12 text-lg font-semibold"
-                  onClick={() => {
-                    setShowFullPageModal(false);
-                    setModalDismissed(true);
-                    console.log('📋 User clicked "See Instructions" - modal dismissed permanently');
-                    document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  📋 See Instructions
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Close button */}
-          {!showDownloadMessage && (
-            <button
-              onClick={() => {
-                setShowFullPageModal(false);
-                setModalDismissed(true);
-                console.log('❌ User clicked X button - modal dismissed permanently');
-              }}
-              className="absolute top-6 right-6 text-white hover:text-gray-200 transition-colors z-20 bg-black bg-opacity-30 rounded-full p-2"
-            >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   const renderInstallButtons = () => {
     if (isInstalled) {
@@ -578,7 +233,7 @@ const StaffInstallPage = () => {
 
     return (
       <div className="space-y-8">
-        {/* Extra spacing and prominent install section */}
+        {/* Prominent Install Header */}
         <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-yellow-50 p-8 rounded-2xl border-4 border-blue-200">
           <div className="text-center space-y-6">
             <div className="space-y-3">
@@ -589,7 +244,7 @@ const StaffInstallPage = () => {
           </div>
         </div>
 
-        {/* Main Install Button - Direct Installation */}
+        {/* Single Prominent Install Button */}
         <div className="text-center space-y-6 relative bg-white p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
           {/* Show download message overlay if installing */}
           {showDownloadMessage && (
@@ -638,20 +293,9 @@ const StaffInstallPage = () => {
               Works offline • Faster than website • Home screen access
             </p>
           </div>
-
-          {/* Alternative modal trigger button for those who prefer guided experience */}
-          <Button 
-            variant="outline"
-            size="lg" 
-            onClick={() => setShowFullPageModal(true)}
-            className="h-16 w-full border-2 border-blue-400 hover:bg-blue-50 text-blue-700 font-bold text-lg"
-          >
-            <Monitor className="h-6 w-6 mr-3" />
-            🔍 Show Guided Installation Experience
-          </Button>
         </div>
 
-        {/* Attention Banner */}
+        {/* Status Information */}
         <Alert className="bg-gradient-to-r from-yellow-100 via-orange-100 to-red-100 border-orange-400 border-3">
           <AlertCircle className="h-6 w-6 text-orange-600 animate-pulse" />
           <AlertDescription className="text-center">
@@ -1186,9 +830,6 @@ const StaffInstallPage = () => {
           {renderInstallButtons()}
         </div>
       </div>
-
-      {/* Full Page Modal */}
-      {renderFullPageModal()}
     </div>
   );
 };
