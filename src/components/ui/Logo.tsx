@@ -30,7 +30,7 @@ export const Logo: React.FC<LogoProps> = ({
   const { theme, systemTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [logoKey, setLogoKey] = useState(Date.now());
+  const [logoKey, setLogoKey] = useState(Date.now() + 1000); // Force new cache key
   
   // Determine the effective theme
   const effectiveTheme = theme === 'system' ? systemTheme : theme;
@@ -43,7 +43,7 @@ export const Logo: React.FC<LogoProps> = ({
   useEffect(() => {
     setImageError(false);
     setIsLoading(true);
-    setLogoKey(Date.now()); // Force a new cache-busted URL
+    setLogoKey(Date.now() + 1000); // Force a new cache-busted URL
   }, [effectiveTheme]);
   
   if (useStaticImages) {
@@ -117,7 +117,6 @@ export const Logo: React.FC<LogoProps> = ({
     );
   }
   
-  // Original database-driven approach
   // Show loading placeholder
   if (loading) {
     return (
@@ -163,4 +162,4 @@ export const MobileLogo: React.FC<Omit<LogoProps, 'size' | 'fallbackText'>> = (p
 
 export const EmailLogo: React.FC<Omit<LogoProps, 'size'>> = (props) => (
   <Logo {...props} size="xl" useStaticImages={true} />
-); 
+);
