@@ -22,7 +22,7 @@ import {
   Timer,
   Star
 } from 'lucide-react';
-import pwaAnalyticsService, { PWAAnalytics } from '@/services/pwaAnalyticsService';
+import { pwaAnalyticsService, PWAAnalytics } from '@/services/pwaAnalyticsService';
 
 interface PWAAnalyticsDashboardProps {
   className?: string;

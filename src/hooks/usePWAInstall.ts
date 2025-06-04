@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from '@/components/ui/sonner';
-import pwaAnalyticsService from '@/services/pwaAnalyticsService';
+import { pwaAnalyticsService } from '@/services/pwaAnalyticsService';
 
 export interface PWAInstallState {
   isInstallable: boolean;

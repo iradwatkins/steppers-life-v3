@@ -494,7 +494,7 @@ class PWAAnalyticsService {
 }
 
 // Create singleton instance
-export const pwaAnalyticsService = new PWAAnalyticsService();
+const pwaAnalyticsService = new PWAAnalyticsService();
 
-// Export service and types
-export default pwaAnalyticsService; 
+// Export service and types with named export only
+export { pwaAnalyticsService }; 

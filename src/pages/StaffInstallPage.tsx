@@ -44,26 +44,56 @@ const StaffInstallPage = () => {
     // Show download message immediately
     setShowDownloadMessage(true);
     
-    // Check PWA requirements first
+    // Enhanced PWA readiness check
     const pwaReadiness = checkPWAReadiness();
     console.log('🔍 PWA Readiness Check:', pwaReadiness);
+    
+    // Debug current state
+    console.log('📊 Current PWA State:', {
+      isInstallable,
+      isInstalled,
+      isInstalling,
+      hasPrompt: debugInfo.promptReceived,
+      deferredPrompt: !!window.deferredPrompt,
+      browser: deviceInfo.isChrome ? 'Chrome' : deviceInfo.isSafari ? 'Safari' : 'Other',
+      platform: deviceInfo.isAndroid ? 'Android' : deviceInfo.isIOS ? 'iOS' : deviceInfo.isMac ? 'Mac' : 'Other',
+      environment: {
+        isHTTPS: window.location.protocol === 'https:',
+        hostname: window.location.hostname,
+        isDev: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      }
+    });
     
     // Force user engagement for instant install
     sessionStorage.setItem('pwa-engagement', 'true');
     sessionStorage.setItem('user-interacted', 'true');
     localStorage.setItem('pwa-visited', 'true');
     
-    // Log current state before install attempt
-    console.log('📊 Pre-install state:', {
-      isInstallable,
-      isInstalled,
-      hasPrompt: debugInfo.promptReceived,
-      browser: deviceInfo.isChrome ? 'Chrome' : deviceInfo.isSafari ? 'Safari' : 'Other',
-      platform: deviceInfo.isAndroid ? 'Android' : deviceInfo.isIOS ? 'iOS' : deviceInfo.isMac ? 'Mac' : 'Other'
-    });
+    // Check if we're in development mode
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     
-    // Check if we have HTTPS
-    if (!window.location.protocol.includes('https') && !window.location.hostname.includes('localhost')) {
+    if (isDevelopment) {
+      console.log('🛠️ Development mode detected');
+      console.log('💡 Testing options:');
+      console.log('  1. Try: window.mockPWAInstall() for testing');
+      console.log('  2. Build for production: npm run build && npm run preview');
+      console.log('  3. Use HTTPS deployment for full testing');
+      
+      // Offer mock install for development
+      if (typeof window.mockPWAInstall === 'function') {
+        console.log('🧪 Using mock install for development');
+        setShowDownloadMessage(false);
+        toast.info('Development Mode', {
+          description: 'Using mock install. In production, real PWA install will be used.',
+          duration: 5000,
+        });
+        window.mockPWAInstall();
+        return;
+      }
+    }
+    
+    // Check if we have HTTPS (required for PWA)
+    if (!window.location.protocol.includes('https') && !isDevelopment) {
       console.error('❌ PWA requires HTTPS in production');
       toast.error('HTTPS Required', {
         description: 'PWA installation requires HTTPS (secure connection)',
@@ -85,12 +115,15 @@ const StaffInstallPage = () => {
     }
     
     try {
-      // Try auto-install first if available
-      console.log('⚡ Attempting auto-install...');
+      // Enhanced install attempt with better error handling
+      console.log('⚡ Attempting PWA install...');
+      console.log('📱 Install criteria met:', pwaReadiness.ready);
+      console.log('🔗 Deferred prompt available:', !!window.deferredPrompt);
+      
       const success = await install();
       
       if (success) {
-        console.log('✅ Auto-install successful!');
+        console.log('✅ PWA install successful!');
         toast.success('🎉 Installation Started!', {
           description: 'The app is being installed. Check your home screen in a moment.',
           duration: 5000,
@@ -102,11 +135,16 @@ const StaffInstallPage = () => {
         }, 3000);
         
       } else {
-        console.log('❌ Auto-install failed, showing manual instructions');
+        console.log('❌ PWA install failed, showing guidance');
         setShowDownloadMessage(false);
         
-        // Show platform-specific guidance
-        if (deviceInfo.isIOS) {
+        // Enhanced platform-specific guidance
+        if (isDevelopment) {
+          toast.info('💻 Development Mode', {
+            description: 'PWA install prompts don\'t work on localhost. Try production build or deployment.',
+            duration: 10000,
+          });
+        } else if (deviceInfo.isIOS) {
           toast.info('📱 iOS Installation', {
             description: 'Tap the Share button in Safari, then "Add to Home Screen"',
             duration: 8000,
@@ -116,8 +154,13 @@ const StaffInstallPage = () => {
             description: 'Look for "Add to Home Screen" in Chrome menu, or check browser notifications',
             duration: 8000,
           });
+        } else if (deviceInfo.isChrome) {
+          toast.info('💻 Chrome Installation', {
+            description: 'Look for the install icon in the address bar, or check Chrome menu → Install',
+            duration: 8000,
+          });
         } else {
-          toast.info('💻 Manual Installation', {
+          toast.info('🌐 Manual Installation', {
             description: 'Check your browser menu for "Install" or "Add to Home Screen" option',
             duration: 8000,
           });
@@ -130,9 +173,19 @@ const StaffInstallPage = () => {
     } catch (error) {
       console.error('💥 Installation error:', error);
       setShowDownloadMessage(false);
+      
+      // Enhanced error reporting
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('📊 Error details:', {
+        error: errorMessage,
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        pwaState: { isInstallable, isInstalled, hasPrompt: debugInfo.promptReceived },
+        environment: { isDevelopment, protocol: window.location.protocol }
+      });
+      
       toast.error('Installation Error', {
-        description: `Failed to install: ${error.message}`,
-        duration: 5000,
+        description: `Failed to install: ${errorMessage}. Check console for details.`,
+        duration: 8000,
       });
     }
   };
@@ -342,6 +395,58 @@ const StaffInstallPage = () => {
                   <Bug className="h-3 w-3 mr-1" />
                   {showDebug ? 'Hide' : 'Debug'}
                 </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Development Testing Section */}
+        {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <Bug className="h-4 w-4 text-blue-600" />
+            <AlertDescription>
+              <div className="space-y-3">
+                <div>
+                  <strong>🛠️ Development Mode Detected</strong>
+                  <br />
+                  <span className="text-sm">PWA install prompts may not work on localhost. Try these options:</span>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      if (typeof window.mockPWAInstall === 'function') {
+                        window.mockPWAInstall();
+                        toast.success('Mock install triggered', { duration: 3000 });
+                      } else {
+                        toast.error('Mock function not available', { duration: 3000 });
+                      }
+                    }}
+                    className="text-xs"
+                  >
+                    🧪 Test Mock Install
+                  </Button>
+                  
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => {
+                      const previewUrl = 'http://localhost:4173/staff-install';
+                      window.open(previewUrl, '_blank');
+                      toast.info('Opening preview build', { duration: 3000 });
+                    }}
+                    className="text-xs"
+                  >
+                    🏗️ Test Preview Build
+                  </Button>
+                </div>
+                
+                <div className="text-xs text-blue-700 bg-blue-100 p-2 rounded">
+                  <strong>💡 For full PWA testing:</strong><br />
+                  Production preview server is running at <code>http://localhost:4173/staff-install</code>
+                </div>
               </div>
             </AlertDescription>
           </Alert>

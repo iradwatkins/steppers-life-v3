@@ -29,7 +29,7 @@ import {
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import PWAQRScanner from '@/components/pwa/PWAQRScanner';
 import { pwaCheckinService, PWATicketData, PWACheckinResult, PWAEventStats } from '@/services/pwaCheckinService';
-import pwaAnalyticsService from '@/services/pwaAnalyticsService';
+import { pwaAnalyticsService } from '@/services/pwaAnalyticsService';
 
 const PWACheckinPage: React.FC = () => {
   const navigate = useNavigate();

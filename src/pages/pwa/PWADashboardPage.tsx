@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { Event } from '@/types/event';
 import { mockEvents } from '@/data/mockData';
-import pwaAnalyticsService from '@/services/pwaAnalyticsService';
+import { pwaAnalyticsService } from '@/services/pwaAnalyticsService';
 
 interface EventSummary {
   id: string;
