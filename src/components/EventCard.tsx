@@ -187,7 +187,21 @@ const EventCard = ({ event }: EventCardProps) => {
             </div>
             <div className="flex items-center text-text-secondary text-sm">
               <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span className="line-clamp-1">{event.location}, {event.city}, {event.state}</span>
+              <span className="line-clamp-1 flex-1">{event.location}, {event.city}, {event.state}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 ml-2 text-xs hover:text-brand-primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                asChild
+              >
+                <Link to={`/venue/${event.location.replace(/\s+/g, '-').toLowerCase()}`}>
+                  Venue Info
+                </Link>
+              </Button>
             </div>
             <div className="flex items-center text-text-secondary text-sm">
               <Users className="h-4 w-4 mr-2 flex-shrink-0" />

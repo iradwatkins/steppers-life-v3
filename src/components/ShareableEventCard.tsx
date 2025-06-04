@@ -158,7 +158,7 @@ export function ShareableEventCard({
               {/* Left side - Image */}
               <div className="w-1/2 bg-gray-200 relative">
                 <img 
-                  src={event.image || '/placeholder.svg'} 
+                  src={event.image || 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=600&h=400&fit=crop&auto=format'}
                   alt={event.title}
                   className="w-full h-full object-cover"
                 />

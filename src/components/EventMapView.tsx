@@ -328,14 +328,26 @@ const EventMapView: React.FC<EventMapViewProps> = ({
                     View Event Details
                   </Link>
                 </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => getDirections(selectedEvent)}
-                >
-                  <Route className="w-4 h-4 mr-2" />
-                  Get Directions
-                </Button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => getDirections(selectedEvent)}
+                  >
+                    <Route className="w-4 h-4 mr-2" />
+                    Get Directions
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    asChild
+                    className="w-full"
+                  >
+                    <Link to={`/venue/${selectedEvent.location.replace(/\s+/g, '-').toLowerCase()}`}>
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Venue Info
+                    </Link>
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

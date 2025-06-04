@@ -51,6 +51,7 @@ import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
 import AccountDashboard from "./pages/buyer/AccountDashboard";
 import ProfileManagement from "./pages/buyer/ProfileManagement";
 import AccountSettings from "./pages/buyer/AccountSettings";
+import VenueDetailPage from "./components/VenueDetailPage";
 
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
@@ -99,6 +100,7 @@ const App = () => (
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Index />} />
             <Route path="/events" element={<Events />} />
+            <Route path="/venue/:venueId" element={<VenueDetailPage />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/community" element={<Community />} />
             <Route path="/profile" element={
