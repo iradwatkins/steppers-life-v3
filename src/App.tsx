@@ -26,6 +26,8 @@ import ManageEventPage from "./pages/organizer/ManageEventPage";
 import EventCollectionsPage from "./pages/organizer/EventCollectionsPage";
 import { MultiEventAnalyticsPage } from "./pages/MultiEventAnalyticsPage";
 import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
+import SalesAgentManagementPage from "./pages/organizer/SalesAgentManagementPage";
+import RoleManagementPage from "./pages/RoleManagementPage";
 import ClaimableEventsPage from "./pages/promoter/ClaimableEventsPage";
 import EventClaimsPage from "./pages/admin/EventClaimsPage";
 import AdminCreateEventPage from "./pages/admin/AdminCreateEventPage";
@@ -42,9 +44,13 @@ import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
 import EventPerformancePage from "./pages/organizer/EventPerformancePage";
 import FinancialReportsPage from "./pages/organizer/FinancialReportsPage";
 import AttendeeReportPage from './pages/AttendeeReportPage';
+import { CustomerAnalyticsPage } from "./pages/analytics/CustomerAnalyticsPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
+import AccountDashboard from "./pages/buyer/AccountDashboard";
+import ProfileManagement from "./pages/buyer/ProfileManagement";
+import AccountSettings from "./pages/buyer/AccountSettings";
 
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
@@ -55,6 +61,8 @@ import PWASettingsPage from "./pages/pwa/PWASettingsPage";
 import PWAAttendeeListPage from "./pages/pwa/PWAAttendeeListPage";
 import PWAStatisticsPage from "./pages/pwa/PWAStatisticsPage";
 import PWAPaymentPage from "./components/pwa/PWAPaymentPage";
+import SalesAgentDashboardPage from './pages/agent/SalesAgentDashboardPage';
+import CommissionPaymentPage from './pages/organizer/CommissionPaymentPage';
 
 const queryClient = new QueryClient();
 
@@ -168,6 +176,11 @@ const App = () => (
                 <AttendeeReportPage />
               </ProtectedRoute>
             } />
+            <Route path="/organizer/event/:eventId/customer-analytics" element={
+              <ProtectedRoute>
+                <CustomerAnalyticsPage />
+              </ProtectedRoute>
+            } />
             <Route path="/organizer/collections" element={
               <ProtectedRoute>
                 <EventCollectionsPage />
@@ -183,9 +196,39 @@ const App = () => (
                 <FollowerManagementPage />
               </ProtectedRoute>
             } />
+            <Route path="/organizer/roles" element={
+              <ProtectedRoute>
+                <RoleManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/sales-agents" element={
+              <ProtectedRoute>
+                <SalesAgentManagementPage />
+              </ProtectedRoute>
+            } />
             <Route path="/organizer/event/:eventId/team" element={
               <ProtectedRoute>
                 <FollowerManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/sales-agents" element={
+              <ProtectedRoute>
+                <SalesAgentManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/commission-payments" element={
+              <ProtectedRoute>
+                <CommissionPaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/commission-payments" element={
+              <ProtectedRoute>
+                <CommissionPaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/agent/dashboard" element={
+              <ProtectedRoute>
+                <SalesAgentDashboardPage />
               </ProtectedRoute>
             } />
             <Route path="/promoter/events/claim" element={
@@ -240,6 +283,23 @@ const App = () => (
             <Route path="/tickets/history" element={
               <ProtectedRoute>
                 <TicketHistoryPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Buyer Account Management Routes */}
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <AccountDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/account/profile" element={
+              <ProtectedRoute>
+                <ProfileManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/account/settings" element={
+              <ProtectedRoute>
+                <AccountSettings />
               </ProtectedRoute>
             } />
           </Route>

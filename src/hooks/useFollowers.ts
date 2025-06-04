@@ -1,5 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { followerService, TeamMember, TeamInvitation, ActivityLog, TeamAnalytics, TeamMemberFilters, UserRole, RoleConfig } from '../services/followerService';
+import { useState, useEffect, useCallback } from 'react';
+import { 
+  followerService, 
+  TeamMember, 
+  TeamInvitation, 
+  TeamMemberActivity, 
+  TeamAnalytics, 
+  Follower,
+  TeamRole,
+  BulkRoleUpdate
+} from '../services/followerService';
 import { toast } from 'sonner';
 
 interface UseFollowersOptions {
@@ -11,121 +20,69 @@ interface UseFollowersOptions {
 interface UseFollowersReturn {
   // Data state
   followers: Follower[];
+  teamMembers: TeamMember[];
   invitations: TeamInvitation[];
-  activity: TeamActivity[];
-  performance: TeamPerformanceMetrics[];
   analytics: TeamAnalytics | null;
-  permissions: Permission[];
+  recentActivities: TeamMemberActivity[];
   
   // Loading states
   loading: boolean;
-  loadingFollowers: boolean;
-  loadingInvitations: boolean;
-  loadingActivity: boolean;
-  loadingPerformance: boolean;
-  loadingAnalytics: boolean;
-  
-  // Error states
   error: string | null;
   
-  // Follower management
-  refreshFollowers: () => Promise<void>;
-  updateFollowerRole: (followerId: string, newRole: TeamRole) => Promise<boolean>;
-  updateFollowerStatus: (followerId: string, status: Follower['status']) => Promise<boolean>;
-  updateFollowerProfile: (followerId: string, profileUpdates: Partial<Follower['profile']>) => Promise<boolean>;
-  removeFollower: (followerId: string) => Promise<boolean>;
-  
-  // Role and permission management
-  getRolePermissions: (role: TeamRole) => Promise<RolePermissions | null>;
-  updateFollowerPermissions: (followerId: string, permissions: string[]) => Promise<boolean>;
-  
-  // Team invitations
-  refreshInvitations: () => Promise<void>;
-  createInvitation: (invitation: Omit<TeamInvitation, 'id' | 'invitedAt' | 'expiresAt' | 'status' | 'organizerId' | 'invitedBy'>) => Promise<boolean>;
-  updateInvitationStatus: (invitationId: string, status: TeamInvitation['status']) => Promise<boolean>;
-  cancelInvitation: (invitationId: string) => Promise<boolean>;
+  // Core functions
+  refresh: () => Promise<void>;
+  assignRoleToFollower: (followerId: string, role: TeamRole) => Promise<void>;
+  updateMemberRole: (memberId: string, role: TeamRole, reason?: string) => Promise<void>;
+  removeMember: (memberId: string, reason?: string) => Promise<void>;
+  sendInvitation: (email: string, role: TeamRole, message?: string, name?: string) => Promise<void>;
+  cancelInvitation: (invitationId: string) => Promise<void>;
+  resendInvitation: (invitationId: string) => Promise<void>;
+  getAvailableRoles: () => { value: TeamRole; label: string; description: string }[];
   
   // Bulk operations
-  performBulkOperation: (operation: Omit<BulkOperation, 'executedAt' | 'results' | 'executedBy' | 'organizerId'>) => Promise<BulkOperation | null>;
-  
-  // Activity and performance
-  refreshActivity: () => Promise<void>;
-  refreshPerformance: () => Promise<void>;
-  refreshAnalytics: () => Promise<void>;
-  getTeamActivity: (userId?: string) => Promise<TeamActivity[]>;
-  
-  // Utility functions
-  getFollowersByRole: (role?: TeamRole) => Follower[];
-  getActiveTeamMembers: () => Follower[];
-  getFollowerById: (followerId: string) => Follower | undefined;
-  getInvitationById: (invitationId: string) => TeamInvitation | undefined;
-  
-  // Statistics
-  getTeamStats: () => {
-    totalFollowers: number;
-    activeMembers: number;
-    pendingInvitations: number;
-    roleBreakdown: Record<TeamRole, number>;
-  };
+  bulkUpdateRoles: (updates: BulkRoleUpdate[]) => Promise<void>;
 }
 
-export const useFollowers = ({ organizerId, autoRefresh = true, refreshInterval = 30000 }: UseFollowersOptions): UseFollowersReturn => {
+export const useFollowers = ({ organizerId, autoRefresh = false, refreshInterval = 30000 }: UseFollowersOptions): UseFollowersReturn => {
   // Data state
   const [followers, setFollowers] = useState<Follower[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [invitations, setInvitations] = useState<TeamInvitation[]>([]);
-  const [activity, setActivity] = useState<TeamActivity[]>([]);
-  const [performance, setPerformance] = useState<TeamPerformanceMetrics[]>([]);
   const [analytics, setAnalytics] = useState<TeamAnalytics | null>(null);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [recentActivities, setRecentActivities] = useState<TeamMemberActivity[]>([]);
   
   // Loading states
   const [loading, setLoading] = useState(true);
-  const [loadingFollowers, setLoadingFollowers] = useState(false);
-  const [loadingInvitations, setLoadingInvitations] = useState(false);
-  const [loadingActivity, setLoadingActivity] = useState(false);
-  const [loadingPerformance, setLoadingPerformance] = useState(false);
-  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
-  
-  // Error state
   const [error, setError] = useState<string | null>(null);
 
   // Initialize data
-  const initializeData = useCallback(async () => {
+  const refresh = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
       const [
         followersData,
+        teamMembersData,
         invitationsData,
-        activityData,
-        performanceData,
-        permissionsData
+        analyticsData,
+        activitiesData
       ] = await Promise.all([
         followerService.getFollowers(organizerId),
+        followerService.getTeamMembers(organizerId),
         followerService.getInvitations(organizerId),
-        followerService.getTeamActivity(organizerId),
-        followerService.getTeamPerformance(organizerId),
-        followerService.getAllPermissions()
+        followerService.getTeamAnalytics(organizerId),
+        followerService.getTeamActivities(organizerId, 50)
       ]);
       
       setFollowers(followersData);
+      setTeamMembers(teamMembersData);
       setInvitations(invitationsData);
-      setActivity(activityData);
-      setPerformance(performanceData);
-      setPermissions(permissionsData);
-      
-      // Load analytics with date range
-      const now = new Date();
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-      const analyticsData = await followerService.getTeamAnalytics(organizerId, {
-        start: lastMonth.toISOString(),
-        end: now.toISOString()
-      });
       setAnalytics(analyticsData);
+      setRecentActivities(activitiesData);
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load follower data';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load team data';
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -133,357 +90,137 @@ export const useFollowers = ({ organizerId, autoRefresh = true, refreshInterval 
     }
   }, [organizerId]);
 
-  // Refresh functions
-  const refreshFollowers = useCallback(async () => {
+  // Role assignment functions
+  const assignRoleToFollower = useCallback(async (followerId: string, role: TeamRole): Promise<void> => {
     try {
-      setLoadingFollowers(true);
-      const data = await followerService.getFollowers(organizerId);
-      setFollowers(data);
+      await followerService.assignRole(followerId, role, organizerId, organizerId);
+      await refresh();
+      toast.success('Role assigned successfully');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh followers';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to assign role';
       toast.error(errorMessage);
-    } finally {
-      setLoadingFollowers(false);
+      throw err;
     }
-  }, [organizerId]);
+  }, [organizerId, refresh]);
 
-  const refreshInvitations = useCallback(async () => {
+  const updateMemberRole = useCallback(async (memberId: string, role: TeamRole, reason?: string): Promise<void> => {
     try {
-      setLoadingInvitations(true);
-      const data = await followerService.getInvitations(organizerId);
-      setInvitations(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh invitations';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingInvitations(false);
-    }
-  }, [organizerId]);
-
-  const refreshActivity = useCallback(async () => {
-    try {
-      setLoadingActivity(true);
-      const data = await followerService.getTeamActivity(organizerId);
-      setActivity(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh activity';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingActivity(false);
-    }
-  }, [organizerId]);
-
-  const refreshPerformance = useCallback(async () => {
-    try {
-      setLoadingPerformance(true);
-      const data = await followerService.getTeamPerformance(organizerId);
-      setPerformance(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh performance';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingPerformance(false);
-    }
-  }, [organizerId]);
-
-  const refreshAnalytics = useCallback(async () => {
-    try {
-      setLoadingAnalytics(true);
-      const now = new Date();
-      const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
-      const data = await followerService.getTeamAnalytics(organizerId, {
-        start: lastMonth.toISOString(),
-        end: now.toISOString()
-      });
-      setAnalytics(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to refresh analytics';
-      toast.error(errorMessage);
-    } finally {
-      setLoadingAnalytics(false);
-    }
-  }, [organizerId]);
-
-  // Follower management functions
-  const updateFollowerRole = useCallback(async (followerId: string, newRole: TeamRole): Promise<boolean> => {
-    try {
-      const result = await followerService.updateFollowerRole(followerId, newRole, organizerId);
-      if (result) {
-        await refreshFollowers();
-        toast.success(`Role updated successfully`);
-        return true;
-      }
-      return false;
+      await followerService.updateTeamMemberRole(memberId, role, organizerId, reason);
+      await refresh();
+      toast.success('Role updated successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to update role';
       toast.error(errorMessage);
-      return false;
+      throw err;
     }
-  }, [organizerId, refreshFollowers]);
+  }, [organizerId, refresh]);
 
-  const updateFollowerStatus = useCallback(async (followerId: string, status: Follower['status']): Promise<boolean> => {
+  const removeMember = useCallback(async (memberId: string, reason?: string): Promise<void> => {
     try {
-      const result = await followerService.updateFollowerStatus(followerId, status, organizerId);
-      if (result) {
-        await refreshFollowers();
-        toast.success(`Status updated successfully`);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update status';
-      toast.error(errorMessage);
-      return false;
-    }
-  }, [organizerId, refreshFollowers]);
-
-  const updateFollowerProfile = useCallback(async (followerId: string, profileUpdates: Partial<Follower['profile']>): Promise<boolean> => {
-    try {
-      const result = await followerService.updateFollowerProfile(followerId, profileUpdates);
-      if (result) {
-        await refreshFollowers();
-        toast.success(`Profile updated successfully`);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
-      toast.error(errorMessage);
-      return false;
-    }
-  }, [refreshFollowers]);
-
-  const removeFollower = useCallback(async (followerId: string): Promise<boolean> => {
-    try {
-      const result = await followerService.removeFollower(followerId, organizerId);
-      if (result) {
-        await refreshFollowers();
-        toast.success(`Team member removed successfully`);
-        return true;
-      }
-      return false;
+      await followerService.removeTeamMember(memberId, organizerId, reason);
+      await refresh();
+      toast.success('Team member removed successfully');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to remove team member';
       toast.error(errorMessage);
-      return false;
+      throw err;
     }
-  }, [organizerId, refreshFollowers]);
-
-  // Role and permission management
-  const getRolePermissions = useCallback(async (role: TeamRole): Promise<RolePermissions | null> => {
-    try {
-      return await followerService.getRolePermissions(role);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get role permissions';
-      toast.error(errorMessage);
-      return null;
-    }
-  }, []);
-
-  const updateFollowerPermissions = useCallback(async (followerId: string, permissions: string[]): Promise<boolean> => {
-    try {
-      const result = await followerService.updateFollowerPermissions(followerId, permissions, organizerId);
-      if (result) {
-        await refreshFollowers();
-        toast.success(`Permissions updated successfully`);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update permissions';
-      toast.error(errorMessage);
-      return false;
-    }
-  }, [organizerId, refreshFollowers]);
+  }, [organizerId, refresh]);
 
   // Team invitation functions
-  const createInvitation = useCallback(async (invitation: Omit<TeamInvitation, 'id' | 'invitedAt' | 'expiresAt' | 'status' | 'organizerId' | 'invitedBy'>): Promise<boolean> => {
+  const sendInvitation = useCallback(async (email: string, role: TeamRole, message?: string, name?: string): Promise<void> => {
     try {
-      await followerService.createInvitation({
-        ...invitation,
-        organizerId,
-        invitedBy: organizerId
-      });
-      await refreshInvitations();
-      toast.success(`Invitation sent to ${invitation.inviteeEmail}`);
-      return true;
+      await followerService.sendInvitation(organizerId, email, role, message, name);
+      await refresh();
+      toast.success(`Invitation sent to ${email}`);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to send invitation';
       toast.error(errorMessage);
-      return false;
+      throw err;
     }
-  }, [organizerId, refreshInvitations]);
+  }, [organizerId, refresh]);
 
-  const updateInvitationStatus = useCallback(async (invitationId: string, status: TeamInvitation['status']): Promise<boolean> => {
+  const cancelInvitation = useCallback(async (invitationId: string): Promise<void> => {
     try {
-      const result = await followerService.updateInvitationStatus(invitationId, status);
-      if (result) {
-        await refreshInvitations();
-        toast.success(`Invitation ${status}`);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update invitation';
-      toast.error(errorMessage);
-      return false;
-    }
-  }, [refreshInvitations]);
-
-  const cancelInvitation = useCallback(async (invitationId: string): Promise<boolean> => {
-    try {
-      const result = await followerService.cancelInvitation(invitationId);
-      if (result) {
-        await refreshInvitations();
-        toast.success(`Invitation cancelled`);
-        return true;
-      }
-      return false;
+      await followerService.cancelInvitation(invitationId);
+      await refresh();
+      toast.success('Invitation cancelled');
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to cancel invitation';
       toast.error(errorMessage);
-      return false;
+      throw err;
     }
-  }, [refreshInvitations]);
+  }, [refresh]);
+
+  const resendInvitation = useCallback(async (invitationId: string): Promise<void> => {
+    try {
+      await followerService.resendInvitation(invitationId);
+      await refresh();
+      toast.success('Invitation resent');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend invitation';
+      toast.error(errorMessage);
+      throw err;
+    }
+  }, [refresh]);
 
   // Bulk operations
-  const performBulkOperation = useCallback(async (operation: Omit<BulkOperation, 'executedAt' | 'results' | 'executedBy'>): Promise<BulkOperation | null> => {
+  const bulkUpdateRoles = useCallback(async (updates: BulkRoleUpdate[]): Promise<void> => {
     try {
-      const result = await followerService.performBulkOperation({
-        ...operation,
-        executedBy: organizerId
-      });
-      
-      await refreshFollowers();
-      
-      const { successful, failed } = result.results;
-      if (successful.length > 0) {
-        toast.success(`Operation completed successfully for ${successful.length} members`);
-      }
-      if (failed.length > 0) {
-        toast.error(`Operation failed for ${failed.length} members`);
-      }
-      
-      return result;
+      await followerService.bulkUpdateRoles(updates, organizerId);
+      await refresh();
+      toast.success('Bulk role update completed');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Bulk operation failed';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update roles';
       toast.error(errorMessage);
-      return null;
+      throw err;
     }
-  }, [organizerId, refreshFollowers]);
-
-  // Activity tracking
-  const getTeamActivity = useCallback(async (userId?: string): Promise<TeamActivity[]> => {
-    try {
-      return await followerService.getTeamActivity(organizerId, userId);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to get team activity';
-      toast.error(errorMessage);
-      return [];
-    }
-  }, [organizerId]);
+  }, [organizerId, refresh]);
 
   // Utility functions
-  const getFollowersByRole = useCallback((role?: TeamRole): Follower[] => {
-    if (!role) return followers;
-    return followers.filter(follower => follower.role === role);
-  }, [followers]);
-
-  const getActiveTeamMembers = useCallback((): Follower[] => {
-    return followers.filter(follower => follower.status === 'active' && follower.role !== 'follower');
-  }, [followers]);
-
-  const getFollowerById = useCallback((followerId: string): Follower | undefined => {
-    return followers.find(follower => follower.id === followerId);
-  }, [followers]);
-
-  const getInvitationById = useCallback((invitationId: string): TeamInvitation | undefined => {
-    return invitations.find(invitation => invitation.id === invitationId);
-  }, [invitations]);
-
-  const getTeamStats = useCallback(() => {
-    const roleBreakdown = followers.reduce((acc, follower) => {
-      acc[follower.role] = (acc[follower.role] || 0) + 1;
-      return acc;
-    }, {} as Record<TeamRole, number>);
-
-    return {
-      totalFollowers: followers.length,
-      activeMembers: getActiveTeamMembers().length,
-      pendingInvitations: invitations.filter(inv => inv.status === 'pending').length,
-      roleBreakdown
-    };
-  }, [followers, invitations, getActiveTeamMembers]);
+  const getAvailableRoles = useCallback(() => {
+    return followerService.getAvailableRoles();
+  }, []);
 
   // Initialize data on mount
   useEffect(() => {
-    initializeData();
-  }, [initializeData]);
+    refresh();
+  }, [refresh]);
 
   // Auto-refresh setup
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
-      refreshFollowers();
-      refreshInvitations();
-      refreshActivity();
+      refresh();
     }, refreshInterval);
 
     return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, refreshFollowers, refreshInvitations, refreshActivity]);
+  }, [autoRefresh, refreshInterval, refresh]);
 
   return {
     // Data
     followers,
+    teamMembers,
     invitations,
-    activity,
-    performance,
     analytics,
-    permissions,
+    recentActivities,
     
     // Loading states
     loading,
-    loadingFollowers,
-    loadingInvitations,
-    loadingActivity,
-    loadingPerformance,
-    loadingAnalytics,
-    
-    // Error state
     error,
     
-    // Follower management
-    refreshFollowers,
-    updateFollowerRole,
-    updateFollowerStatus,
-    updateFollowerProfile,
-    removeFollower,
-    
-    // Role and permission management
-    getRolePermissions,
-    updateFollowerPermissions,
-    
-    // Team invitations
-    refreshInvitations,
-    createInvitation,
-    updateInvitationStatus,
+    // Core functions
+    refresh,
+    assignRoleToFollower,
+    updateMemberRole,
+    removeMember,
+    sendInvitation,
     cancelInvitation,
+    resendInvitation,
+    getAvailableRoles,
     
     // Bulk operations
-    performBulkOperation,
-    
-    // Activity and performance
-    refreshActivity,
-    refreshPerformance,
-    refreshAnalytics,
-    getTeamActivity,
-    
-    // Utility functions
-    getFollowersByRole,
-    getActiveTeamMembers,
-    getFollowerById,
-    getInvitationById,
-    getTeamStats
+    bulkUpdateRoles
   };
 }; 

@@ -1,704 +1,709 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
+import { Progress } from '@/components/ui/progress';
 import { 
   Users, 
   UserPlus, 
   Mail, 
-  Phone, 
-  MapPin, 
-  Clock, 
-  Star, 
-  TrendingUp, 
-  Activity, 
-  Search,
-  Filter,
+  Search, 
+  Filter, 
   MoreHorizontal,
   Crown,
   Shield,
   Megaphone,
-  Eye,
-  Edit,
-  Trash2,
-  Send,
-  RefreshCw,
-  BarChart3,
   Calendar,
-  AlertCircle,
+  MapPin,
+  Star,
+  TrendingUp,
+  Activity,
+  Eye,
+  RefreshCw,
   CheckCircle,
   XCircle,
-  Clock3,
-  ArrowLeft
+  Clock,
+  Send,
+  UserMinus,
+  Settings
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useFollowers } from '@/hooks/useFollowers';
-import { type Follower, type TeamRole, type TeamInvitation } from '@/services/followerService';
+import { TeamRole, TeamMember, Follower, TeamInvitation } from '@/services/followerService';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
-const FollowerManagementPage = () => {
-  const { eventId } = useParams<{ eventId: string }>();
-  const organizerId = 'org_001'; // In real app, get from auth context
-  
+const organizerId = 'org-1'; // This would come from auth context
+
+export default function FollowerManagementPage() {
   const {
     followers,
+    teamMembers,
     invitations,
     analytics,
+    recentActivities,
     loading,
     error,
-    updateFollowerRole,
-    updateFollowerStatus,
-    removeFollower,
-    createInvitation,
-    updateInvitationStatus,
+    assignRoleToFollower,
+    updateMemberRole,
+    removeMember,
+    sendInvitation,
     cancelInvitation,
-    getFollowersByRole,
-    getActiveTeamMembers,
-    getTeamStats
-  } = useFollowers({ organizerId });
+    resendInvitation,
+    getAvailableRoles,
+    refresh
+  } = useFollowers(organizerId);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRole, setSelectedRole] = useState<TeamRole | 'all'>('all');
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [inviteForm, setInviteForm] = useState({
-    email: '',
-    role: 'sales_agent' as TeamRole,
-    message: '',
-    position: '',
-    compensation: ''
-  });
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [roleAssignDialogOpen, setRoleAssignDialogOpen] = useState(false);
+  const [selectedFollower, setSelectedFollower] = useState<Follower | null>(null);
 
-  const teamStats = getTeamStats();
+  // Role assignment form state
+  const [newInviteEmail, setNewInviteEmail] = useState('');
+  const [newInviteName, setNewInviteName] = useState('');
+  const [newInviteRole, setNewInviteRole] = useState<TeamRole>('sales_agent');
+  const [newInviteMessage, setNewInviteMessage] = useState('');
 
-  // Role configurations
-  const roleConfig = {
-    follower: { 
-      label: 'Follower', 
-      icon: Users, 
-      color: 'bg-gray-100 text-gray-800',
-      description: 'Basic follower with limited access'
-    },
-    sales_agent: { 
-      label: 'Sales Agent', 
-      icon: TrendingUp, 
-      color: 'bg-green-100 text-green-800',
-      description: 'Can process sales and access customer data'
-    },
-    event_staff: { 
-      label: 'Event Staff', 
-      icon: Shield, 
-      color: 'bg-blue-100 text-blue-800',
-      description: 'Can manage events and check-in attendees'
-    },
-    marketing_assistant: { 
-      label: 'Marketing Assistant', 
-      icon: Megaphone, 
-      color: 'bg-purple-100 text-purple-800',
-      description: 'Can manage marketing campaigns and social media'
+  const availableRoles = getAvailableRoles();
+
+  const getRoleIcon = (role: TeamRole) => {
+    switch (role) {
+      case 'admin': return <Crown className="h-4 w-4" />;
+      case 'sales_agent': return <TrendingUp className="h-4 w-4" />;
+      case 'event_staff': return <Shield className="h-4 w-4" />;
+      case 'marketing_assistant': return <Megaphone className="h-4 w-4" />;
+      default: return <Users className="h-4 w-4" />;
     }
   };
 
-  // Filter followers based on search and role
-  const filteredFollowers = followers.filter(follower => {
-    const matchesSearch = follower.profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         follower.profile.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === 'all' || follower.role === selectedRole;
-    return matchesSearch && matchesRole;
-  });
-
-  const handleRoleChange = async (followerId: string, newRole: TeamRole) => {
-    await updateFollowerRole(followerId, newRole);
+  const getRoleBadgeColor = (role: TeamRole) => {
+    switch (role) {
+      case 'admin': return 'bg-purple-100 text-purple-800';
+      case 'sales_agent': return 'bg-green-100 text-green-800';
+      case 'event_staff': return 'bg-blue-100 text-blue-800';
+      case 'marketing_assistant': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleStatusChange = async (followerId: string, status: Follower['status']) => {
-    await updateFollowerStatus(followerId, status);
+  const getAvailabilityColor = (availability: string) => {
+    switch (availability) {
+      case 'available': return 'bg-green-100 text-green-800';
+      case 'busy': return 'bg-yellow-100 text-yellow-800';
+      case 'away': return 'bg-orange-100 text-orange-800';
+      case 'offline': return 'bg-gray-100 text-gray-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const handleRemoveFollower = async (followerId: string) => {
-    if (confirm('Are you sure you want to remove this team member?')) {
-      await removeFollower(followerId);
+  const handleAssignRole = async (followerId: string, role: TeamRole) => {
+    try {
+      await assignRoleToFollower(followerId, role);
+      setRoleAssignDialogOpen(false);
+      setSelectedFollower(null);
+    } catch (error) {
+      console.error('Failed to assign role:', error);
     }
   };
 
   const handleSendInvitation = async () => {
-    if (!inviteForm.email || !inviteForm.role) {
-      toast.error('Please fill in required fields');
+    if (!newInviteEmail.trim() || !newInviteRole) {
+      toast.error('Please fill in all required fields');
       return;
     }
 
-    const success = await createInvitation({
-      inviteeEmail: inviteForm.email,
-      role: inviteForm.role,
-      permissions: [], // Will be set by service based on role
-      message: inviteForm.message,
-      metadata: {
-        position: inviteForm.position,
-        compensation: inviteForm.compensation
-      }
-    });
-
-    if (success) {
-      setShowInviteDialog(false);
-      setInviteForm({
-        email: '',
-        role: 'sales_agent',
-        message: '',
-        position: '',
-        compensation: ''
-      });
+    try {
+      await sendInvitation(newInviteEmail, newInviteRole, newInviteMessage, newInviteName);
+      setInviteDialogOpen(false);
+      setNewInviteEmail('');
+      setNewInviteName('');
+      setNewInviteMessage('');
+    } catch (error) {
+      console.error('Failed to send invitation:', error);
     }
   };
 
-  const getStatusBadge = (status: Follower['status']) => {
-    const statusConfig = {
-      active: { label: 'Active', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      inactive: { label: 'Inactive', color: 'bg-gray-100 text-gray-800', icon: Clock3 },
-      suspended: { label: 'Suspended', color: 'bg-red-100 text-red-800', icon: XCircle },
-      pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock }
-    };
-    
-    const config = statusConfig[status];
-    const IconComponent = config.icon;
-    
-    return (
-      <Badge className={`${config.color} flex items-center gap-1`}>
-        <IconComponent className="h-3 w-3" />
-        {config.label}
-      </Badge>
-    );
-  };
+  const filteredFollowers = followers.filter(follower => {
+    const matchesSearch = follower.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          follower.userEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
 
-  const getInvitationStatusBadge = (status: TeamInvitation['status']) => {
-    const statusConfig = {
-      pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      accepted: { label: 'Accepted', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      declined: { label: 'Declined', color: 'bg-red-100 text-red-800', icon: XCircle },
-      expired: { label: 'Expired', color: 'bg-gray-100 text-gray-800', icon: AlertCircle },
-      cancelled: { label: 'Cancelled', color: 'bg-gray-100 text-gray-800', icon: XCircle }
-    };
-    
-    const config = statusConfig[status];
-    const IconComponent = config.icon;
-    
-    return (
-      <Badge className={`${config.color} flex items-center gap-1`}>
-        <IconComponent className="h-3 w-3" />
-        {config.label}
-      </Badge>
-    );
-  };
+  const filteredTeamMembers = teamMembers.filter(member => {
+    const matchesSearch = member.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          member.userEmail.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = selectedRole === 'all' || member.role === selectedRole;
+    return matchesSearch && matchesRole && member.isActive;
+  });
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background-main flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-brand-primary" />
-          <p className="text-text-secondary">Loading team data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background-main flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="h-8 w-8 mx-auto mb-4 text-red-500" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => window.location.reload()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Retry
-          </Button>
+      <div className="p-6">
+        <div className="flex items-center justify-center h-64">
+          <RefreshCw className="h-8 w-8 animate-spin" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background-main py-8 px-4 md:px-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Link 
-              to={eventId ? `/organizer/event/${eventId}/manage` : '/organizer/dashboard'}
-              className="text-text-secondary hover:text-text-primary"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-text-primary">Team Management</h1>
-              <p className="text-text-secondary">Manage your followers and team members</p>
-            </div>
-          </div>
-
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="p-4 text-center">
-                <Users className="h-8 w-8 mx-auto mb-2 text-brand-primary" />
-                <div className="text-2xl font-bold text-text-primary">{teamStats.totalFollowers}</div>
-                <div className="text-sm text-text-secondary">Total Followers</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <Shield className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                <div className="text-2xl font-bold text-text-primary">{teamStats.activeMembers}</div>
-                <div className="text-sm text-text-secondary">Active Team Members</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <Send className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                <div className="text-2xl font-bold text-text-primary">{teamStats.pendingInvitations}</div>
-                <div className="text-sm text-text-secondary">Pending Invitations</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4 text-center">
-                <TrendingUp className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                <div className="text-2xl font-bold text-text-primary">
-                  ${analytics?.overview.totalSalesGenerated.toLocaleString() || '0'}
-                </div>
-                <div className="text-sm text-text-secondary">Total Sales Generated</div>
-              </CardContent>
-            </Card>
-          </div>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      {/* Header */}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Team Management</h1>
+          <p className="text-muted-foreground mt-2">
+            Manage your followers, team members, and invitations
+          </p>
         </div>
+        <div className="flex gap-3">
+          <Button onClick={refresh} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Invite Team Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Invite Team Member</DialogTitle>
+                <DialogDescription>
+                  Send an invitation to join your team with a specific role.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="member@example.com"
+                    value={newInviteEmail}
+                    onChange={(e) => setNewInviteEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name (Optional)</Label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    value={newInviteName}
+                    onChange={(e) => setNewInviteName(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role *</Label>
+                  <Select value={newInviteRole} onValueChange={(value) => setNewInviteRole(value as TeamRole)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableRoles.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          <div className="flex items-center gap-2">
+                            {getRoleIcon(role.value)}
+                            <div>
+                              <div className="font-medium">{role.label}</div>
+                              <div className="text-sm text-muted-foreground">{role.description}</div>
+                            </div>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="message">Personal Message (Optional)</Label>
+                  <Textarea
+                    id="message"
+                    placeholder="Join our team and help us create amazing events!"
+                    value={newInviteMessage}
+                    onChange={(e) => setNewInviteMessage(e.target.value)}
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSendInvitation}>
+                    <Send className="h-4 w-4 mr-2" />
+                    Send Invitation
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
 
-        {/* Main Content */}
-        <Tabs defaultValue="team" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList className="grid w-fit grid-cols-4">
-              <TabsTrigger value="team">Team Members</TabsTrigger>
-              <TabsTrigger value="followers">All Followers</TabsTrigger>
-              <TabsTrigger value="invitations">Invitations</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            </TabsList>
+      {/* Quick Stats */}
+      {analytics && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Team Members</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalTeamMembers}</div>
+              <p className="text-xs text-muted-foreground">
+                {analytics.activeMembers} active
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">${analytics.totalRevenue.toLocaleString()}</div>
+              <p className="text-xs text-muted-foreground">
+                From team sales
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tickets Sold</CardTitle>
+              <Star className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{analytics.totalTicketsSold}</div>
+              <p className="text-xs text-muted-foreground">
+                This month
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Performance Score</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{Math.round(analytics.avgPerformanceScore)}%</div>
+              <p className="text-xs text-muted-foreground">
+                Average efficiency
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
-            <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-              <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Invite Team Member
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Invite Team Member</DialogTitle>
-                  <DialogDescription>
-                    Send an invitation to join your team with a specific role and permissions.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium">Email Address *</label>
+      {/* Main Content */}
+      <Tabs defaultValue="followers" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="followers">Followers ({followers.length})</TabsTrigger>
+          <TabsTrigger value="team">Team Members ({teamMembers.filter(m => m.isActive).length})</TabsTrigger>
+          <TabsTrigger value="invitations">Invitations ({invitations.length})</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+        </TabsList>
+
+        {/* Followers Tab */}
+        <TabsContent value="followers" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Followers</CardTitle>
+                  <CardDescription>Users who follow your events</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      type="email"
-                      placeholder="Enter email address"
-                      value={inviteForm.email}
-                      onChange={(e) => setInviteForm(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="Search followers..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-64"
                     />
                   </div>
-                  <div>
-                    <label className="text-sm font-medium">Role *</label>
-                    <Select
-                      value={inviteForm.role}
-                      onValueChange={(value: TeamRole) => setInviteForm(prev => ({ ...prev, role: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sales_agent">Sales Agent</SelectItem>
-                        <SelectItem value="event_staff">Event Staff</SelectItem>
-                        <SelectItem value="marketing_assistant">Marketing Assistant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Position Title</label>
-                    <Input
-                      placeholder="e.g., Part-time Sales Representative"
-                      value={inviteForm.position}
-                      onChange={(e) => setInviteForm(prev => ({ ...prev, position: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Compensation</label>
-                    <Input
-                      placeholder="e.g., 15% commission"
-                      value={inviteForm.compensation}
-                      onChange={(e) => setInviteForm(prev => ({ ...prev, compensation: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Personal Message</label>
-                    <Textarea
-                      placeholder="Add a personal message to your invitation..."
-                      value={inviteForm.message}
-                      onChange={(e) => setInviteForm(prev => ({ ...prev, message: e.target.value }))}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={handleSendInvitation} className="flex-1">
-                      <Send className="h-4 w-4 mr-2" />
-                      Send Invitation
-                    </Button>
-                    <Button variant="outline" onClick={() => setShowInviteDialog(false)}>
-                      Cancel
-                    </Button>
-                  </div>
                 </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {/* Team Members Tab */}
-          <TabsContent value="team">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Active Team Members</CardTitle>
-                    <CardDescription>
-                      Manage roles and permissions for your active team members
-                    </CardDescription>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-tertiary" />
-                      <Input
-                        placeholder="Search team members..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 w-64"
-                      />
-                    </div>
-                    <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as TeamRole | 'all')}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Roles</SelectItem>
-                        <SelectItem value="sales_agent">Sales Agent</SelectItem>
-                        <SelectItem value="event_staff">Event Staff</SelectItem>
-                        <SelectItem value="marketing_assistant">Marketing Assistant</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {getActiveTeamMembers().filter(member => {
-                    const matchesSearch = member.profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                         member.profile.email.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesRole = selectedRole === 'all' || member.role === selectedRole;
-                    return matchesSearch && matchesRole;
-                  }).map((member) => {
-                    const roleInfo = roleConfig[member.role];
-                    const RoleIcon = roleInfo.icon;
-                    
-                    return (
-                      <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={member.profile.avatar} />
-                            <AvatarFallback>
-                              {member.profile.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-text-primary">{member.profile.name}</div>
-                            <div className="text-sm text-text-secondary flex items-center gap-2">
-                              <Mail className="h-3 w-3" />
-                              {member.profile.email}
-                            </div>
-                            {member.profile.location && (
-                              <div className="text-sm text-text-secondary flex items-center gap-2">
-                                <MapPin className="h-3 w-3" />
-                                {member.profile.location}
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge className={roleInfo.color}>
-                                <RoleIcon className="h-3 w-3 mr-1" />
-                                {roleInfo.label}
-                              </Badge>
-                              {getStatusBadge(member.status)}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-4">
-                          <div className="text-right text-sm">
-                            <div className="font-medium text-text-primary">
-                              ${member.performance.totalSales.toLocaleString()}
-                            </div>
-                            <div className="text-text-secondary">Total Sales</div>
-                          </div>
-                          <div className="text-right text-sm">
-                            <div className="font-medium text-text-primary flex items-center gap-1">
-                              <Star className="h-3 w-3 text-yellow-500" />
-                              {member.performance.rating || 'N/A'}
-                            </div>
-                            <div className="text-text-secondary">Rating</div>
-                          </div>
-                          
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <Eye className="h-4 w-4 mr-2" />
-                                View Profile
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Role
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem>
-                                Change Role
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                {member.status === 'active' ? 'Suspend' : 'Activate'}
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                className="text-red-600"
-                                onClick={() => handleRemoveFollower(member.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Remove from Team
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {getActiveTeamMembers().length === 0 && (
-                    <div className="text-center py-8">
-                      <Users className="h-12 w-12 mx-auto mb-4 text-text-tertiary" />
-                      <p className="text-text-secondary">No active team members found</p>
-                      <Button onClick={() => setShowInviteDialog(true)} className="mt-4">
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Invite Your First Team Member
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* All Followers Tab */}
-          <TabsContent value="followers">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Followers</CardTitle>
-                <CardDescription>
-                  View all users who follow you and promote them to team members
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {filteredFollowers.map((follower) => {
-                    const roleInfo = roleConfig[follower.role];
-                    const RoleIcon = roleInfo.icon;
-                    
-                    return (
-                      <div key={follower.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-4">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={follower.profile.avatar} />
-                            <AvatarFallback>
-                              {follower.profile.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium text-text-primary">{follower.profile.name}</div>
-                            <div className="text-sm text-text-secondary">{follower.profile.email}</div>
-                            <div className="flex items-center gap-2 mt-1">
-                              <Badge className={roleInfo.color}>
-                                <RoleIcon className="h-3 w-3 mr-1" />
-                                {roleInfo.label}
-                              </Badge>
-                              {getStatusBadge(follower.status)}
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                          <div className="text-sm text-text-secondary">
-                            Joined {new Date(follower.joinedAt).toLocaleDateString()}
-                          </div>
-                          {follower.role === 'follower' && (
-                            <Button size="sm" onClick={() => {/* Handle promote */}}>
-                              <Crown className="h-4 w-4 mr-1" />
-                              Promote
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Invitations Tab */}
-          <TabsContent value="invitations">
-            <Card>
-              <CardHeader>
-                <CardTitle>Team Invitations</CardTitle>
-                <CardDescription>
-                  Manage pending and sent invitations
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {invitations.map((invitation) => (
-                    <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredFollowers.map((follower) => (
+                  <div key={follower.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={follower.userAvatar} />
+                        <AvatarFallback>{follower.userName.charAt(0)}</AvatarFallback>
+                      </Avatar>
                       <div>
-                        <div className="font-medium text-text-primary">{invitation.inviteeEmail}</div>
-                        <div className="text-sm text-text-secondary">
-                          Invited for {roleConfig[invitation.role].label} role
-                        </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          {getInvitationStatusBadge(invitation.status)}
-                          <span className="text-xs text-text-tertiary">
-                            Sent {new Date(invitation.invitedAt).toLocaleDateString()}
+                        <div className="font-medium">{follower.userName}</div>
+                        <div className="text-sm text-muted-foreground">{follower.userEmail}</div>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Follower since {follower.followerSince}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Star className="h-3 w-3" />
+                            {follower.totalEventsAttended} events
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" />
+                            ${follower.totalSpent} spent
                           </span>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-2">
-                        {invitation.status === 'pending' && (
-                          <>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap gap-1">
+                        {follower.interests.map((interest) => (
+                          <Badge key={interest} variant="secondary" className="text-xs">
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setSelectedFollower(follower);
+                          setRoleAssignDialogOpen(true);
+                        }}
+                      >
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Add to Team
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                {filteredFollowers.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No followers found matching your search.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Team Members Tab */}
+        <TabsContent value="team" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle>Team Members</CardTitle>
+                  <CardDescription>Manage your team roles and permissions</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search team..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 w-64"
+                    />
+                  </div>
+                  <Select value={selectedRole} onValueChange={(value) => setSelectedRole(value as TeamRole | 'all')}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Filter by role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Roles</SelectItem>
+                      {availableRoles.map((role) => (
+                        <SelectItem key={role.value} value={role.value}>
+                          {role.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {filteredTeamMembers.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={member.userAvatar} />
+                        <AvatarFallback>{member.userName.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{member.userName}</span>
+                          <Badge className={getRoleBadgeColor(member.role)}>
+                            {getRoleIcon(member.role)}
+                            <span className="ml-1">{member.role.replace('_', ' ')}</span>
+                          </Badge>
+                          <Badge className={getAvailabilityColor(member.availability)}>
+                            {member.availability}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-muted-foreground">{member.userEmail}</div>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          <span>Joined {format(member.assignedAt, 'MMM d, yyyy')}</span>
+                          <span>Last login {format(member.lastLogin, 'MMM d')}</span>
+                          <span>Efficiency: {member.performance.efficiency}%</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right text-sm">
+                        <div className="font-medium">${member.performance.revenue.toLocaleString()}</div>
+                        <div className="text-muted-foreground">{member.performance.ticketsSold} tickets</div>
+                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Settings className="h-4 w-4 mr-2" />
+                            Edit Role
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-red-600"
+                            onClick={() => removeMember(member.id, 'Removed by organizer')}
+                          >
+                            <UserMinus className="h-4 w-4 mr-2" />
+                            Remove from Team
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                ))}
+                {filteredTeamMembers.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No team members found matching your filters.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Invitations Tab */}
+        <TabsContent value="invitations" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Invitations</CardTitle>
+              <CardDescription>Manage pending and sent invitations</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {invitations.map((invitation) => (
+                  <div key={invitation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center justify-center w-10 h-10 rounded-full bg-muted">
+                        <Mail className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="font-medium">{invitation.inviteeName || invitation.inviteeEmail}</div>
+                        <div className="text-sm text-muted-foreground">{invitation.inviteeEmail}</div>
+                        <div className="flex items-center gap-4 mt-1 text-xs text-muted-foreground">
+                          <span>Invited {format(invitation.invitedAt, 'MMM d, yyyy')}</span>
+                          <span>Expires {format(invitation.expiresAt, 'MMM d, yyyy')}</span>
+                          <Badge className={getRoleBadgeColor(invitation.role)}>
+                            {invitation.role.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={invitation.status === 'pending' ? 'secondary' : invitation.status === 'accepted' ? 'default' : 'destructive'}>
+                        {invitation.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                        {invitation.status === 'accepted' && <CheckCircle className="h-3 w-3 mr-1" />}
+                        {invitation.status === 'rejected' && <XCircle className="h-3 w-3 mr-1" />}
+                        {invitation.status}
+                      </Badge>
+                      {invitation.status === 'pending' && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => resendInvitation(invitation.id)}>
+                              <Send className="h-4 w-4 mr-2" />
+                              Resend
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-red-600"
                               onClick={() => cancelInvitation(invitation.id)}
                             >
+                              <XCircle className="h-4 w-4 mr-2" />
                               Cancel
-                            </Button>
-                          </>
-                        )}
-                      </div>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
-                  ))}
-                  
-                  {invitations.length === 0 && (
-                    <div className="text-center py-8">
-                      <Send className="h-12 w-12 mx-auto mb-4 text-text-tertiary" />
-                      <p className="text-text-secondary">No invitations sent yet</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  </div>
+                ))}
+                {invitations.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No invitations found.
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Analytics Tab */}
+        <TabsContent value="analytics" className="space-y-4">
+          {analytics && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Role Distribution</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {Object.entries(analytics.roleDistribution).map(([role, count]) => (
+                        <div key={role} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {getRoleIcon(role as TeamRole)}
+                            <span className="text-sm">{role.replace('_', ' ')}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary rounded-full" 
+                                style={{ width: `${(count / analytics.totalTeamMembers) * 100}%` }}
+                              />
+                            </div>
+                            <span className="text-sm font-medium">{count}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Performers</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      {analytics.topPerformers.slice(0, 5).map((member, index) => (
+                        <div key={member.id} className="flex items-center gap-3">
+                          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                            {index + 1}
+                          </div>
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={member.userAvatar} />
+                            <AvatarFallback>{member.userName.charAt(0)}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="text-sm font-medium">{member.userName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {member.performance.efficiency}% efficiency
+                            </div>
+                          </div>
+                          <div className="text-right text-sm">
+                            <div className="font-medium">${member.performance.revenue.toLocaleString()}</div>
+                            <div className="text-muted-foreground">{member.performance.ticketsSold} tickets</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    Team Performance Overview
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {analytics && (
-                    <div className="space-y-4">
-                      <div className="flex justify-between">
-                        <span>Average Performance Rating</span>
-                        <span className="font-medium">{analytics.overview.averagePerformance}/5.0</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Total Sales Generated</span>
-                        <span className="font-medium">${analytics.overview.totalSalesGenerated.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Events Staffed</span>
-                        <span className="font-medium">{analytics.overview.totalEventsStaffed}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Invitation Acceptance Rate</span>
-                        <span className="font-medium">{analytics.overview.acceptanceRate}%</span>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Role Distribution</CardTitle>
+                  <CardTitle>Recent Activity</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {Object.entries(teamStats.roleBreakdown).map(([role, count]) => {
-                      const roleInfo = roleConfig[role as TeamRole];
-                      return (
-                        <div key={role} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Badge className={roleInfo.color}>
-                              {roleInfo.label}
-                            </Badge>
+                    {recentActivities.slice(0, 10).map((activity) => (
+                      <div key={activity.id} className="flex items-center gap-3 py-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          activity.result === 'success' ? 'bg-green-500' : 
+                          activity.result === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+                        }`} />
+                        <div className="flex-1">
+                          <div className="text-sm">{activity.description}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {format(activity.timestamp, 'MMM d, yyyy HH:mm')}
                           </div>
-                          <span className="font-medium">{count}</span>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
+            </>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Role Assignment Dialog */}
+      <Dialog open={roleAssignDialogOpen} onOpenChange={setRoleAssignDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add to Team</DialogTitle>
+            <DialogDescription>
+              Assign a role to {selectedFollower?.userName} and add them to your team.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedFollower && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 p-3 border rounded-lg bg-muted/50">
+                <Avatar>
+                  <AvatarImage src={selectedFollower.userAvatar} />
+                  <AvatarFallback>{selectedFollower.userName.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="font-medium">{selectedFollower.userName}</div>
+                  <div className="text-sm text-muted-foreground">{selectedFollower.userEmail}</div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <Label>Select Role</Label>
+                {availableRoles.map((role) => (
+                  <div
+                    key={role.value}
+                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleAssignRole(selectedFollower.id, role.value)}
+                  >
+                    <div className="flex items-center gap-3">
+                      {getRoleIcon(role.value)}
+                      <div>
+                        <div className="font-medium">{role.label}</div>
+                        <div className="text-sm text-muted-foreground">{role.description}</div>
+                      </div>
+                    </div>
+                    <Button size="sm">Assign</Button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
-};
-
-export default FollowerManagementPage; 
+} 
