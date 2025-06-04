@@ -30,7 +30,7 @@ const Header = () => {
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
-    { name: 'App', href: '/staff-install' },
+    { name: 'Magazine', href: '/magazine' },
   ];
 
   const isActiveLink = (href: string) => {
@@ -72,7 +72,7 @@ const Header = () => {
           {/* Desktop Auth */}
           <div className="hidden md:flex items-center space-x-4">
             {/* PWA Install Button */}
-            <PWAInstallButton variant="ghost" size="sm" showDebug={true} />
+            <PWAInstallButton variant="ghost" size="sm" />
             
             {/* Theme Toggle */}
             <ThemeToggle />
@@ -133,7 +133,7 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/staff-install" className="flex items-center">
+                      <Link to="/download" className="flex items-center">
                         <Smartphone className="mr-2 h-4 w-4" />
                         <span>Download App</span>
                       </Link>
@@ -175,7 +175,7 @@ const Header = () => {
 
           {/* Mobile menu button */}
           <div className="md:hidden flex items-center space-x-2">
-            <PWAInstallButton variant="ghost" size="icon" showText={false} showDebug={true} />
+            <PWAInstallButton variant="ghost" size="icon" showText={false} />
             <ThemeToggle />
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -205,11 +205,6 @@ const Header = () => {
                 </Link>
               ))}
               
-              {/* Mobile PWA Install */}
-              <div className="px-3 py-2">
-                <PWAInstallButton variant="outline" size="sm" className="w-full" />
-              </div>
-              
               {user ? (
                 <>
                   <Link
@@ -220,7 +215,7 @@ const Header = () => {
                     Profile
                   </Link>
                   <Link
-                    to="/staff-install"
+                    to="/download"
                     className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -304,6 +299,19 @@ const Header = () => {
                   </Link>
                 </div>
               )}
+
+              {/* Mobile Download App Button - Always at Bottom */}
+              <div className="px-3 py-2 mt-4 border-t border-border-default pt-4">
+                <Link to="/download" onClick={() => setIsMenuOpen(false)}>
+                  <Button 
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center space-x-2"
+                    size="lg"
+                  >
+                    <Smartphone className="h-5 w-5" />
+                    <span>📲 Download App</span>
+                  </Button>
+                </Link>
+              </div>
             </nav>
           </div>
         )}

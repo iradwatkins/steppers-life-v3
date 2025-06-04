@@ -101,20 +101,20 @@ const setupUserEngagement = () => {
   const requiredScore = 3; // Chrome's typical requirement
   
   // Check if we're on the staff install page
-  const isStaffInstallPage = window.location.pathname === '/staff-install';
+  const isDownloadPage = window.location.pathname === '/download';
   
   const trackEngagement = (type: string) => {
     engagementScore++;
     console.log(`📈 User engagement: ${type} (score: ${engagementScore}/${requiredScore})`);
     
-    if (engagementScore >= requiredScore || isStaffInstallPage) {
+    if (engagementScore >= requiredScore || isDownloadPage) {
       sessionStorage.setItem('pwa-engagement', 'true');
       console.log('✅ User engagement threshold met for PWA install');
     }
   };
   
   // Immediately fulfill engagement requirements on staff install page
-  if (isStaffInstallPage) {
+  if (isDownloadPage) {
     console.log('📱 Staff install page - immediately fulfilling engagement requirements');
     sessionStorage.setItem('pwa-engagement', 'true');
     sessionStorage.setItem('user-interacted', 'true');
@@ -133,7 +133,7 @@ const setupUserEngagement = () => {
   // Automatic engagement after time delay (reduced for staff page)
   setTimeout(() => {
     trackEngagement('time-spent');
-  }, isStaffInstallPage ? 1000 : 5000);
+  }, isDownloadPage ? 1000 : 5000);
   
   // Page navigation tracking
   let navigationCount = 0;
@@ -212,10 +212,10 @@ const initializePWA = async () => {
   }
   
   // Set up periodic checks for install prompt - more aggressive on staff install page
-  const isStaffInstallPage = window.location.pathname === '/staff-install';
+  const isDownloadPage = window.location.pathname === '/download';
   let checkCount = 0;
-  const maxChecks = isStaffInstallPage ? 10 : 3; // More checks on staff page
-  const checkInterval = isStaffInstallPage ? 2000 : 15000; // More frequent on staff page
+  const maxChecks = isDownloadPage ? 10 : 3; // More checks on staff page
+  const checkInterval = isDownloadPage ? 2000 : 15000; // More frequent on staff page
   
   const installPromptChecker = setInterval(() => {
     checkCount++;
@@ -236,7 +236,7 @@ const initializePWA = async () => {
     }
     
     // More verbose logging on staff install page
-    if (isStaffInstallPage || checkCount === 1) {
+    if (isDownloadPage || checkCount === 1) {
       console.log(`🔍 Checking for PWA install prompt... (${checkCount}/${maxChecks})`);
     }
     triggerInstallabilityCheck();

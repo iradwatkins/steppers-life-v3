@@ -39,16 +39,14 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
   const instructions = getInstallInstructions();
 
-  // Hide on staff install page to prevent duplicates
-  if (window.location.pathname === '/staff-install') {
-    return null;
+  // Enhanced visibility logic - show on mobile or if explicitly requested
+  if (window.location.pathname === '/download') {
+    return null; // Never show on download page itself
   }
 
-  // Only show PWA install button on mobile devices (Android and iOS) for general pages
-  // Hide on desktop (Mac, Windows, and other desktop browsers) except for staff-install page
+  // Hide on desktop (Mac, Windows, and other desktop browsers) except for download page
   if (deviceInfo.isMac || deviceInfo.isWindows || (!deviceInfo.isAndroid && !deviceInfo.isIOS)) {
-    console.log('🖥️ Desktop device detected - PWA install button hidden (mobile only)');
-    return null;
+    return showDebug ? null : null; // Only show in debug mode on desktop
   }
 
   const handleDebugClick = () => {
@@ -257,7 +255,7 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
         </DropdownMenuItem>
         
         <DropdownMenuItem 
-          onClick={() => window.open('/staff-install', '_blank')}
+          onClick={() => window.open('/download', '_blank')}
           className="flex items-center"
         >
           <Download className="mr-2 h-4 w-4" />

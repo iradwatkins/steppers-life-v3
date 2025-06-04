@@ -63,7 +63,7 @@ const App = () => (
           {/* Public routes */}
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
-          <Route path="/staff-install" element={<AppInstallPage />} />
+          <Route path="/download" element={<AppInstallPage />} />
           
           {/* PWA-specific routes (standalone, no layout) */}
           <Route path="/pwa/login" element={<PWALoginPage />} />

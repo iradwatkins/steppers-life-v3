@@ -103,15 +103,15 @@ export const usePWAInstall = () => {
     const chromeVersionOk = !deviceInfo.isChrome || (chromeVersion && chromeVersion >= 68);
     
     // Enhanced user engagement checking - bypass on staff install page
-    const isStaffInstallPage = window.location.pathname === '/staff-install';
-    const userEngagement = isStaffInstallPage || 
+    const isDownloadPage = window.location.pathname === '/download';
+    const userEngagement = isDownloadPage || 
                           sessionStorage.getItem('pwa-engagement') === 'true' || 
                           localStorage.getItem('pwa-visited') === 'true' ||
                           sessionStorage.getItem('user-interacted') === 'true';
     
     // Mark page visit and engagement immediately on staff install page
     localStorage.setItem('pwa-visited', 'true');
-    if (isStaffInstallPage) {
+    if (isDownloadPage) {
       sessionStorage.setItem('pwa-engagement', 'true');
       sessionStorage.setItem('user-interacted', 'true');
       console.log('📱 Staff install page detected - bypassing user engagement requirements');

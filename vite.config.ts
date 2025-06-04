@@ -199,10 +199,10 @@ export default defineConfig(({ mode }) => ({
             ]
           },
           {
-            name: 'Staff Install Guide',
+            name: 'App Install Guide',
             short_name: 'Install Guide',
-            description: 'Staff installation instructions',
-            url: '/staff-install',
+            description: 'App installation instructions',
+            url: '/download',
             icons: [
               {
                 src: '/icons/icon-96x96.png',

@@ -298,7 +298,7 @@ const Index = () => {
             </div>
             
             <div className="flex flex-col xs:flex-row sm:flex-row gap-3 xs:gap-4 justify-center items-center">
-              <Link to="/staff-install" className="w-full xs:w-auto">
+              <Link to="/download" className="w-full xs:w-auto">
                 <Button size="lg" className="w-full xs:w-auto bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary text-sm xs:text-base">
                   📲 Install App
                 </Button>

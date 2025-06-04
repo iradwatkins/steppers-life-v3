@@ -21,7 +21,8 @@ import {
   RefreshCw,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  BookOpen
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -47,6 +48,12 @@ const PWALayout: React.FC = () => {
       path: '/pwa/dashboard',
       label: 'Dashboard',
       icon: Home,
+      roles: ['organizer', 'event_staff', 'sales_agent']
+    },
+    {
+      path: '/magazine',
+      label: 'Magazine',
+      icon: BookOpen,
       roles: ['organizer', 'event_staff', 'sales_agent']
     },
     {
@@ -161,7 +168,7 @@ const PWALayout: React.FC = () => {
             {/* Status and User Menu */}
             <div className="flex items-center space-x-3">
               {/* PWA Install Button */}
-              <PWAInstallButton variant="ghost" size="sm" className="hidden sm:flex" showDebug={true} />
+              <PWAInstallButton variant="ghost" size="sm" className="hidden sm:flex" />
               
               {/* Connection Status */}
               <div className="hidden sm:flex items-center space-x-2">
@@ -295,7 +302,7 @@ const PWALayout: React.FC = () => {
               
               {/* Mobile PWA Install */}
               <div className="px-3 py-2">
-                <PWAInstallButton variant="outline" size="sm" className="w-full" showDebug={true} />
+                <PWAInstallButton variant="outline" size="sm" className="w-full" />
               </div>
               
               {/* Mobile Status */}
