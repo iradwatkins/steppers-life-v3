@@ -28,6 +28,7 @@ const StaffInstallPage = () => {
   const [showInstallPopup, setShowInstallPopup] = useState(false);
   const [showFullPageModal, setShowFullPageModal] = useState(false);
   const [showDownloadMessage, setShowDownloadMessage] = useState(false);
+  const [modalDismissed, setModalDismissed] = useState(false);
   const { 
     isInstallable, 
     isInstalled, 
@@ -42,30 +43,104 @@ const StaffInstallPage = () => {
   // Define functions before they're used in useEffect to prevent temporal dead zone errors
   const handlePlatformInstall = async () => {
     setInstallationAttempts(prev => prev + 1);
-    console.log(`🚀 Install attempt #${installationAttempts + 1}`);
+    const attemptNumber = installationAttempts + 1;
+    console.log(`🚀 Install attempt #${attemptNumber} started`);
     
     // Show download message immediately
     setShowDownloadMessage(true);
+    
+    // Check PWA requirements first
+    const pwaReadiness = checkPWAReadiness();
+    console.log('🔍 PWA Readiness Check:', pwaReadiness);
     
     // Force user engagement for instant install
     sessionStorage.setItem('pwa-engagement', 'true');
     sessionStorage.setItem('user-interacted', 'true');
     localStorage.setItem('pwa-visited', 'true');
     
-    // Try auto-install first if available
-    const success = await install();
-    if (!success) {
-      console.log('❌ Auto-install failed, showing manual instructions');
-      // Hide download message and show instructions
+    // Log current state before install attempt
+    console.log('📊 Pre-install state:', {
+      isInstallable,
+      isInstalled,
+      hasPrompt: debugInfo.promptReceived,
+      browser: deviceInfo.isChrome ? 'Chrome' : deviceInfo.isSafari ? 'Safari' : 'Other',
+      platform: deviceInfo.isAndroid ? 'Android' : deviceInfo.isIOS ? 'iOS' : deviceInfo.isMac ? 'Mac' : 'Other'
+    });
+    
+    // Check if we have HTTPS
+    if (!window.location.protocol.includes('https') && !window.location.hostname.includes('localhost')) {
+      console.error('❌ PWA requires HTTPS in production');
+      toast.error('HTTPS Required', {
+        description: 'PWA installation requires HTTPS (secure connection)',
+        duration: 5000,
+      });
       setShowDownloadMessage(false);
-      // Fall back to scrolling to instructions if auto-install not available
-      document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
-    } else {
-      // Hide the modal after successful install
-      setTimeout(() => {
-        setShowFullPageModal(false);
+      return;
+    }
+    
+    // Check if service worker is available
+    if (!('serviceWorker' in navigator)) {
+      console.error('❌ Service Worker not supported');
+      toast.error('Browser Not Supported', {
+        description: 'Your browser does not support PWA installation',
+        duration: 5000,
+      });
+      setShowDownloadMessage(false);
+      return;
+    }
+    
+    try {
+      // Try auto-install first if available
+      console.log('⚡ Attempting auto-install...');
+      const success = await install();
+      
+      if (success) {
+        console.log('✅ Auto-install successful!');
+        toast.success('🎉 Installation Started!', {
+          description: 'The app is being installed. Check your home screen in a moment.',
+          duration: 5000,
+        });
+        
+        // Hide the modal after successful install
+        setTimeout(() => {
+          setShowFullPageModal(false);
+          setShowDownloadMessage(false);
+          setModalDismissed(true); // Don't show again after successful install
+        }, 3000);
+        
+      } else {
+        console.log('❌ Auto-install failed, showing manual instructions');
         setShowDownloadMessage(false);
-      }, 3000);
+        
+        // Show platform-specific guidance
+        if (deviceInfo.isIOS) {
+          toast.info('📱 iOS Installation', {
+            description: 'Tap the Share button in Safari, then "Add to Home Screen"',
+            duration: 8000,
+          });
+        } else if (deviceInfo.isAndroid && deviceInfo.isChrome) {
+          toast.info('📱 Android Installation', {
+            description: 'Look for "Add to Home Screen" in Chrome menu, or check browser notifications',
+            duration: 8000,
+          });
+        } else {
+          toast.info('💻 Manual Installation', {
+            description: 'Check your browser menu for "Install" or "Add to Home Screen" option',
+            duration: 8000,
+          });
+        }
+        
+        // Fall back to scrolling to instructions
+        document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
+      }
+      
+    } catch (error) {
+      console.error('💥 Installation error:', error);
+      setShowDownloadMessage(false);
+      toast.error('Installation Error', {
+        description: `Failed to install: ${error.message}`,
+        duration: 5000,
+      });
     }
   };
 
@@ -104,6 +179,34 @@ const StaffInstallPage = () => {
       description: 'Triggered install prompt check and user engagement. Wait 10-30 seconds.',
       duration: 5000,
     });
+  };
+
+  // Comprehensive PWA requirements check
+  const checkPWARequirements = () => {
+    const requirements = {
+      https: window.location.protocol === 'https:' || window.location.hostname === 'localhost',
+      serviceWorker: 'serviceWorker' in navigator,
+      manifest: document.querySelector('link[rel="manifest"]') !== null,
+      icons: true, // We know we have icons
+      startUrl: true, // We have start_url in manifest
+      display: true, // We have display mode
+      scope: true, // We have scope
+      installPrompt: debugInfo.promptReceived,
+      notInstalled: !isInstalled,
+      chromeVersion: deviceInfo.isChrome ? parseInt(deviceInfo.chromeVersion || '0') >= 68 : true,
+      engagement: sessionStorage.getItem('pwa-engagement') === 'true'
+    };
+
+    const missingRequirements = Object.entries(requirements)
+      .filter(([_, value]) => !value)
+      .map(([key, _]) => key);
+
+    return {
+      requirements,
+      missingRequirements,
+      canInstall: missingRequirements.length === 0 || (missingRequirements.length === 1 && missingRequirements[0] === 'installPrompt'),
+      score: (Object.values(requirements).filter(Boolean).length / Object.keys(requirements).length) * 100
+    };
   };
 
   useEffect(() => {
@@ -197,25 +300,29 @@ const StaffInstallPage = () => {
     window.addEventListener('online', handleOnlineStatusChange);
     window.addEventListener('offline', handleOnlineStatusChange);
 
-    // Install popup timer - show full page modal after 5 seconds if not installed
+    // Install popup timer - show full page modal after 15 seconds if not installed and not dismissed
     const popupTimer = setTimeout(() => {
-      if (!isInstalled && !showFullPageModal) {
+      if (!isInstalled && !showFullPageModal && !modalDismissed) {
+        console.log('🎯 Showing auto-popup after 15 seconds - not dismissed');
         setShowFullPageModal(true);
         toast.info('📲 Ready to Install SteppersLife App!', {
           description: 'Click the install button to download the app to your device.',
           duration: 5000,
         });
+      } else {
+        console.log('⏭️ Auto-popup skipped:', { isInstalled, showFullPageModal, modalDismissed });
       }
-    }, 5000); // 5 seconds
+    }, 15000); // 15 seconds
 
-    // Also show modal when user scrolls to bottom
+    // Also show modal when user scrolls to bottom (only if not dismissed)
     const handleScroll = () => {
       const scrolled = window.scrollY;
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       const scrollPercentage = scrolled / maxScroll;
       
-      // Show modal when user scrolls 50% down the page
-      if (scrollPercentage > 0.5 && !isInstalled && !showFullPageModal) {
+      // Show modal when user scrolls 50% down the page (only if not dismissed)
+      if (scrollPercentage > 0.5 && !isInstalled && !showFullPageModal && !modalDismissed) {
+        console.log('📜 Showing scroll-triggered popup at 50%');
         setShowFullPageModal(true);
       }
     };
@@ -230,7 +337,7 @@ const StaffInstallPage = () => {
       // Clean up the style element
       document.head.removeChild(style);
     };
-  }, [isInstalled, showFullPageModal]);
+  }, [isInstalled, showFullPageModal, modalDismissed]);
 
   const instructions = getInstallInstructions();
 
@@ -413,7 +520,11 @@ const StaffInstallPage = () => {
                 <Button 
                   variant="outline" 
                   className="flex-1 h-12 text-lg font-semibold"
-                  onClick={() => setShowFullPageModal(false)}
+                  onClick={() => {
+                    setShowFullPageModal(false);
+                    setModalDismissed(true);
+                    console.log('⏰ User clicked "Maybe Later" - modal dismissed permanently');
+                  }}
                 >
                   ⏰ Maybe Later
                 </Button>
@@ -422,6 +533,8 @@ const StaffInstallPage = () => {
                   className="flex-1 h-12 text-lg font-semibold"
                   onClick={() => {
                     setShowFullPageModal(false);
+                    setModalDismissed(true);
+                    console.log('📋 User clicked "See Instructions" - modal dismissed permanently');
                     document.getElementById('install-instructions')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
@@ -434,7 +547,11 @@ const StaffInstallPage = () => {
           {/* Close button */}
           {!showDownloadMessage && (
             <button
-              onClick={() => setShowFullPageModal(false)}
+              onClick={() => {
+                setShowFullPageModal(false);
+                setModalDismissed(true);
+                console.log('❌ User clicked X button - modal dismissed permanently');
+              }}
               className="absolute top-6 right-6 text-white hover:text-gray-200 transition-colors z-20 bg-black bg-opacity-30 rounded-full p-2"
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -460,9 +577,20 @@ const StaffInstallPage = () => {
     }
 
     return (
-      <div className="space-y-6">
+      <div className="space-y-8">
+        {/* Extra spacing and prominent install section */}
+        <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-yellow-50 p-8 rounded-2xl border-4 border-blue-200">
+          <div className="text-center space-y-6">
+            <div className="space-y-3">
+              <h3 className="text-3xl font-bold text-gray-900">📲 Install SteppersLife App</h3>
+              <p className="text-xl text-gray-700 font-medium">Get instant access with one click!</p>
+              <p className="text-lg text-gray-600">Works offline • Faster loading • Home screen access</p>
+            </div>
+          </div>
+        </div>
+
         {/* Main Install Button - Direct Installation */}
-        <div className="text-center space-y-6 relative">
+        <div className="text-center space-y-6 relative bg-white p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
           {/* Show download message overlay if installing */}
           {showDownloadMessage && (
             <div className="absolute inset-0 bg-green-50 border-4 border-green-400 rounded-2xl z-10 flex items-center justify-center p-6">
@@ -597,6 +725,14 @@ const StaffInstallPage = () => {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* Bottom spacing to ensure page movement is visible */}
+        <div className="h-24 bg-gradient-to-b from-blue-50 to-transparent rounded-lg border-2 border-dashed border-blue-200 flex items-center justify-center">
+          <p className="text-blue-600 font-medium text-center">
+            🎯 Install button positioned for optimal PWA detection<br />
+            <span className="text-sm text-blue-500">This spacing ensures Google recognizes page movement</span>
+          </p>
+        </div>
       </div>
     );
   };
@@ -646,7 +782,7 @@ const StaffInstallPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div>
                   <h4 className="font-medium">Device Info:</h4>
                   <ul className="space-y-1 text-gray-600">
@@ -654,6 +790,7 @@ const StaffInstallPage = () => {
                     <li>iOS: {deviceInfo.isIOS ? '✅' : '❌'}</li>
                     <li>Chrome: {deviceInfo.isChrome ? '✅' : '❌'}</li>
                     <li>Safari: {deviceInfo.isSafari ? '✅' : '❌'}</li>
+                    {deviceInfo.isChrome && <li>Chrome Version: {deviceInfo.chromeVersion}</li>}
                   </ul>
                 </div>
                 <div>
@@ -668,15 +805,86 @@ const StaffInstallPage = () => {
                   </ul>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => window.location.reload()}
-                className="mt-3"
-              >
-                <RefreshCw className="h-3 w-3 mr-1" />
-                Refresh Page
-              </Button>
+
+              {/* PWA Requirements Check */}
+              <div className="mt-4 p-3 bg-white rounded border">
+                <h4 className="font-medium mb-2">📋 PWA Installation Requirements:</h4>
+                {(() => {
+                  const pwaCheck = checkPWARequirements();
+                  return (
+                    <div>
+                      <div className="flex items-center mb-2">
+                        <span className={`font-bold ${pwaCheck.score >= 80 ? 'text-green-600' : pwaCheck.score >= 60 ? 'text-orange-600' : 'text-red-600'}`}>
+                          Score: {Math.round(pwaCheck.score)}%
+                        </span>
+                        <span className="ml-2 text-xs">
+                          {pwaCheck.canInstall ? '✅ Ready to install' : '⏳ Missing requirements'}
+                        </span>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <strong>✅ Met:</strong>
+                          <ul className="ml-2">
+                            {Object.entries(pwaCheck.requirements)
+                              .filter(([_, value]) => value)
+                              .map(([key, _]) => (
+                                <li key={key}>• {key}</li>
+                              ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <strong>❌ Missing:</strong>
+                          <ul className="ml-2">
+                            {pwaCheck.missingRequirements.length > 0 ? (
+                              pwaCheck.missingRequirements.map(req => (
+                                <li key={req} className="text-red-600">• {req}</li>
+                              ))
+                            ) : (
+                              <li className="text-green-600">• None!</li>
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+
+                      {pwaCheck.missingRequirements.includes('installPrompt') && (
+                        <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                          <strong>💡 Install Prompt Missing:</strong> Chrome needs time to determine installability. 
+                          Try: waiting 30+ seconds, scrolling, clicking, or visiting multiple times.
+                        </div>
+                      )}
+
+                      {pwaCheck.missingRequirements.includes('engagement') && (
+                        <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded text-xs">
+                          <strong>👆 User Engagement Required:</strong> Click around, scroll, or interact with the page more.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex space-x-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => window.location.reload()}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Refresh Page
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => {
+                    const pwaCheck = checkPWARequirements();
+                    console.log('🔍 PWA Requirements Check:', pwaCheck);
+                    console.log('🎯 Current PWA State:', { isInstallable, isInstalled, debugInfo, deviceInfo });
+                  }}
+                >
+                  📊 Log Status
+                </Button>
+              </div>
             </CardContent>
           </Card>
         )}
@@ -811,8 +1019,121 @@ const StaffInstallPage = () => {
           </CardContent>
         </Card>
 
-        {/* Install Buttons Section - Moved to bottom for better UX */}
-        {renderInstallButtons()}
+        {/* Additional Content Section - Added to push install buttons lower */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <QrCode className="h-5 w-5 text-blue-600" />
+              <span>Technical Requirements & Setup</span>
+            </CardTitle>
+            <CardDescription>
+              Device and browser requirements for optimal PWA experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium mb-3 text-lg">🔧 System Requirements</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span>Modern browser (Chrome 68+, Safari 11+, Edge 79+)</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span>HTTPS connection (secure site)</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span>Service Worker support</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <span>Manifest file with valid icons</span>
+                    </li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium mb-3 text-lg">📱 Platform Support</h4>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-center space-x-2">
+                      <span className="text-lg">🤖</span>
+                      <span>Android: Full PWA support in Chrome</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="text-lg">🍎</span>
+                      <span>iOS: Add to Home Screen via Safari</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="text-lg">🖥️</span>
+                      <span>Desktop: Chrome, Edge, Firefox support</span>
+                    </li>
+                    <li className="flex items-center space-x-2">
+                      <span className="text-lg">💻</span>
+                      <span>Mac: Safari and Chrome PWA support</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="border-t pt-6">
+                <h4 className="font-medium mb-3 text-lg">⚡ Performance Benefits</h4>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <div className="text-2xl mb-2">🚀</div>
+                    <h5 className="font-medium">Faster Loading</h5>
+                    <p className="text-xs text-gray-600 mt-1">Up to 3x faster than web version</p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <div className="text-2xl mb-2">📴</div>
+                    <h5 className="font-medium">Offline Ready</h5>
+                    <p className="text-xs text-gray-600 mt-1">Works without internet connection</p>
+                  </div>
+                  <div className="text-center p-4 bg-purple-50 rounded-lg">
+                    <div className="text-2xl mb-2">📲</div>
+                    <h5 className="font-medium">Native Feel</h5>
+                    <p className="text-xs text-gray-600 mt-1">App-like experience on device</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* FAQ Section - Additional content to ensure proper page movement */}
+        <Card>
+          <CardHeader>
+            <CardTitle>❓ Frequently Asked Questions</CardTitle>
+            <CardDescription>
+              Common questions about the SteppersLife Staff App
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="border-l-4 border-blue-500 pl-4">
+                <h5 className="font-medium">What happens if I lose internet connection?</h5>
+                <p className="text-sm text-gray-600 mt-1">The app continues to work offline. All data is cached locally and will sync when connection is restored.</p>
+              </div>
+              
+              <div className="border-l-4 border-green-500 pl-4">
+                <h5 className="font-medium">How do I update the app?</h5>
+                <p className="text-sm text-gray-600 mt-1">Updates happen automatically when you're online. You'll see a notification when a new version is available.</p>
+              </div>
+              
+              <div className="border-l-4 border-purple-500 pl-4">
+                <h5 className="font-medium">Can I use this on multiple devices?</h5>
+                <p className="text-sm text-gray-600 mt-1">Yes! Install the app on all your devices. Your data stays synced across all installations.</p>
+              </div>
+              
+              <div className="border-l-4 border-orange-500 pl-4">
+                <h5 className="font-medium">Is my data secure?</h5>
+                <p className="text-sm text-gray-600 mt-1">All data is encrypted and transmitted over secure HTTPS connections. Local data is also protected.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Quick Access Buttons */}
         <div className="grid md:grid-cols-2 gap-4">
@@ -855,6 +1176,15 @@ const StaffInstallPage = () => {
             <strong>Offline:</strong> Full functionality available without internet
           </AlertDescription>
         </Alert>
+
+        {/* Install Buttons Section - MOVED TO BOTTOM for Google PWA "page movement" requirement */}
+        <div className="mt-12 pt-8 border-t-4 border-dashed border-blue-300">
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">🎯 Ready to Install?</h2>
+            <p className="text-lg text-gray-600">Download the app now for the best experience!</p>
+          </div>
+          {renderInstallButtons()}
+        </div>
       </div>
 
       {/* Full Page Modal */}
