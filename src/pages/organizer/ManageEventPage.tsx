@@ -24,7 +24,8 @@ import {
   Download,
   ExternalLink,
   Mail,
-  FolderPlus
+  FolderPlus,
+  Users
 } from 'lucide-react';
 import SocialShareButtons from '@/components/SocialShareButtons';
 import { createEventURL, createShortURL, addTrackingParams } from '@/utils/urlUtils';
@@ -149,10 +150,22 @@ const ManageEventPage = () => {
       path: `/organizer/event/${eventId}/performance`,
     },
     {
+      label: 'Attendee Report',
+      icon: <Users className="h-5 w-5 text-brand-primary" />,
+      description: 'Manage attendee information, view reports, and export attendee data.',
+      path: `/organizer/event/${eventId}/attendees`,
+    },
+    {
       label: 'Event Collections',
       icon: <FolderPlus className="h-5 w-5 text-brand-primary" />,
       description: 'Organize events into collections, create series, and manage templates.',
       path: `/organizer/collections`,
+    },
+    {
+      label: 'Team Management',
+      icon: <Users className="h-5 w-5 text-brand-primary" />,
+      description: 'Manage your followers, team members, and role assignments.',
+      path: `/organizer/event/${eventId}/team`,
     },
   ];
 

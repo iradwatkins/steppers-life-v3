@@ -37,9 +37,12 @@ import EventRefundsPage from "./pages/organizer/EventRefundsPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
 import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
 import EventPerformancePage from "./pages/organizer/EventPerformancePage";
+import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
+import { MultiEventAnalyticsPage } from './pages/MultiEventAnalyticsPage';
+import AttendeeReportPage from './pages/AttendeeReportPage';
 
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
@@ -152,9 +155,29 @@ const App = () => (
                 <EventPerformancePage />
               </ProtectedRoute>
             } />
+            <Route path="/organizer/event/:eventId/attendees" element={
+              <ProtectedRoute>
+                <AttendeeReportPage />
+              </ProtectedRoute>
+            } />
             <Route path="/organizer/collections" element={
               <ProtectedRoute>
                 <EventCollectionsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/analytics" element={
+              <ProtectedRoute>
+                <MultiEventAnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/team" element={
+              <ProtectedRoute>
+                <FollowerManagementPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/team" element={
+              <ProtectedRoute>
+                <FollowerManagementPage />
               </ProtectedRoute>
             } />
             <Route path="/promoter/events/claim" element={

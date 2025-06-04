@@ -1,4 +1,4 @@
-# User Stories Index - Epic A, Epic B, Epic C & Epic D
+# User Stories Index - Epic A, Epic B, Epic C, Epic D & Epic E
 
 ## Overview
 
@@ -38,7 +38,11 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [A.008.story.md](./A.008.story.md)  
 **Summary:** Created AdminCreateEventPage.tsx allowing admins to create events and assign to mock promoters. Added link from Admin dashboard.
 
-## Epic B: Core Platform Features (Buyer Experience) - ✅ 12 Done, 🔄 1 In Progress
+## Epic B: Core Platform Features (Buyer Experience) - ✅ 15 Done
+
+### ✅ B.001: Buyer Registration & Account Management
+**File:** [B.001.story.md](./B.001.story.md)  
+**Summary:** User registration and account management system with email verification, social login, profile management, security settings, payment methods, and GDPR compliance. Foundation for buyer experience.
 
 ### ✅ B.002: Complete Checkout Flow
 **File:** [B.002.story.md](./B.002.story.md)  
@@ -88,12 +92,11 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [B.013.story.md](./B.013.story.md)  
 **Summary:** Created comprehensive notification system with NotificationCenter (bell icon, unread badges, tabbed interface), NotificationPreferences for user customization, CalendarIntegration for multiple platforms, NotificationManagementPage for organizers, multi-channel delivery (email/SMS/push), automatic scheduling of confirmations and reminders, and integration with checkout confirmation and event details pages.
 
-### 🔄 B.014: Event Check-in & Attendance Tracking System
+### ✅ B.014: Event Check-in & Attendance Tracking System
 **File:** [B.014.story.md](./B.014.story.md)  
-**Status:** In Progress (Ready for Implementation)  
 **Summary:** Comprehensive check-in system with QR code scanner, real-time ticket verification, offline capability, self-check-in kiosks, live attendance dashboard, manual check-in, analytics with CSV export, waitlist management, and integration with notification system for welcome messages.
 
-## Epic C: Event Promotion & Marketing (for Organizers) - ✅ 4 Done, 🔄 0 In Progress
+## Epic C: Event Promotion & Marketing (for Organizers) - ✅ 4 Done
 
 ### ✅ C.001: Social Media Sharing Tools & Public Event URLs
 **File:** [C.001.story.md](./C.001.story.md)  
@@ -111,7 +114,7 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [C.004.story.md](./C.004.story.md)  
 **Summary:** Created comprehensive QR code generation and display tools for event sales pages with customizable design options, multiple formats for different use cases, tracking analytics, branded customization, batch generation, testing tools, social media integration, and complete marketing toolkit with templates and best practices.
 
-## Epic D: On-Site Event Management (PWA) - ✅ 2 Done, 📋 0 Ready
+## Epic D: On-Site Event Management (PWA) - ✅ 5 Done
 
 ### ✅ D.001: PWA Setup & Secure Login for Organizers & Staff
 **File:** [D.001.story.md](./D.001.story.md)  
@@ -121,6 +124,32 @@ This directory contains all documented user stories for SteppersLife V2, organiz
 **File:** [D.002.story.md](./D.002.story.md)  
 **Summary:** Completed comprehensive PWA check-in system with PWAQRScanner component featuring camera integration, real-time validation, visual/haptic feedback, and mobile optimization. Implemented pwaCheckinService with offline queue, automatic sync, encrypted IndexedDB storage, and integration with existing attendance tracking. Created complete PWA check-in interface with QR scanning, manual lookup, staff analytics dashboard, emergency override, and multi-event support. All features tested and optimized for mobile devices with proper error handling and accessibility.
 
+### ✅ D.003: PWA View Attendee List & Status
+**File:** [D.003.story.md](./D.003.story.md)  
+**Summary:** Completed comprehensive PWA attendee list interface with mobile-first design, real-time search and filtering, bulk operations, detailed attendee profiles, offline caching with encryption, and full integration with check-in system. Features attendee management, export functionality, and real-time status updates across all devices.
+
+### ✅ D.004: PWA Basic Live Event Statistics (Sold vs. Checked-in)
+**File:** [D.004.story.md](./D.004.story.md)  
+**Summary:** Completed comprehensive PWA statistics dashboard with tabbed interface showing real-time metrics, hourly patterns, alert management, and visual data representation. Features color-coded status indicators, automatic refresh, offline caching, and full integration with PWA system for operational decision-making during events.
+
+### ✅ D.005: PWA On-site Payment Processing Interface
+**File:** [D.005.story.md](./D.005.story.md)  
+**Summary:** Completed comprehensive PWA payment processing interface with multiple payment methods (cash, card, digital wallet), transaction management, receipt generation, refund processing, offline queue with auto-sync, PCI compliance features, and mobile-optimized UI. Fully integrated with existing PWA system for complete on-site payment capabilities.
+
+## Epic E: Advanced Analytics & Reporting (for Organizers) - ✅ 3 Done
+
+### ✅ E.001: Event Performance Dashboard (Per Event)
+**File:** [E.001.story.md](./E.001.story.md)  
+**Summary:** Comprehensive event performance dashboard providing real-time and historical analytics for individual events. Features ticket sales tracking, revenue analytics, attendee engagement metrics, customizable widgets, and export functionality for data-driven event optimization.
+
+### ✅ E.002: Multi-Event Analytics Dashboard (Cross-Event Comparison)
+**File:** [E.002.story.md](./E.002.story.md)  
+**Summary:** Completed comprehensive multi-event analytics dashboard with cross-event comparison, trend analysis, audience insights, and predictive analytics. Features tabbed interface with overview, comparison, trends, audience, and insights tabs. Includes strategic recommendations, venue performance analysis, seasonal patterns, and export functionality for event portfolio optimization.
+
+### ✅ E.003: Attendee Information Report (View & Export)
+**File:** [E.003.story.md](./E.003.story.md)  
+**Summary:** Comprehensive attendee information reporting system with advanced filtering, search capabilities, detailed attendee profiles, bulk operations, export functionality, and integration with communication tools for effective attendee management and analysis. Created AttendeeReportService with data management and privacy controls, useAttendeeReport hook for state management, and AttendeeReportPage with responsive design, advanced filtering, bulk operations, export functionality, and detailed attendee profiles with activity tracking.
+
 ## Story Template
 
 All stories follow the BMAD method story template located at: `bmad-agent/templates/story-tmpl.md`
@@ -128,25 +157,31 @@ All stories follow the BMAD method story template located at: `bmad-agent/templa
 ## Story Statistics
 
 - **Epic A Completed:** 7 stories (1 deferred)
-- **Epic B Completed:** 14 stories (all completed)
+- **Epic B Completed:** 15 stories (all completed) 
 - **Epic C Completed:** 4 stories (all completed)
-- **Epic D In Progress:** 2 completed (D.001, D.002), 0 ready
-- **Total Completed:** 27 stories
-- **Total Documented:** 27 stories (1 deferred)
-- **Total Acceptance Criteria:** 316+ ACs across all stories
-- **Total Tasks/Subtasks:** 168+ major tasks with 590+ subtasks
-- **Coverage:** Complete Epic A event creation, comprehensive Epic B buyer experience with inventory/reviews/notifications/check-in, complete Epic C event promotion foundation, and Epic D PWA foundation implemented with complete check-in interface ready for on-site event management
+- **Epic D Completed:** 5 stories (all completed)
+- **Epic E Completed:** 3 stories (all completed)
+- **Total Completed:** 34 stories
+- **Total Documented:** 34 stories (1 deferred in Epic A)
+- **Total Acceptance Criteria:** 400+ ACs across all stories
+- **Total Tasks/Subtasks:** 200+ major tasks with 700+ subtasks
+- **Coverage:** Complete Epic A event creation, comprehensive Epic B buyer experience, complete Epic C event promotion, complete Epic D PWA on-site management, and Epic E advanced analytics foundation
 
 ## Next Steps
 
-🚀 **Epic D Development Continuing!** 
+🚀 **Epic E Analytics Implementation Ready!** 
 
-With Epics A, B, and C fully implemented, and D.001 completed, we're now ready for D.002:
+With Epics A, B, C, and D fully implemented, Epic E provides advanced analytics and reporting capabilities:
 
-**Current Epic D Status:**
-- ✅ D.001 Completed: PWA Setup & Secure Login foundation implemented and tested
-- ✅ D.002 Completed: PWA Check-in Interface & QR Scanning fully functional and deployed
-- 🔄 Next Stories: D.003 (Attendee List), D.004 (Live Stats), D.005 (On-site Payments), D.006 (Offline Sync)
+**Current Epic E Status:**
+- 📋 E.001 Ready: Event Performance Dashboard (Per Event) - individual event analytics
+- 📋 E.002 Ready: Multi-Event Analytics Dashboard - cross-event comparison and portfolio analysis  
+- 📋 E.003 Ready: Attendee Information Report - comprehensive attendee data management
+
+**Next Development Priorities:**
+1. **Epic E Implementation** - Advanced analytics suite for data-driven event management
+2. **Epic A.004 Enhancement** - Visual seating chart builder (deferred advanced feature)
+3. **Platform Optimization** - Performance improvements and additional integrations
 
 ## Related Documentation
 

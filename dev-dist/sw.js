@@ -82,12 +82,12 @@ define(['./workbox-a0789725'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "/index.html",
-    "revision": "0.m00cm3rrumo"
+    "revision": "0.ildc32fnfdg"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/],
-    denylist: [/^\/api\//, /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot)$/]
+    denylist: [/^\/api\//, /\/__/, /\/sw\.js$/, /\/manifest\.json$/, /\/manifest\.webmanifest$/, /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot|webp|avif|map)$/]
   }));
   workbox.registerRoute(/^https:\/\/api\.stepperslife\.com\/.*$/, new workbox.NetworkFirst({
     "cacheName": "api-cache",

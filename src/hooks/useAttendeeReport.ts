@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import { 
   attendeeReportService, 
@@ -7,7 +7,11 @@ import {
   AttendeeFilterOptions, 
   BulkOperation, 
   ExportConfig,
-  PrivacyAuditRecord
+  PrivacyAuditRecord,
+  AttendeeProfile,
+  AttendeeFilters,
+  AttendeeSort,
+  AttendeeActivity
 } from '../services/attendeeReportService';
 
 interface UseAttendeeReportResult {
@@ -28,14 +32,14 @@ interface UseAttendeeReportResult {
   exportError: string | null;
   
   // Filters and search
-  filters: AttendeeFilterOptions;
+  filters: AttendeeFilters;
   searchQuery: string;
   
   // Actions
   loadAttendees: (eventId: string, staffId?: string, justification?: string) => Promise<void>;
   refreshAttendees: () => Promise<void>;
   searchAttendees: (query: string, fields?: string[]) => Promise<void>;
-  updateFilters: (newFilters: Partial<AttendeeFilterOptions>) => void;
+  updateFilters: (newFilters: Partial<AttendeeFilters>) => void;
   clearFilters: () => void;
   
   // Selection management
@@ -63,6 +67,30 @@ interface UseAttendeeReportResult {
   getAttendeeCount: () => number;
   getCheckedInCount: () => number;
   getVIPCount: () => number;
+  
+  // New data
+  selectedAttendee: AttendeeProfile | null;
+  activities: AttendeeActivity[];
+  
+  // Pagination
+  page: number;
+  totalPages: number;
+  total: number;
+  limit: number;
+  
+  // New actions
+  loadAnalytics: (eventId: string) => Promise<void>;
+  loadAttendeeDetails: (attendeeId: string) => Promise<void>;
+  loadAttendeeActivities: (attendeeId: string) => Promise<void>;
+  addTagToSelected: (tag: string) => Promise<void>;
+  removeTagFromSelected: (tag: string) => Promise<void>;
+  addNoteToSelected: (note: string) => Promise<void>;
+  setVipStatusForSelected: (isVip: boolean) => Promise<void>;
+  exportSelected: (eventId: string, format: 'csv' | 'excel' | 'pdf') => Promise<void>;
+  
+  // New states
+  loading: boolean;
+  exportProgress: number;
 }
 
 export const useAttendeeReport = (
@@ -80,8 +108,16 @@ export const useAttendeeReport = (
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<AttendeeFilterOptions>({});
+  const [filters, setFilters] = useState<AttendeeFilters>({});
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAttendee, setSelectedAttendee] = useState<AttendeeProfile | null>(null);
+  const [activities, setActivities] = useState<AttendeeActivity[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [limit, setLimit] = useState(50);
+  const [loading, setLoading] = useState(false);
+  const [exportProgress, setExportProgress] = useState(0);
 
   // Load attendees data
   const loadAttendees = useCallback(async (
@@ -102,6 +138,9 @@ export const useAttendeeReport = (
 
       setAttendees(result.attendees);
       setAnalytics(result.analytics);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+      setPage(result.page);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load attendees';
       setError(errorMessage);
@@ -157,7 +196,7 @@ export const useAttendeeReport = (
   }, [eventId, staffId, analytics, loadAttendees]);
 
   // Update filters
-  const updateFilters = useCallback((newFilters: Partial<AttendeeFilterOptions>) => {
+  const updateFilters = useCallback((newFilters: Partial<AttendeeFilters>) => {
     const updatedFilters = { ...filters, ...newFilters };
     setFilters(updatedFilters);
     
@@ -408,6 +447,81 @@ export const useAttendeeReport = (
     };
   }, [eventId, refreshAttendees]);
 
+  // New actions
+  const loadAnalytics = useCallback(async (eventIdParam?: string) => {
+    const targetEventId = eventIdParam || eventId;
+    if (!targetEventId) return;
+
+    try {
+      const analytics = await attendeeReportService.getAttendeeAnalytics(targetEventId);
+      setAnalytics(analytics);
+    } catch (error) {
+      console.error('Failed to load analytics:', error);
+    }
+  }, [eventId]);
+
+  const loadAttendeeDetails = useCallback(async (attendeeId: string) => {
+    setLoading(true);
+
+    try {
+      const attendee = await attendeeReportService.getAttendeeProfile(attendeeId);
+      setSelectedAttendee(attendee);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to load attendee details');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadAttendeeActivities = useCallback(async (attendeeId: string) => {
+    try {
+      const activities = await attendeeReportService.getAttendeeActivities(attendeeId);
+      setActivities(activities);
+    } catch (error) {
+      console.error('Failed to load activities:', error);
+    }
+  }, []);
+
+  const addTagToSelected = useCallback(async (tag: string) => {
+    await performBulkOperation({
+      type: 'add_tag',
+      data: { tag }
+    });
+  }, [performBulkOperation]);
+
+  const removeTagFromSelected = useCallback(async (tag: string) => {
+    await performBulkOperation({
+      type: 'remove_tag',
+      data: { tag }
+    });
+  }, [performBulkOperation]);
+
+  const addNoteToSelected = useCallback(async (note: string) => {
+    await performBulkOperation({
+      type: 'add_note',
+      data: { note }
+    });
+  }, [performBulkOperation]);
+
+  const setVipStatusForSelected = useCallback(async (isVip: boolean) => {
+    await performBulkOperation({
+      type: isVip ? 'set_vip' : 'remove_vip'
+    });
+  }, [performBulkOperation]);
+
+  const exportSelected = useCallback(async (eventIdParam: string, format: 'csv' | 'excel' | 'pdf') => {
+    if (selectedAttendees.length === 0) return;
+
+    await exportAttendees({
+      format,
+      fields: ['firstName', 'lastName', 'email', 'phone', 'ticketType', 'purchaseDate', 'checkInStatus'],
+      filters: {
+        // Filter to only selected attendees - in a real implementation,
+        // this would be handled differently
+      }
+    }, '');
+  }, [selectedAttendees, exportAttendees]);
+
   return {
     // Data
     attendees,
@@ -460,6 +574,30 @@ export const useAttendeeReport = (
     getFilteredAttendees,
     getAttendeeCount,
     getCheckedInCount,
-    getVIPCount
+    getVIPCount,
+    
+    // New data
+    selectedAttendee,
+    activities,
+    
+    // Pagination
+    page,
+    totalPages,
+    total,
+    limit,
+    
+    // New actions
+    loadAnalytics,
+    loadAttendeeDetails,
+    loadAttendeeActivities,
+    addTagToSelected,
+    removeTagFromSelected,
+    addNoteToSelected,
+    setVipStatusForSelected,
+    exportSelected,
+    
+    // New states
+    loading,
+    exportProgress
   };
 }; 

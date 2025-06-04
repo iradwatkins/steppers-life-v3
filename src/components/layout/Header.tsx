@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
-import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2, Smartphone } from 'lucide-react';
+import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2, Smartphone, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
@@ -133,6 +133,12 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
+                      <Link to="/organizer/analytics" className="flex items-center">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        <span>Event Analytics</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/download" className="flex items-center">
                         <Smartphone className="mr-2 h-4 w-4" />
                         <span>Download App</span>
@@ -213,6 +219,14 @@ const Header = () => {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Profile
+                  </Link>
+                  <Link
+                    to="/organizer/analytics"
+                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Event Analytics
                   </Link>
                   <Link
                     to="/download"
