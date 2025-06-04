@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dialog";
 import { Link } from 'react-router-dom';
 import EventCard from '@/components/EventCard';
+import EventMapView from '@/components/EventMapView';
 
 const Events = () => {
   // View and layout state
@@ -41,6 +42,11 @@ const Events = () => {
   const [sortBy, setSortBy] = useState('date');
   const [distance, setDistance] = useState(50); // miles
   
+  // Location state
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [gpsLoading, setGpsLoading] = useState(false);
+
   // Enhanced mock events data with more properties for search/discovery
   const events = [
     {
@@ -279,8 +285,20 @@ const Events = () => {
       const matchesDateFrom = !dateFrom || eventDate >= dateFrom;
       const matchesDateTo = !dateTo || eventDate <= dateTo;
       
+      // Distance filter (only when location is enabled)
+      let matchesDistance = true;
+      if (locationEnabled && userLocation) {
+        const eventDistance = calculateDistance(
+          userLocation.lat, 
+          userLocation.lng, 
+          event.coordinates.lat, 
+          event.coordinates.lng
+        );
+        matchesDistance = eventDistance <= distance;
+      }
+      
       return matchesSearch && matchesCategory && matchesCity && matchesSkillLevel && 
-             matchesPrice && matchesDateFrom && matchesDateTo;
+             matchesPrice && matchesDateFrom && matchesDateTo && matchesDistance;
     });
 
     // Sort events
@@ -297,7 +315,11 @@ const Events = () => {
         case 'rating':
           return b.rating - a.rating;
         case 'distance':
-          // In a real app, this would calculate actual distance
+          if (locationEnabled && userLocation) {
+            const distanceA = calculateDistance(userLocation.lat, userLocation.lng, a.coordinates.lat, a.coordinates.lng);
+            const distanceB = calculateDistance(userLocation.lat, userLocation.lng, b.coordinates.lat, b.coordinates.lng);
+            return distanceA - distanceB;
+          }
           return 0;
         default:
           return 0;
@@ -305,10 +327,48 @@ const Events = () => {
     });
 
     return filtered;
-  }, [searchQuery, selectedCategory, selectedCity, selectedSkillLevel, priceRange, dateFrom, dateTo, sortBy]);
+  }, [searchQuery, selectedCategory, selectedCity, selectedSkillLevel, priceRange, dateFrom, dateTo, sortBy, locationEnabled, userLocation, distance]);
 
   const featuredEvents = events.filter(event => event.featured);
   const upcomingEvents = filteredAndSortedEvents.filter(event => new Date(event.date) >= new Date());
+
+  // Get user's location
+  const getCurrentLocation = () => {
+    setGpsLoading(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+          setLocationEnabled(true);
+          setSortBy('distance'); // Auto-sort by distance when location is enabled
+          setGpsLoading(false);
+        },
+        (error) => {
+          console.error('Location access denied:', error);
+          setGpsLoading(false);
+          // Show error toast in real implementation
+        }
+      );
+    } else {
+      setGpsLoading(false);
+      alert('Geolocation is not supported by this browser');
+    }
+  };
+
+  // Calculate distance between two coordinates
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 3959; // Earth's radius in miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   return (
     <div className="min-h-screen bg-background-main py-8">
@@ -350,6 +410,17 @@ const Events = () => {
               />
             </div>
             <div className="flex gap-2">
+              {/* GPS Location Button */}
+              <Button 
+                variant={locationEnabled ? "default" : "outline"}
+                onClick={getCurrentLocation}
+                disabled={gpsLoading}
+                className="flex items-center gap-2"
+              >
+                <Navigation className={`w-4 h-4 ${gpsLoading ? 'animate-spin' : ''}`} />
+                {gpsLoading ? 'Finding...' : locationEnabled ? 'GPS On' : 'Near Me'}
+              </Button>
+              
               <Button 
                 variant="outline" 
                 onClick={() => setShowFilters(!showFilters)}
@@ -503,16 +574,26 @@ const Events = () => {
                 {/* Distance (for location-based search) */}
                 <div>
                   <label className="text-sm font-medium text-text-primary mb-2 block">
-                    Distance: {distance} miles
+                    {locationEnabled ? `Distance: ${distance} miles` : 'Distance Filter'}
                   </label>
-                  <Slider
-                    value={[distance]}
-                    onValueChange={(value) => setDistance(value[0])}
-                    max={200}
-                    min={5}
-                    step={5}
-                    className="mt-2"
-                  />
+                  {locationEnabled ? (
+                    <Slider
+                      value={[distance]}
+                      onValueChange={(value) => setDistance(value[0])}
+                      max={200}
+                      min={5}
+                      step={5}
+                      className="mt-2"
+                    />
+                  ) : (
+                    <div className="mt-2 p-3 bg-gray-50 rounded border text-center">
+                      <p className="text-xs text-gray-500 mb-2">Enable GPS to filter by distance</p>
+                      <Button size="sm" variant="outline" onClick={getCurrentLocation} disabled={gpsLoading}>
+                        <Navigation className="w-3 h-3 mr-1" />
+                        {gpsLoading ? 'Finding...' : 'Enable GPS'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -621,11 +702,17 @@ const Events = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-semibold text-text-primary">
-              {searchQuery ? 'Search Results' : 'Upcoming Events'} ({upcomingEvents.length})
+              {searchQuery ? 'Search Results' : locationEnabled ? 'Events Near You' : 'Upcoming Events'} ({upcomingEvents.length})
             </h2>
             {searchQuery && (
               <p className="text-text-secondary">
                 Showing results for "{searchQuery}"
+              </p>
+            )}
+            {locationEnabled && !searchQuery && (
+              <p className="text-text-secondary flex items-center gap-1">
+                <Navigation className="w-4 h-4" />
+                Within {distance} miles of your location
               </p>
             )}
           </div>
@@ -646,19 +733,11 @@ const Events = () => {
 
         {/* Events Display */}
         {viewMode === 'map' ? (
-          <Card className="mb-8">
-            <CardContent className="p-8 text-center">
-              <Map className="w-16 h-16 mx-auto mb-4 text-text-secondary" />
-              <h3 className="text-xl font-semibold text-text-primary mb-2">Map View</h3>
-              <p className="text-text-secondary mb-4">
-                Interactive map showing event locations would be displayed here
-              </p>
-              <Button onClick={() => setViewMode('grid')}>
-                <Grid className="w-4 h-4 mr-2" />
-                Switch to Grid View
-              </Button>
-            </CardContent>
-          </Card>
+          <EventMapView 
+            events={upcomingEvents} 
+            userLocation={userLocation}
+            locationEnabled={locationEnabled}
+          />
         ) : (
           <div className={`
             ${viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}
