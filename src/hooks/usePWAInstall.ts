@@ -256,7 +256,8 @@ export const usePWAInstall = () => {
 
     // Enhanced debug timeout with Chrome guidance
     const debugTimeout = setTimeout(() => {
-      if (!state.isInstalled && !debugInfo.promptReceived && deviceInfo.isChrome) {
+      // Only show warnings and prompts for mobile devices
+      if (!state.isInstalled && !debugInfo.promptReceived && deviceInfo.isChrome && (deviceInfo.isAndroid || deviceInfo.isIOS)) {
         console.warn('⚠️ Chrome PWA Install prompt not received after 30 seconds');
         console.log('🔧 Chrome Install Troubleshooting:');
         console.log('- Refresh page and wait');
@@ -265,7 +266,7 @@ export const usePWAInstall = () => {
         console.log('- Try incognito mode');
         console.log('- Clear browser cache');
         
-        // Show helpful toast for Chrome users
+        // Show helpful toast for Chrome users on mobile only
         if (Object.values(installCriteria).every(Boolean)) {
           toast.info('Chrome PWA Installation', {
             description: 'All requirements met! Chrome install prompt can take up to 5 minutes to appear.',
@@ -281,6 +282,8 @@ export const usePWAInstall = () => {
             duration: 10000,
           });
         }
+      } else if (!state.isInstalled && !debugInfo.promptReceived && (deviceInfo.isMac || deviceInfo.isWindows)) {
+        console.log('🖥️ Desktop device - PWA install prompts disabled (mobile only feature)');
       }
     }, 30000);
 

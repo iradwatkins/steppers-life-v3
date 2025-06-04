@@ -12,8 +12,8 @@ const registerServiceWorker = async () => {
     try {
       console.log('🔧 Registering service worker...');
       
-      // In development, use dev-dist path; in production use root
-      const swPath = import.meta.env.DEV ? '/dev-dist/sw.js' : '/sw.js';
+      // Use root path for service worker - this should work for both dev and production
+      const swPath = '/sw.js';
       console.log(`📍 Service worker path: ${swPath}`);
       
       const registration = await navigator.serviceWorker.register(swPath, {
@@ -27,8 +27,8 @@ const registerServiceWorker = async () => {
         console.log('🔄 New service worker waiting');
       }
       
-      // In development, check for updates more frequently
-      const updateInterval = import.meta.env.DEV ? 10000 : 30000;
+      // Check for updates periodically
+      const updateInterval = 30000; // 30 seconds
       setInterval(() => {
         registration.update();
       }, updateInterval);
@@ -37,11 +37,13 @@ const registerServiceWorker = async () => {
     } catch (error) {
       console.error('❌ SW registration failed:', error);
       
-      // In development, show helpful message
+      // Show less aggressive error messaging 
       if (import.meta.env.DEV) {
-        console.warn('💡 Development mode: Service worker issues are normal. Try production build for full PWA testing.');
+        console.log('💡 Development note: Service worker errors are common in dev mode.');
       }
-      throw error;
+      
+      // Don't throw the error to prevent breaking the app
+      return null;
     }
   } else {
     console.warn('⚠️ Service Worker not supported');
@@ -194,10 +196,10 @@ const initializePWA = async () => {
     console.error('❌ Service worker registration failed:', error);
   }
   
-  // Set up periodic checks for install prompt (reduced for development)
+  // Set up periodic checks for install prompt - reduced frequency and less verbose
   let checkCount = 0;
-  const maxChecks = import.meta.env.DEV ? 6 : 12; // Shorter in development
-  const checkInterval = import.meta.env.DEV ? 5000 : 10000; // More frequent in development
+  const maxChecks = 3; // Reduced from 6-12 to 3
+  const checkInterval = 15000; // 15 seconds instead of 5-10 seconds
   
   const installPromptChecker = setInterval(() => {
     checkCount++;
@@ -209,18 +211,18 @@ const initializePWA = async () => {
     
     if (checkCount >= maxChecks) {
       if (import.meta.env.DEV) {
-        console.warn('⚠️ PWA install prompt not received in development mode');
-        console.log('💡 This is normal on localhost. Use production build for full PWA testing.');
-        console.log('🧪 Try: window.mockPWAInstall() to test install flow');
+        console.log('ℹ️ PWA install prompt checking complete (development mode)');
       } else {
-        console.warn('⚠️ PWA install prompt not received after checking');
-        console.log('💡 Try: 1) Refresh page, 2) Use Chrome 68+, 3) Interact with page more');
+        console.log('ℹ️ PWA install prompt checking complete');
       }
       clearInterval(installPromptChecker);
       return;
     }
     
-    console.log(`🔍 Checking for install prompt... (${checkCount}/${maxChecks})`);
+    // Only log on the first check to reduce console spam
+    if (checkCount === 1) {
+      console.log(`🔍 Checking for PWA install prompt...`);
+    }
     triggerInstallabilityCheck();
   }, checkInterval);
   
