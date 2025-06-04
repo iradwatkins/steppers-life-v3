@@ -40,6 +40,7 @@ import EventRefundsPage from "./pages/organizer/EventRefundsPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
 import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
 import EventPerformancePage from "./pages/organizer/EventPerformancePage";
+import FinancialReportsPage from "./pages/organizer/FinancialReportsPage";
 import AttendeeReportPage from './pages/AttendeeReportPage';
 import EventDetailsPage from "./pages/EventDetailsPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
@@ -155,6 +156,11 @@ const App = () => (
             <Route path="/organizer/event/:eventId/performance" element={
               <ProtectedRoute>
                 <EventPerformancePage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/financial-reports" element={
+              <ProtectedRoute>
+                <FinancialReportsPage />
               </ProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/attendees" element={
