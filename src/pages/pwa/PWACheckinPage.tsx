@@ -44,6 +44,7 @@ const PWACheckinPage: React.FC = () => {
   const [recentCheckins, setRecentCheckins] = useState<PWACheckinResult[]>([]);
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyReason, setEmergencyReason] = useState('');
+  const [scanning, setScanning] = useState(false);
 
   // Check permissions
   useEffect(() => {
@@ -81,6 +82,17 @@ const PWACheckinPage: React.FC = () => {
       setEventStats(stats);
     } catch (error) {
       console.error('Failed to load event stats:', error);
+    }
+  };
+
+  // Load recent check-ins
+  const loadRecentCheckins = async () => {
+    try {
+      // Get recent check-ins from local storage or service
+      const recent = JSON.parse(localStorage.getItem('recent-checkins') || '[]').slice(0, 20);
+      setRecentCheckins(recent);
+    } catch (error) {
+      console.error('Failed to load recent check-ins:', error);
     }
   };
 

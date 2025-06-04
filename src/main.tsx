@@ -11,7 +11,12 @@ const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
       console.log('🔧 Registering service worker...');
-      const registration = await navigator.serviceWorker.register('/sw.js', {
+      
+      // In development, use dev-dist path; in production use root
+      const swPath = import.meta.env.DEV ? '/dev-dist/sw.js' : '/sw.js';
+      console.log(`📍 Service worker path: ${swPath}`);
+      
+      const registration = await navigator.serviceWorker.register(swPath, {
         scope: '/'
       });
       
@@ -22,14 +27,20 @@ const registerServiceWorker = async () => {
         console.log('🔄 New service worker waiting');
       }
       
-      // Check for updates periodically
+      // In development, check for updates more frequently
+      const updateInterval = import.meta.env.DEV ? 10000 : 30000;
       setInterval(() => {
         registration.update();
-      }, 30000); // Check every 30 seconds
+      }, updateInterval);
       
       return registration;
     } catch (error) {
       console.error('❌ SW registration failed:', error);
+      
+      // In development, show helpful message
+      if (import.meta.env.DEV) {
+        console.warn('💡 Development mode: Service worker issues are normal. Try production build for full PWA testing.');
+      }
       throw error;
     }
   } else {
@@ -119,21 +130,7 @@ const setupUserEngagement = () => {
 
 // Check if app is already installed with enhanced detection
 const checkInstallationStatus = () => {
-  let displayMode = 'browser';
-  
-  // Check various install indicators
-  if (navigator.standalone) {
-    displayMode = 'standalone-ios';
-  }
-  if (window.matchMedia('(display-mode: standalone)').matches) {
-    displayMode = 'standalone';
-  }
-  if (window.matchMedia('(display-mode: minimal-ui)').matches) {
-    displayMode = 'minimal-ui';
-  }
-  if (window.matchMedia('(display-mode: fullscreen)').matches) {
-    displayMode = 'fullscreen';
-  }
+  const displayMode = getDisplayMode();
   
   console.log('📱 PWA Display Mode:', displayMode);
   
@@ -176,6 +173,9 @@ const triggerInstallabilityCheck = () => {
 const initializePWA = async () => {
   console.log('🚀 Initializing PWA...');
   
+  // Set up development helpers first
+  setupDevelopmentPWAHelpers();
+  
   // Set up user engagement tracking
   setupUserEngagement();
   
@@ -194,9 +194,10 @@ const initializePWA = async () => {
     console.error('❌ Service worker registration failed:', error);
   }
   
-  // Set up periodic checks for install prompt
+  // Set up periodic checks for install prompt (reduced for development)
   let checkCount = 0;
-  const maxChecks = 12; // Check for 2 minutes (12 * 10 seconds)
+  const maxChecks = import.meta.env.DEV ? 6 : 12; // Shorter in development
+  const checkInterval = import.meta.env.DEV ? 5000 : 10000; // More frequent in development
   
   const installPromptChecker = setInterval(() => {
     checkCount++;
@@ -207,15 +208,21 @@ const initializePWA = async () => {
     }
     
     if (checkCount >= maxChecks) {
-      console.warn('⚠️ PWA install prompt not received after 2 minutes');
-      console.log('💡 Try: 1) Refresh page, 2) Use Chrome 68+, 3) Interact with page more');
+      if (import.meta.env.DEV) {
+        console.warn('⚠️ PWA install prompt not received in development mode');
+        console.log('💡 This is normal on localhost. Use production build for full PWA testing.');
+        console.log('🧪 Try: window.mockPWAInstall() to test install flow');
+      } else {
+        console.warn('⚠️ PWA install prompt not received after checking');
+        console.log('💡 Try: 1) Refresh page, 2) Use Chrome 68+, 3) Interact with page more');
+      }
       clearInterval(installPromptChecker);
       return;
     }
     
     console.log(`🔍 Checking for install prompt... (${checkCount}/${maxChecks})`);
     triggerInstallabilityCheck();
-  }, 10000);
+  }, checkInterval);
   
   // Force initial installability check
   triggerInstallabilityCheck();
@@ -225,6 +232,8 @@ const initializePWA = async () => {
 declare global {
   interface Window {
     deferredPrompt: any;
+    mockPWAInstall?: () => void;
+    checkPWAStatus?: () => void;
   }
 }
 
@@ -234,5 +243,54 @@ if (document.readyState === 'loading') {
 } else {
   initializePWA();
 }
+
+// Enhanced development mode helpers
+const setupDevelopmentPWAHelpers = () => {
+  if (!import.meta.env.DEV) return;
+  
+  console.log('🛠️ Development PWA helpers enabled');
+  
+  // Mock install prompt for development testing
+  window.mockPWAInstall = () => {
+    console.log('🧪 Mocking PWA install prompt for development');
+    const mockEvent = {
+      preventDefault: () => console.log('Mock preventDefault called'),
+      prompt: () => {
+        console.log('Mock prompt triggered');
+        return Promise.resolve({ outcome: 'accepted' });
+      }
+    };
+    handleBeforeInstallPrompt(mockEvent);
+  };
+  
+  // Development PWA status checker
+  window.checkPWAStatus = () => {
+    console.log('🔍 PWA Development Status:');
+    console.log('- Service Worker supported:', 'serviceWorker' in navigator);
+    console.log('- Install prompt received:', installPromptReceived);
+    console.log('- Deferred prompt:', !!deferredPrompt);
+    console.log('- Is HTTPS:', location.protocol === 'https:');
+    console.log('- Current display mode:', getDisplayMode());
+    console.log('- User engagement stored:', !!sessionStorage.getItem('pwa-engagement'));
+  };
+  
+  // Warn about localhost limitations
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    console.warn('⚠️ Development on localhost: Chrome may not show install prompts');
+    console.log('💡 For full PWA testing:');
+    console.log('  1. Build production version: npm run build');
+    console.log('  2. Serve over HTTPS or use ngrok');
+    console.log('  3. Use: window.mockPWAInstall() to test install flow');
+  }
+};
+
+// Enhanced display mode detection
+const getDisplayMode = () => {
+  if (navigator.standalone) return 'standalone-ios';
+  if (window.matchMedia('(display-mode: standalone)').matches) return 'standalone';
+  if (window.matchMedia('(display-mode: minimal-ui)').matches) return 'minimal-ui';
+  if (window.matchMedia('(display-mode: fullscreen)').matches) return 'fullscreen';
+  return 'browser';
+};
 
 createRoot(document.getElementById("root")!).render(<App />);

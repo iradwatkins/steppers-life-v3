@@ -292,103 +292,91 @@ export const usePWAInstall = () => {
   }, []);
 
   const install = async (): Promise<boolean> => {
-    // Check for both local and global deferred prompt
-    const promptToUse = state.deferredPrompt || window.deferredPrompt;
-    
-    if (!promptToUse) {
-      console.warn('❌ No deferred prompt available for installation');
-      console.log('🔍 Available prompts:', { state: state.deferredPrompt, global: window.deferredPrompt });
-      
-      // Track attempted manual installation
-      pwaAnalyticsService.trackPWAInstall('manual');
-      
-      // Provide specific guidance based on browser
-      if (state.deviceInfo.isChrome) {
-        const unmetCriteria = Object.entries(state.debugInfo.installCriteria)
-          .filter(([, value]) => !value)
-          .map(([key]) => key.replace(/([A-Z])/g, ' $1'));
-        
-        if (unmetCriteria.length > 0) {
-          toast.error('Installation Requirements Not Met', {
-            description: `Missing: ${unmetCriteria.join(', ')}. Check console for details.`,
-            duration: 8000,
-          });
-        } else {
-          toast.error('Installation Not Ready', {
-            description: 'Chrome hasn\'t shown the install prompt yet. Try refreshing or waiting longer.',
-            duration: 8000,
-          });
-        }
-      } else {
-        toast.error('Installation not available', {
-          description: 'Please try using Chrome or check if the app is already installed.',
-        });
-      }
+    if (state.isInstalling) {
+      console.log('⏳ Installation already in progress...');
       return false;
     }
 
+    console.log('🚀 Starting PWA installation process...');
     setState(prev => ({ ...prev, isInstalling: true }));
-    
-    // Show installing toast with enhanced messaging
-    const installingToast = toast.loading('🚀 Installing SteppersLife...', {
-      description: 'Please wait while the app is being added to your device.',
-    });
-    
+
     try {
-      console.log('🚀 Starting PWA installation with prompt:', promptToUse);
-      await promptToUse.prompt();
-      const { outcome } = await promptToUse.userChoice;
+      // Check if we have a deferred prompt
+      const prompt = state.deferredPrompt || window.deferredPrompt;
       
-      // Dismiss the loading toast
-      toast.dismiss(installingToast);
+      if (!prompt) {
+        console.log('❌ No deferred prompt available for installation');
+        
+        // In development mode, provide helpful guidance
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          console.log('💡 Development mode detected - install prompts may not work on localhost');
+          console.log('🧪 Try: window.mockPWAInstall() to test the flow');
+          toast.info('Development Mode', {
+            description: 'PWA install prompts don\'t work on localhost. Try production build or use window.mockPWAInstall()',
+            duration: 8000,
+          });
+        } else {
+          toast.error('Installation Not Available', {
+            description: 'The app doesn\'t meet PWA installation criteria yet. Try interacting more with the page.',
+            duration: 5000,
+          });
+        }
+        return false;
+      }
+
+      console.log('✅ Deferred prompt available, showing installation dialog...');
       
-      console.log('📊 Installation outcome:', outcome);
+      // Track installation attempt
+      pwaAnalyticsService.trackInstallation('manual', false);
       
-      if (outcome === 'accepted') {
-        console.log('✅ User accepted the install prompt');
+      // Show the install prompt
+      const result = await prompt.prompt();
+      console.log('📱 User installation choice:', result);
+
+      if (result.outcome === 'accepted') {
+        console.log('🎉 User accepted the installation!');
         
         // Track successful installation
-        pwaAnalyticsService.trackPWAInstall('auto');
+        pwaAnalyticsService.trackInstallation('manual', true);
         
         setState(prev => ({
           ...prev,
-          isInstalled: true,
           isInstalling: false,
+          isInstalled: true,
           isInstallable: false,
           deferredPrompt: null,
         }));
-        
-        // Clear global prompt
-        window.deferredPrompt = null;
-        
-        toast.success('🎉 Installation started!', {
-          description: 'SteppersLife is being added to your device. Look for it on your home screen or desktop.',
-          duration: 10000,
+
+        toast.success('🎉 App Installed!', {
+          description: 'The SteppersLife app has been installed successfully!',
+          duration: 5000,
         });
-        
+
         return true;
       } else {
-        console.log('❌ User dismissed the install prompt');
-        setState(prev => ({ ...prev, isInstalling: false }));
+        console.log('❌ User dismissed the installation');
         
-        toast.info('Installation cancelled', {
-          description: 'You can install the app later by clicking the install button again.',
+        toast.info('Installation Cancelled', {
+          description: 'You can install the app later from your browser\'s menu.',
+          duration: 3000,
         });
-        
+
         return false;
       }
     } catch (error) {
-      console.error('💥 PWA installation error:', error);
-      setState(prev => ({ ...prev, isInstalling: false }));
+      console.error('❌ Installation failed:', error);
       
-      // Dismiss the loading toast
-      toast.dismiss(installingToast);
+      // Track failed installation
+      pwaAnalyticsService.trackInstallation('manual', false);
       
-      toast.error('Installation failed', {
-        description: `Installation error: ${error}. Check console for details.`,
+      toast.error('Installation Failed', {
+        description: 'There was an error installing the app. Please try again.',
+        duration: 5000,
       });
-      
+
       return false;
+    } finally {
+      setState(prev => ({ ...prev, isInstalling: false }));
     }
   };
 
@@ -442,29 +430,56 @@ export const usePWAInstall = () => {
 
   // Enhanced debug function with Chrome-specific guidance
   const checkPWAReadiness = () => {
+    const criteria = state.debugInfo.installCriteria;
+    const allMet = Object.values(criteria).every(Boolean);
+    
     const readiness = {
-      ...state.debugInfo,
-      isInstallable: state.isInstallable,
-      isInstalled: state.isInstalled,
-      deviceSupported: state.deviceInfo.isChrome || state.deviceInfo.isAndroid || state.deviceInfo.isSafari || state.deviceInfo.isEdge,
-      chromeSpecific: state.deviceInfo.isChrome ? {
-        version: state.deviceInfo.chromeVersion,
-        criteriaCheck: state.debugInfo.installCriteria,
-        hints: state.debugInfo.chromeInstallHints,
-        availablePrompts: {
-          statePrompt: !!state.deferredPrompt,
-          globalPrompt: !!(window as any).deferredPrompt,
-        }
-      } : null,
+      ready: allMet,
+      criteria,
+      missing: Object.entries(criteria)
+        .filter(([, value]) => !value)
+        .map(([key]) => key),
+      deviceInfo: state.deviceInfo,
+      debugInfo: state.debugInfo,
+      environment: {
+        isDevelopment: location.hostname === 'localhost' || location.hostname === '127.0.0.1',
+        isHTTPS: location.protocol === 'https:',
+        hostname: location.hostname,
+        protocol: location.protocol,
+      },
+      recommendations: [] as string[],
     };
     
-    console.log('🔍 PWA Readiness Check:', readiness);
-    
-    if (state.deviceInfo.isChrome && !state.isInstallable) {
-      console.log('💡 Chrome Install Tips:');
-      state.debugInfo.chromeInstallHints.forEach(hint => console.log(`  - ${hint}`));
+    // Add development-specific recommendations
+    if (readiness.environment.isDevelopment) {
+      readiness.recommendations.push('🛠️ Development mode: Install prompts may not work on localhost');
+      readiness.recommendations.push('📦 Try production build: npm run build && npm run preview');
+      readiness.recommendations.push('🧪 Test install flow: window.mockPWAInstall()');
+      readiness.recommendations.push('🌐 For full testing: Use HTTPS or deploy to production');
     }
     
+    if (!readiness.ready) {
+      if (!criteria.hasServiceWorker) {
+        readiness.recommendations.push('Service Worker not registered - check main.tsx');
+      }
+      if (!criteria.hasManifest) {
+        readiness.recommendations.push('Web App Manifest not found - check index.html link tags');
+      }
+      if (!criteria.isSecure) {
+        readiness.recommendations.push('HTTPS required for PWA - use production deployment');
+      }
+      if (!criteria.userEngagement) {
+        readiness.recommendations.push('Interact more with the page - scroll, click, navigate');
+      }
+      if (!criteria.chromeVersion) {
+        readiness.recommendations.push(`Chrome ${state.deviceInfo.chromeVersion} detected - need Chrome 68+`);
+      }
+    } else if (!state.debugInfo.promptReceived) {
+      readiness.recommendations.push('All criteria met - waiting for browser to show install prompt');
+      readiness.recommendations.push('This can take 30+ seconds in Chrome');
+    }
+    
+    console.log('🔍 PWA Readiness Check:', readiness);
     return readiness;
   };
 
