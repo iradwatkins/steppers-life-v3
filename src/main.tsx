@@ -3,8 +3,52 @@ import App from './App.tsx'
 import './index.css'
 
 // Enhanced PWA install detection with better timing
+// Initialize global variables first to avoid temporal dead zone errors
 let deferredPrompt: any = null;
-let installPromptReceived = false;
+let installPromptReceived: boolean = false;
+
+// Enhanced beforeinstallprompt handler - defined after variable declarations
+const handleBeforeInstallPrompt = (e: any) => {
+  console.log('🎯 PWA Install Prompt received!', e);
+  
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  
+  // Store the event globally
+  deferredPrompt = e;
+  window.deferredPrompt = e;
+  installPromptReceived = true;
+  
+  console.log('📱 PWA is now installable!');
+  
+  // Dispatch custom event for components to listen to
+  window.dispatchEvent(new CustomEvent('pwainstallable', { detail: e }));
+  
+  // Show immediate notification
+  console.log('🎉 Install prompt is ready - look for install buttons!');
+  
+  return false;
+};
+
+// Track successful installation - defined after variable declarations
+const handleAppInstalled = (evt: any) => {
+  console.log('🎉 PWA was installed successfully!', evt);
+  
+  // Clear the deferred prompt
+  deferredPrompt = null;
+  window.deferredPrompt = null;
+  installPromptReceived = false;
+  
+  // Dispatch custom event
+  window.dispatchEvent(new CustomEvent('pwainstalled'));
+  
+  // Track installation for analytics
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'app_installed', {
+      method: 'pwa'
+    });
+  }
+};
 
 // Register service worker for PWA functionality
 const registerServiceWorker = async () => {
@@ -48,49 +92,6 @@ const registerServiceWorker = async () => {
   } else {
     console.warn('⚠️ Service Worker not supported');
     return null;
-  }
-};
-
-// Enhanced beforeinstallprompt handler
-const handleBeforeInstallPrompt = (e: any) => {
-  console.log('🎯 PWA Install Prompt received!', e);
-  
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  
-  // Store the event globally
-  deferredPrompt = e;
-  window.deferredPrompt = e;
-  installPromptReceived = true;
-  
-  console.log('📱 PWA is now installable!');
-  
-  // Dispatch custom event for components to listen to
-  window.dispatchEvent(new CustomEvent('pwainstallable', { detail: e }));
-  
-  // Show immediate notification
-  console.log('🎉 Install prompt is ready - look for install buttons!');
-  
-  return false;
-};
-
-// Track successful installation
-const handleAppInstalled = (evt: any) => {
-  console.log('🎉 PWA was installed successfully!', evt);
-  
-  // Clear the deferred prompt
-  deferredPrompt = null;
-  window.deferredPrompt = null;
-  installPromptReceived = false;
-  
-  // Dispatch custom event
-  window.dispatchEvent(new CustomEvent('pwainstalled'));
-  
-  // Track installation for analytics
-  if (typeof gtag !== 'undefined') {
-    gtag('event', 'app_installed', {
-      method: 'pwa'
-    });
   }
 };
 
