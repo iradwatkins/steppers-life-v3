@@ -10,6 +10,21 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@radix-ui/react-slot', '@radix-ui/react-toast']
+        }
+      }
+    }
+  },
+  base: '/',
   plugins: [
     react(),
     mode === 'development' &&
@@ -23,8 +38,15 @@ export default defineConfig(({ mode }) => ({
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [
           /^\/api\//,
-          /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot)$/
+          /\/__/,
+          /\/sw\.js$/,
+          /\/manifest\.json$/,
+          /\/manifest\.webmanifest$/,
+          /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot|webp|avif|map)$/
         ],
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.stepperslife\.com\/.*$/,
