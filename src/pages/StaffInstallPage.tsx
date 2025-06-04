@@ -19,7 +19,6 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import PWAInstallButton from '@/components/PWAInstallButton';
 import { toast } from '@/components/ui/sonner';
 
 const StaffInstallPage = () => {
@@ -124,6 +123,11 @@ const StaffInstallPage = () => {
   const handlePlatformInstall = async () => {
     setInstallationAttempts(prev => prev + 1);
     console.log(`🚀 Install attempt #${installationAttempts + 1}`);
+    
+    // Force user engagement for instant install
+    sessionStorage.setItem('pwa-engagement', 'true');
+    sessionStorage.setItem('user-interacted', 'true');
+    localStorage.setItem('pwa-visited', 'true');
     
     // Try auto-install first if available
     const success = await install();

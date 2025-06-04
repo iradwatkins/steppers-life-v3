@@ -102,13 +102,20 @@ export const usePWAInstall = () => {
     const notInstalled = !window.matchMedia('(display-mode: standalone)').matches && !(navigator as any).standalone;
     const chromeVersionOk = !deviceInfo.isChrome || (chromeVersion && chromeVersion >= 68);
     
-    // Enhanced user engagement checking
-    const userEngagement = sessionStorage.getItem('pwa-engagement') === 'true' || 
+    // Enhanced user engagement checking - bypass on staff install page
+    const isStaffInstallPage = window.location.pathname === '/staff-install';
+    const userEngagement = isStaffInstallPage || 
+                          sessionStorage.getItem('pwa-engagement') === 'true' || 
                           localStorage.getItem('pwa-visited') === 'true' ||
                           sessionStorage.getItem('user-interacted') === 'true';
     
-    // Mark page visit
+    // Mark page visit and engagement immediately on staff install page
     localStorage.setItem('pwa-visited', 'true');
+    if (isStaffInstallPage) {
+      sessionStorage.setItem('pwa-engagement', 'true');
+      sessionStorage.setItem('user-interacted', 'true');
+      console.log('📱 Staff install page detected - bypassing user engagement requirements');
+    }
 
     const installCriteria = {
       hasServiceWorker,
@@ -244,16 +251,6 @@ export const usePWAInstall = () => {
     // Initial check
     checkIfInstalled();
     
-    // Mark user interaction on any engagement
-    const markUserInteraction = () => {
-      sessionStorage.setItem('user-interacted', 'true');
-      console.log('👆 User interaction detected');
-    };
-    
-    ['click', 'scroll', 'keydown', 'touchstart'].forEach(event => {
-      document.addEventListener(event, markUserInteraction, { once: true });
-    });
-
     // Enhanced debug timeout with Chrome guidance
     const debugTimeout = setTimeout(() => {
       // Only show warnings and prompts for mobile devices

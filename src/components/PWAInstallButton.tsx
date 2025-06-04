@@ -39,8 +39,13 @@ const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 
   const instructions = getInstallInstructions();
 
-  // Only show PWA install button on mobile devices (Android and iOS)
-  // Hide on desktop (Mac, Windows, and other desktop browsers)
+  // Hide on staff install page to prevent duplicates
+  if (window.location.pathname === '/staff-install') {
+    return null;
+  }
+
+  // Only show PWA install button on mobile devices (Android and iOS) for general pages
+  // Hide on desktop (Mac, Windows, and other desktop browsers) except for staff-install page
   if (deviceInfo.isMac || deviceInfo.isWindows || (!deviceInfo.isAndroid && !deviceInfo.isIOS)) {
     console.log('🖥️ Desktop device detected - PWA install button hidden (mobile only)');
     return null;
