@@ -124,10 +124,24 @@ const StaffInstallPage = () => {
       
       if (success) {
         console.log('✅ PWA install successful!');
-        toast.success('🎉 Installation Started!', {
-          description: 'The app is being installed. Check your home screen in a moment.',
-          duration: 5000,
-        });
+        
+        // Enhanced success message for different platforms
+        if (deviceInfo.isAndroid) {
+          toast.success('🎉 Added to Home Screen!', {
+            description: 'SteppersLife has been added to your Android home screen. Look for the app icon!',
+            duration: 8000,
+          });
+        } else if (deviceInfo.isIOS) {
+          toast.success('🎉 iOS Installation Started!', {
+            description: 'Use Safari\'s Share button (□↗) and select "Add to Home Screen" to complete installation.',
+            duration: 10000,
+          });
+        } else {
+          toast.success('🎉 Installation Started!', {
+            description: 'The app is being installed. Check your desktop or app menu in a moment.',
+            duration: 5000,
+          });
+        }
         
         // Hide the download message after successful install
         setTimeout(() => {
@@ -145,15 +159,31 @@ const StaffInstallPage = () => {
             duration: 10000,
           });
         } else if (deviceInfo.isIOS) {
-          toast.info('📱 iOS Installation', {
-            description: 'Tap the Share button in Safari, then "Add to Home Screen"',
-            duration: 8000,
-          });
-        } else if (deviceInfo.isAndroid && deviceInfo.isChrome) {
-          toast.info('📱 Android Installation', {
-            description: 'Look for "Add to Home Screen" in Chrome menu, or check browser notifications',
-            duration: 8000,
-          });
+          // Enhanced iOS guidance
+          if (deviceInfo.isSafari) {
+            toast.info('🍎 Safari Installation Ready!', {
+              description: 'Use Safari\'s Share button (□↗) at the bottom, then select "Add to Home Screen". The app will appear on your home screen!',
+              duration: 12000,
+            });
+          } else {
+            toast.info('🍎 Switch to Safari for iOS Installation', {
+              description: 'For the best experience, open this page in Safari and use the Share button → "Add to Home Screen"',
+              duration: 10000,
+            });
+          }
+        } else if (deviceInfo.isAndroid) {
+          // For Android, if install failed, it might be because the prompt wasn't ready yet
+          if (!debugInfo.promptReceived) {
+            toast.info('📱 Android Install Loading...', {
+              description: 'Chrome is preparing the install option. Wait a few seconds and try again. The button will turn green when ready!',
+              duration: 10000,
+            });
+          } else {
+            toast.info('📱 Android Installation', {
+              description: 'Use the install button in Chrome\'s address bar, or try the button again in a moment.',
+              duration: 8000,
+            });
+          }
         } else if (deviceInfo.isChrome) {
           toast.info('💻 Chrome Installation', {
             description: 'Look for the install icon in the address bar, or check Chrome menu → Install',
@@ -301,20 +331,67 @@ const StaffInstallPage = () => {
         <div className="text-center space-y-6 relative bg-white p-8 rounded-2xl border-2 border-gray-200 shadow-lg">
           {/* Show download message overlay if installing */}
           {showDownloadMessage && (
-            <div className="absolute inset-0 bg-green-50 border-4 border-green-400 rounded-2xl z-10 flex items-center justify-center p-6">
+            <div className="absolute inset-0 bg-blue-50 border-4 border-blue-400 rounded-2xl z-10 flex items-center justify-center p-6">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-green-600 mx-auto mb-4"></div>
-                <h3 className="text-green-800 font-bold text-2xl mb-2">Download will begin shortly...</h3>
-                <p className="text-green-600 text-lg">Please follow any browser prompts to complete installation.</p>
-                <p className="text-green-500 text-sm mt-2">✅ Installation process started!</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-600 mx-auto mb-4"></div>
+                <h3 className="text-blue-800 font-bold text-2xl mb-2">
+                  {deviceInfo.isIOS ? 'Follow Safari instructions...' : 'Download will begin shortly...'}
+                </h3>
+                <p className="text-blue-600 text-lg">
+                  {deviceInfo.isIOS 
+                    ? 'Use Safari\'s Share button and select "Add to Home Screen"' 
+                    : 'Please follow any browser prompts to complete installation.'}
+                </p>
+                <p className="text-blue-500 text-sm mt-2">
+                  {deviceInfo.isIOS ? '📱 Safari installation in progress!' : '✅ Installation process started!'}
+                </p>
               </div>
+            </div>
+          )}
+
+          {/* Installation Status Banner - Enhanced for iOS */}
+          {(isInstallable || deviceInfo.isIOS) && (
+            <div className={`border-2 rounded-lg p-4 mb-6 ${
+              deviceInfo.isIOS 
+                ? 'bg-gradient-to-r from-blue-100 to-indigo-100 border-blue-300' 
+                : 'bg-gradient-to-r from-green-100 to-emerald-100 border-green-300'
+            }`}>
+              <div className="flex items-center justify-center space-x-2">
+                <div className={`w-3 h-3 rounded-full animate-pulse ${
+                  deviceInfo.isIOS ? 'bg-blue-500' : 'bg-green-500'
+                }`}></div>
+                <span className={`font-bold text-lg ${
+                  deviceInfo.isIOS ? 'text-blue-800' : 'text-green-800'
+                }`}>
+                  {deviceInfo.isIOS 
+                    ? '🍎 Ready for iOS Installation! (Safari)'
+                    : isInstallable && deviceInfo.isAndroid 
+                    ? '🚀 Ready for One-Click Install! (Android)'
+                    : '🚀 Ready for Installation!'}
+                </span>
+              </div>
+              <p className={`text-center mt-2 ${
+                deviceInfo.isIOS ? 'text-blue-700' : 'text-green-700'
+              }`}>
+                {deviceInfo.isIOS 
+                  ? 'Click below, then use Safari\'s Share button (□↗) → "Add to Home Screen"' 
+                  : deviceInfo.isAndroid 
+                  ? "Click below to add directly to your home screen!" 
+                  : "Install as a desktop app"}
+              </p>
             </div>
           )}
 
           <Button 
             size="lg" 
             onClick={handlePlatformInstall}
-            className="h-24 w-full bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500 hover:from-blue-700 hover:via-purple-700 hover:to-yellow-600 text-white font-black text-2xl relative overflow-hidden transform transition-all duration-300 hover:scale-105 border-4 border-yellow-400 shadow-2xl"
+            className={`h-24 w-full font-black text-2xl relative overflow-hidden transform transition-all duration-300 hover:scale-105 border-4 shadow-2xl ${
+              deviceInfo.isIOS
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-500 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-600 border-blue-400 animate-pulse'
+                : isInstallable 
+                ? 'bg-gradient-to-r from-green-600 via-emerald-600 to-teal-500 hover:from-green-700 hover:via-emerald-700 hover:to-teal-600 border-green-400 animate-pulse' 
+                : 'bg-gradient-to-r from-blue-600 via-purple-600 to-yellow-500 hover:from-blue-700 hover:via-purple-700 hover:to-yellow-600 border-yellow-400'
+            }`}
             disabled={isInstalling}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-orange-500 opacity-0 hover:opacity-30 transition-opacity duration-300"></div>
@@ -322,29 +399,81 @@ const StaffInstallPage = () => {
             <Download className="h-10 w-10 mr-6 animate-bounce" />
             <div className="text-center flex-1 relative z-10">
               <div className="font-black text-3xl mb-1">
-                {isInstalling ? '🔄 INSTALLING...' : '⚡ INSTALL STEPPERS APP'}
+                {isInstalling ? '🔄 INSTALLING...' : 
+                 deviceInfo.isIOS ? '🍎 ADD TO HOME SCREEN' :
+                 isInstallable ? '⚡ ADD TO HOME SCREEN' : 
+                 '⚡ INSTALL STEPPERS APP'}
               </div>
               <div className="text-lg opacity-95 font-bold">
-                {isInstalling ? 'Please wait...' : `${deviceInfo.isAndroid ? '📱 Android' : deviceInfo.isIOS ? '🍎 iOS' : deviceInfo.isMac ? '💻 Mac' : deviceInfo.isWindows ? '🖥️ Windows' : '📲 Device'} Installation`}
+                {isInstalling ? 'Please wait...' : 
+                 deviceInfo.isIOS ? '📱 Safari Share Button Required' :
+                 isInstallable && deviceInfo.isAndroid ? '📱 One-Click Android Install' :
+                 isInstallable ? '💻 Desktop Installation' :
+                 `${deviceInfo.isAndroid ? '📱 Android' : deviceInfo.isIOS ? '🍎 iOS' : deviceInfo.isMac ? '💻 Mac' : deviceInfo.isWindows ? '🖥️ Windows' : '📲 Device'} Installation`}
               </div>
             </div>
             <div className="absolute top-4 right-4">
               <span className="text-5xl animate-bounce">
-                {isInstalling ? '🔄' : '⚡'}
+                {isInstalling ? '🔄' : 
+                 deviceInfo.isIOS ? '🍎' :
+                 isInstallable ? '🏠' : '⚡'}
               </span>
             </div>
             <div className="absolute bottom-2 right-2 bg-yellow-400 text-black text-xs px-2 py-1 rounded-full font-bold">
-              {isInstallable ? 'ONE-CLICK' : 'GUIDED'}
+              {deviceInfo.isIOS ? 'SAFARI' : isInstallable ? 'ONE-CLICK' : 'GUIDED'}
             </div>
           </Button>
 
           <div className="space-y-2">
             <p className="text-gray-700 text-lg font-semibold">
-              🎯 <strong>Click above to start installation!</strong>
+              🎯 <strong>
+                {deviceInfo.isIOS
+                  ? "Click above, then follow Safari's Share menu!"
+                  : isInstallable && deviceInfo.isAndroid 
+                  ? "Click above for instant home screen installation!" 
+                  : "Click above to start installation!"}
+              </strong>
             </p>
             <p className="text-gray-600 text-sm">
-              Works offline • Faster than website • Home screen access
+              {deviceInfo.isIOS
+                ? "Safari will show detailed instructions after clicking • Works offline • Faster than website"
+                : deviceInfo.isAndroid && isInstallable 
+                ? "Will show 'Add to Home Screen' dialog directly • Works offline • Faster than website"
+                : "Works offline • Faster than website • Home screen access"}
             </p>
+            
+            {/* Enhanced iOS-specific guidance */}
+            {deviceInfo.isIOS && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-4 mt-4">
+                <div className="flex items-start space-x-3">
+                  <span className="text-2xl">🍎</span>
+                  <div>
+                    <h4 className="font-bold text-blue-800 mb-2">iPhone/iPad Installation Steps:</h4>
+                    <ol className="text-blue-700 text-sm space-y-1 list-decimal list-inside">
+                      <li>Click the big blue button above</li>
+                      <li>Look for Safari's <strong>Share button</strong> (□↗) at the bottom</li>
+                      <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
+                      <li>Customize the name if desired, then tap <strong>"Add"</strong></li>
+                      <li>Find the SteppersLife app icon on your home screen!</li>
+                    </ol>
+                    <div className="mt-3 p-2 bg-blue-100 rounded text-xs">
+                      <strong>💡 Pro tip:</strong> The app icon will appear on your home screen just like any other app. 
+                      It works offline and loads much faster than the website!
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Platform-specific guidance for Android */}
+            {deviceInfo.isAndroid && !isInstallable && (
+              <div className="bg-blue-50 border border-blue-200 rounded p-3 mt-4">
+                <p className="text-blue-800 text-sm">
+                  <strong>Android users:</strong> Wait a few seconds for Chrome to enable one-click install. 
+                  You'll see the button change to green when ready!
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -363,17 +492,47 @@ const StaffInstallPage = () => {
             <span className="text-sm text-orange-600 font-medium">
               Attempts: {installationAttempts} • Platform: {
                 deviceInfo.isAndroid ? '📱 Android' : 
-                deviceInfo.isIOS ? '🍎 iOS' : 
+                deviceInfo.isIOS ? '🍎 iOS (Safari)' : 
                 deviceInfo.isMac ? '💻 Mac' : 
                 deviceInfo.isWindows ? '🖥️ Windows' : 
                 '❓ Unknown'
-              } • Ready: {isInstallable ? '✅' : '⏳'}
+              } • Ready: {isInstallable || deviceInfo.isIOS ? '✅' : '⏳'}
             </span>
           </AlertDescription>
         </Alert>
 
+        {/* Enhanced iOS Safari Detection Alert */}
+        {deviceInfo.isIOS && (
+          <Alert className="bg-blue-50 border-blue-200">
+            <span className="text-2xl">🍎</span>
+            <AlertDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <strong>iOS Safari Installation:</strong> {' '}
+                  {deviceInfo.isSafari ? '✅ Safari detected - ready to install!' : '⚠️ For best results, use Safari browser'}
+                  <br />
+                  <span className="text-sm">
+                    {deviceInfo.isSafari 
+                      ? 'Perfect! Safari supports "Add to Home Screen" for full PWA experience.'
+                      : 'Safari offers the best PWA installation experience on iOS devices.'}
+                  </span>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleDebugToggle}
+                  className="ml-2"
+                >
+                  <Bug className="h-3 w-3 mr-1" />
+                  {showDebug ? 'Hide' : 'Debug'}
+                </Button>
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Enhanced Debug Alert for Chrome */}
-        {deviceInfo.isChrome && (
+        {deviceInfo.isChrome && !deviceInfo.isIOS && (
           <Alert className={`${debugInfo.promptReceived ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
             <Chrome className="h-4 w-4" />
             <AlertDescription>
@@ -652,13 +811,44 @@ const StaffInstallPage = () => {
                 <span>{instructions.title}</span>
               </CardTitle>
               <CardDescription>
-                {instructions.canAutoInstall 
+                {deviceInfo.isIOS 
+                  ? "Safari's 'Add to Home Screen' creates a full app experience on your iPhone/iPad"
+                  : instructions.canAutoInstall 
                   ? "Automatic installation should be available - check for install prompts!"
                   : "Follow these steps to install the app on your device"
                 }
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {deviceInfo.isIOS && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center space-x-2 mb-3">
+                    <span className="text-xl">🍎</span>
+                    <h4 className="font-bold text-blue-800">iPhone/iPad Quick Guide:</h4>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="font-medium text-blue-700 mb-2">📱 What to Look For:</h5>
+                      <ul className="text-sm text-blue-600 space-y-1">
+                        <li>• Share button (□↗) in Safari toolbar</li>
+                        <li>• Usually at bottom of screen</li>
+                        <li>• "Add to Home Screen" option in menu</li>
+                        <li>• App icon preview will appear</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h5 className="font-medium text-blue-700 mb-2">⚡ Benefits:</h5>
+                      <ul className="text-sm text-blue-600 space-y-1">
+                        <li>• Works like a native app</li>
+                        <li>• Opens without Safari address bar</li>
+                        <li>• Available offline for core features</li>
+                        <li>• Much faster than web version</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <ol className="space-y-3">
                 {instructions.steps.map((step, index) => (
                   <li key={index} className="flex items-start space-x-3">
@@ -670,7 +860,27 @@ const StaffInstallPage = () => {
                 ))}
               </ol>
               
-              {instructions.canAutoInstall && (
+              {deviceInfo.isIOS && deviceInfo.isSafari && (
+                <Alert className="mt-4 bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <AlertDescription className="text-green-800">
+                    <strong>Perfect Setup!</strong> You're using Safari on iOS - this is ideal for PWA installation. 
+                    The "Add to Home Screen" feature will give you the full app experience.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {deviceInfo.isIOS && !deviceInfo.isSafari && (
+                <Alert className="mt-4 bg-orange-50 border-orange-200">
+                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <AlertDescription className="text-orange-800">
+                    <strong>Recommendation:</strong> For the best iOS installation experience, 
+                    try opening this page in Safari and using "Add to Home Screen".
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {instructions.canAutoInstall && !deviceInfo.isIOS && (
                 <Alert className="mt-4 bg-green-50 border-green-200">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                   <AlertDescription className="text-green-800">
