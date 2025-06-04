@@ -1,5 +1,6 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { FaviconManager } from "@/components/ui/FaviconManager";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -23,11 +24,13 @@ import EventSeatingPage from "./pages/organizer/EventSeatingPage";
 import EventCustomQuestionsPage from "./pages/organizer/EventCustomQuestionsPage";
 import ManageEventPage from "./pages/organizer/ManageEventPage";
 import EventCollectionsPage from "./pages/organizer/EventCollectionsPage";
+import { MultiEventAnalyticsPage } from "./pages/MultiEventAnalyticsPage";
+import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
 import ClaimableEventsPage from "./pages/promoter/ClaimableEventsPage";
 import EventClaimsPage from "./pages/admin/EventClaimsPage";
 import AdminCreateEventPage from "./pages/admin/AdminCreateEventPage";
 import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
-import CheckinManagementPage from "./pages/admin/CheckinManagementPage";
+import { CheckinManagementPage } from "./pages/admin/CheckinManagementPage";
 import TicketSelectionPage from "./pages/checkout/TicketSelectionPage";
 import CheckoutDetailsPage from "./pages/checkout/CheckoutDetailsPage";
 import CheckoutPaymentPage from "./pages/checkout/CheckoutPaymentPage";
@@ -37,12 +40,10 @@ import EventRefundsPage from "./pages/organizer/EventRefundsPage";
 import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
 import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
 import EventPerformancePage from "./pages/organizer/EventPerformancePage";
-import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
+import AttendeeReportPage from './pages/AttendeeReportPage';
+import EventDetailsPage from "./pages/EventDetailsPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
-import EventDetailsPage from "./pages/EventDetailsPage";
-import { MultiEventAnalyticsPage } from './pages/MultiEventAnalyticsPage';
-import AttendeeReportPage from './pages/AttendeeReportPage';
 
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
@@ -61,6 +62,7 @@ const App = () => (
     <ThemeProvider>
       <Toaster />
       <Sonner />
+      <FaviconManager />
       <BrowserRouter>
         <Routes>
           {/* Public routes */}

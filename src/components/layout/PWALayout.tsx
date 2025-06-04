@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { usePWAAuth } from '@/hooks/usePWAAuth';
 import { toast } from '@/components/ui/sonner';
+import { MobileLogo } from '@/components/ui/Logo';
 import PWAInstallButton from '@/components/PWAInstallButton';
 import {
   Shield,
@@ -136,9 +137,7 @@ const PWALayout: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 text-white" />
-              </div>
+              <MobileLogo />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">SteppersLife</h1>
                 <p className="text-xs text-gray-500">PWA Event Management</p>

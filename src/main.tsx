@@ -1,11 +1,61 @@
 import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Enhanced PWA install detection with better timing
 // Initialize global variables first to avoid temporal dead zone errors
 let deferredPrompt: any = null;
 let installPromptReceived: boolean = false;
+
+// Enhanced development mode helpers - moved before usage to avoid temporal dead zone
+const setupDevelopmentPWAHelpers = () => {
+  if (!import.meta.env.DEV) return;
+  
+  console.log('🛠️ Development PWA helpers enabled');
+  
+  // Mock install prompt for development testing
+  window.mockPWAInstall = () => {
+    console.log('🧪 Mocking PWA install prompt for development');
+    const mockEvent = {
+      preventDefault: () => console.log('Mock preventDefault called'),
+      prompt: () => {
+        console.log('Mock prompt triggered');
+        return Promise.resolve({ outcome: 'accepted' });
+      }
+    };
+    handleBeforeInstallPrompt(mockEvent);
+  };
+  
+  // Development PWA status checker
+  window.checkPWAStatus = () => {
+    console.log('🔍 PWA Development Status:');
+    console.log('- Service Worker supported:', 'serviceWorker' in navigator);
+    console.log('- Install prompt received:', installPromptReceived);
+    console.log('- Deferred prompt:', !!deferredPrompt);
+    console.log('- Is HTTPS:', location.protocol === 'https:');
+    console.log('- Current display mode:', getDisplayMode());
+    console.log('- User engagement stored:', !!sessionStorage.getItem('pwa-engagement'));
+  };
+  
+  // Warn about localhost limitations
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    console.warn('⚠️ Development on localhost: Chrome may not show install prompts');
+    console.log('💡 For full PWA testing:');
+    console.log('  1. Build production version: npm run build');
+    console.log('  2. Serve over HTTPS or use ngrok');
+    console.log('  3. Use: window.mockPWAInstall() to test install flow');
+  }
+};
+
+// Enhanced display mode detection
+const getDisplayMode = () => {
+  if (navigator.standalone) return 'standalone-ios';
+  if (window.matchMedia('(display-mode: standalone)').matches) return 'standalone';
+  if (window.matchMedia('(display-mode: minimal-ui)').matches) return 'minimal-ui';
+  if (window.matchMedia('(display-mode: fullscreen)').matches) return 'fullscreen';
+  return 'browser';
+};
 
 // Enhanced beforeinstallprompt handler - defined after variable declarations
 const handleBeforeInstallPrompt = (e: any) => {
@@ -262,53 +312,8 @@ if (document.readyState === 'loading') {
   initializePWA();
 }
 
-// Enhanced development mode helpers
-const setupDevelopmentPWAHelpers = () => {
-  if (!import.meta.env.DEV) return;
-  
-  console.log('🛠️ Development PWA helpers enabled');
-  
-  // Mock install prompt for development testing
-  window.mockPWAInstall = () => {
-    console.log('🧪 Mocking PWA install prompt for development');
-    const mockEvent = {
-      preventDefault: () => console.log('Mock preventDefault called'),
-      prompt: () => {
-        console.log('Mock prompt triggered');
-        return Promise.resolve({ outcome: 'accepted' });
-      }
-    };
-    handleBeforeInstallPrompt(mockEvent);
-  };
-  
-  // Development PWA status checker
-  window.checkPWAStatus = () => {
-    console.log('🔍 PWA Development Status:');
-    console.log('- Service Worker supported:', 'serviceWorker' in navigator);
-    console.log('- Install prompt received:', installPromptReceived);
-    console.log('- Deferred prompt:', !!deferredPrompt);
-    console.log('- Is HTTPS:', location.protocol === 'https:');
-    console.log('- Current display mode:', getDisplayMode());
-    console.log('- User engagement stored:', !!sessionStorage.getItem('pwa-engagement'));
-  };
-  
-  // Warn about localhost limitations
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.warn('⚠️ Development on localhost: Chrome may not show install prompts');
-    console.log('💡 For full PWA testing:');
-    console.log('  1. Build production version: npm run build');
-    console.log('  2. Serve over HTTPS or use ngrok');
-    console.log('  3. Use: window.mockPWAInstall() to test install flow');
-  }
-};
-
-// Enhanced display mode detection
-const getDisplayMode = () => {
-  if (navigator.standalone) return 'standalone-ios';
-  if (window.matchMedia('(display-mode: standalone)').matches) return 'standalone';
-  if (window.matchMedia('(display-mode: minimal-ui)').matches) return 'minimal-ui';
-  if (window.matchMedia('(display-mode: fullscreen)').matches) return 'fullscreen';
-  return 'browser';
-};
-
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
+);

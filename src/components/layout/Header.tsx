@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, User, LogOut, Shield, Plus, CalendarPlus, ListPlus, Store, Users2, Smartphone, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { HeaderLogo } from '@/components/ui/Logo';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import PWAInstallButton from '@/components/PWAInstallButton';
 import {
@@ -46,10 +47,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center">
-              <span className="text-text-on-primary font-bold text-sm">SL</span>
-            </div>
-            <span className="font-serif font-semibold text-xl text-header-text">SteppersLife</span>
+            <HeaderLogo />
           </Link>
 
           {/* Desktop Navigation */}
