@@ -93,6 +93,10 @@ import VanityUrlManagementPage from "./pages/VanityUrlManagementPage";
 import AdminVanityUrlPage from "./pages/admin/AdminVanityUrlPage";
 import AdminEmailManagementPage from "./pages/admin/AdminEmailManagementPage";
 
+// Epic X - Advertising System imports
+import AdminAdvertisingPage from "./pages/admin/AdminAdvertisingPage";
+import AdPortalPage from "./pages/ads/AdPortalPage";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -179,6 +183,18 @@ const App = () => (
             <Route path="/admin/email-management" element={
               <ProtectedRoute>
                 <AdminEmailManagementPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Epic X - Advertising System routes */}
+            <Route path="/admin/advertising" element={
+              <ProtectedRoute>
+                <AdminAdvertisingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/ads/portal" element={
+              <ProtectedRoute>
+                <AdPortalPage />
               </ProtectedRoute>
             } />
             
