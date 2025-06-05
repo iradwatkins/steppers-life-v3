@@ -45,6 +45,8 @@ import EventPerformancePage from "./pages/organizer/EventPerformancePage";
 import FinancialReportsPage from "./pages/organizer/FinancialReportsPage";
 import AttendeeReportPage from './pages/AttendeeReportPage';
 import { CustomerAnalyticsPage } from "./pages/analytics/CustomerAnalyticsPage";
+import ComparativeAnalyticsPage from "./pages/ComparativeAnalyticsPage";
+import AutomatedReportsPage from "./pages/organizer/AutomatedReportsPage";
 import EventDetailsPage from "./pages/EventDetailsPage";
 import CashPaymentPage from "./pages/buyer/CashPaymentPage";
 import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
@@ -64,6 +66,8 @@ import PWAStatisticsPage from "./pages/pwa/PWAStatisticsPage";
 import PWAPaymentPage from "./components/pwa/PWAPaymentPage";
 import SalesAgentDashboardPage from './pages/agent/SalesAgentDashboardPage';
 import CommissionPaymentPage from './pages/organizer/CommissionPaymentPage';
+import AdvancedSeatingEditorPage from "./pages/organizer/AdvancedSeatingEditorPage";
+import PWASeatingPage from "./pages/pwa/PWASeatingPage";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +96,7 @@ const App = () => (
             <Route path="statistics/:eventId" element={<PWAStatisticsPage />} />
             <Route path="payments/:eventId" element={<PWAPaymentPage />} />
             <Route path="settings" element={<PWASettingsPage />} />
+            <Route path="seating/:eventId" element={<PWASeatingPage />} />
             {/* Redirect PWA root to dashboard */}
             <Route index element={<PWADashboardPage />} />
           </Route>
@@ -131,6 +136,11 @@ const App = () => (
             <Route path="/organizer/event/:eventId/seating" element={
               <ProtectedRoute>
                 <EventSeatingPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/seating/advanced" element={
+              <ProtectedRoute>
+                <AdvancedSeatingEditorPage />
               </ProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/custom-questions" element={
@@ -181,6 +191,16 @@ const App = () => (
             <Route path="/organizer/event/:eventId/customer-analytics" element={
               <ProtectedRoute>
                 <CustomerAnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/event/:eventId/comparative-analytics" element={
+              <ProtectedRoute>
+                <ComparativeAnalyticsPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/organizer/automated-reports" element={
+              <ProtectedRoute>
+                <AutomatedReportsPage />
               </ProtectedRoute>
             } />
             <Route path="/organizer/collections" element={

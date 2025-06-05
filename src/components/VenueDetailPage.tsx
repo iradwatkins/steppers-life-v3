@@ -28,6 +28,8 @@ import {
   Settings
 } from 'lucide-react';
 import VenuePhotoUpload from './VenuePhotoUpload';
+import TransitRoutingCard from './TransitRoutingCard';
+import ParkingInfoCard from './ParkingInfoCard';
 
 interface VenueEvent {
   id: number;
@@ -574,50 +576,53 @@ const VenueDetailPage: React.FC = () => {
 
           {/* Transportation */}
           {(venue.parking || venue.publicTransit) && (
-            <TabsContent value="transportation" className="space-y-4">
-              {/* Parking */}
-              {venue.parking && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Car className="w-5 h-5" />
-                      Parking
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="font-medium">Parking Available</span>
-                      <Badge className="bg-green-100 text-green-800">✓ Yes</Badge>
-                    </div>
-                    <div className="space-y-2 text-sm">
-                      <div><strong>Capacity:</strong> {venue.parking?.spots} spots</div>
-                      <div><strong>Price:</strong> {venue.parking?.price}</div>
-                      <div><strong>Details:</strong> {venue.parking?.description}</div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
+            <TabsContent value="transportation" className="space-y-6">
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Enhanced Parking Information */}
+                <ParkingInfoCard
+                  destination={{
+                    name: venue.name,
+                    address: venue.address,
+                    coordinates: venue.coordinates
+                  }}
+                  userLocation={null} // In real app, get from geolocation
+                  eventDate={venue.upcomingEvents[0]?.date} // Use next event date if available
+                  className="h-fit"
+                />
 
-              {/* Public Transit */}
+                {/* Enhanced Transit Routing */}
+                <TransitRoutingCard
+                  destination={{
+                    name: venue.name,
+                    address: venue.address,
+                    coordinates: venue.coordinates
+                  }}
+                  userLocation={null} // In real app, get from geolocation
+                  className="h-fit"
+                />
+              </div>
+
+              {/* Simple Transit Info Fallback */}
               {venue.publicTransit && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Bus className="w-5 h-5" />
-                      Public Transportation
+                      Nearby Transit Stops
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
+                    <div className="text-sm text-gray-600 mb-3">
+                      Quick reference for nearby public transportation
+                    </div>
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {venue.publicTransit?.nearbyStops.map((stop, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 border border-border-default rounded-lg">
-                          <div>
-                            <div className="font-medium">{stop.name}</div>
-                            <div className="text-sm text-text-secondary">{stop.type} • {stop.distance} away</div>
-                          </div>
-                          <div className="flex gap-1">
+                        <div key={index} className="border rounded-lg p-3">
+                          <div className="font-medium text-sm">{stop.name}</div>
+                          <div className="text-xs text-gray-600 mb-2">{stop.type} • {stop.distance} away</div>
+                          <div className="flex gap-1 flex-wrap">
                             {stop.lines.map((line, lineIndex) => (
-                              <Badge key={lineIndex} variant="outline">{line}</Badge>
+                              <Badge key={lineIndex} variant="outline" className="text-xs">{line}</Badge>
                             ))}
                           </div>
                         </div>
@@ -626,6 +631,41 @@ const VenueDetailPage: React.FC = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Transportation Tips */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Getting Here</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Car className="w-4 h-4" />
+                        By Car
+                      </h4>
+                      <ul className="space-y-1 text-gray-600 ml-6">
+                        <li>• Multiple parking options available nearby</li>
+                        <li>• Street parking with meter fees</li>
+                        <li>• Event pricing may apply during special events</li>
+                        <li>• Consider ride-sharing during peak hours</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium mb-2 flex items-center gap-2">
+                        <Bus className="w-4 h-4" />
+                        By Public Transit
+                      </h4>
+                      <ul className="space-y-1 text-gray-600 ml-6">
+                        <li>• Multiple CTA lines serve this area</li>
+                        <li>• Check real-time arrivals above</li>
+                        <li>• Allow extra time during events</li>
+                        <li>• Evening service may be limited</li>
+                      </ul>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </TabsContent>
           )}
 

@@ -253,6 +253,30 @@ const EventSeatingPage = () => {
             <CardDescription className="text-text-secondary">
               Upload your seating chart image and configure interactive seat selection.
             </CardDescription>
+            
+            {/* Advanced Editor Upgrade Notice */}
+            <div className="mt-4 p-4 bg-gradient-to-r from-brand-primary/5 to-brand-primary-hover/5 border border-brand-primary/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-brand-primary rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">⚡</span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-brand-primary">Need Advanced Features?</h4>
+                    <p className="text-sm text-text-secondary">
+                      Try our advanced editor with zoom controls, bulk operations, and import/export
+                    </p>
+                  </div>
+                </div>
+                <a 
+                  href={`/organizer/event/${eventId}/seating/advanced`}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-hover transition-colors"
+                >
+                  <span>⚡</span>
+                  Try Advanced Editor
+                </a>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">

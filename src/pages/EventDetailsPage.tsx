@@ -33,11 +33,11 @@ import {
   Shield
 } from 'lucide-react';
 import EventCard from '@/components/EventCard';
-import { CompactShareButton } from '@/components/SocialShareButtons';
-import { useEventMetaTags } from '@/hooks/useMetaTags';
-import type { EventData } from '@/services/socialSharingService';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import CalendarIntegration from '@/components/notifications/CalendarIntegration';
+import { CompactShareButton } from '@/components/SocialShareButtons';
+import type { EventData } from '@/services/socialSharingService';
+import FollowButton from '@/components/FollowButton';
 
 const EventDetailsPage = () => {
   const { eventId } = useParams();
@@ -241,9 +241,6 @@ Whether you're a seasoned competitor or just starting your stepping journey, thi
     category: event.category,
     organizer: event.organizer
   };
-
-  // Set dynamic meta tags for SEO and social sharing
-  useEventMetaTags(eventForSharing);
 
   const handleShare = () => {
     if (navigator.share) {
@@ -640,9 +637,17 @@ Whether you're a seasoned competitor or just starting your stepping journey, thi
                   <div className="flex-1">
                     <h4 className="font-semibold text-text-primary">{event.organizer}</h4>
                     <p className="text-sm text-text-secondary mb-3">{event.organizerBio}</p>
-                    <Button variant="outline" size="sm">
-                      View Profile
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        View Profile
+                      </Button>
+                      <FollowButton
+                        entityId={`organizer_${event.organizer.toLowerCase().replace(/\s+/g, '_')}`}
+                        entityType="organizer"
+                        variant="outline"
+                        size="sm"
+                      />
+                    </div>
                   </div>
                 </div>
               </CardContent>

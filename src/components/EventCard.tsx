@@ -6,6 +6,7 @@ import { Calendar, MapPin, Clock, Users, Heart, Share2, Star, TrendingUp } from 
 import { Link } from 'react-router-dom';
 import SocialShareButtons, { type EventData } from '@/components/SocialShareButtons';
 import socialSharingService from '@/services/socialSharingService';
+import FollowButton from '@/components/FollowButton';
 
 interface EventCardProps {
   event: {
@@ -70,6 +71,9 @@ const EventCard = ({ event }: EventCardProps) => {
   const availabilityPercentage = event.capacity ? (event.attendees / event.capacity) * 100 : 0;
   const isAlmostSoldOut = availabilityPercentage > 80;
   const isPopular = event.attendees && event.attendees > 100;
+
+  // Generate organizer ID from name for following
+  const organizerEntityId = event.organizer ? `organizer_${event.organizer.toLowerCase().replace(/\s+/g, '_')}` : `organizer_${event.id}`;
 
   return (
     <Link to={`/event/${event.id}/tickets`} className="block group">
@@ -182,10 +186,31 @@ const EventCard = ({ event }: EventCardProps) => {
           </div>
 
           {/* Location */}
-          <div className="flex items-center justify-center text-gray-600 text-sm mb-6">
+          <div className="flex items-center justify-center text-gray-600 text-sm mb-4">
             <MapPin className="h-4 w-4 mr-2 text-gray-500" />
             <span className="font-medium">{event.location}</span>
           </div>
+
+          {/* Organizer & Follow Button */}
+          {event.organizer && (
+            <div className="flex items-center justify-between gap-3 mb-4 p-3 bg-gray-50 rounded-xl">
+              <div className="text-left flex-1">
+                <p className="text-xs text-gray-500 mb-1">Organizer</p>
+                <p className="text-sm font-medium text-gray-900">{event.organizer}</p>
+              </div>
+              <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                <FollowButton
+                  entityId={organizerEntityId}
+                  entityType="organizer"
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                >
+                  Follow
+                </FollowButton>
+              </div>
+            </div>
+          )}
 
           {/* Tickets Button */}
           <Button 
