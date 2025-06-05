@@ -72,7 +72,7 @@ export interface EmailStats {
 class EmailService {
   private config: EmailConfig = {
     provider: 'sendgrid',
-    sendgridApiKey: process.env.SENDGRID_API_KEY || 'SG.test-key',
+    sendgridApiKey: import.meta.env.VITE_SENDGRID_API_KEY || 'SG.test-key',
     fromEmail: 'noreply@stepperslife.com',
     fromName: 'SteppersLife',
     replyToEmail: 'support@stepperslife.com',
@@ -112,7 +112,7 @@ class EmailService {
           <p><strong>Time:</strong> {{eventTime}}</p>
           <p><strong>Venue:</strong> {{eventVenue}}</p>
           <p><strong>Tickets:</strong> {{ticketCount}} x {{ticketType}}</p>
-          <p><strong>Total:</strong> ${{totalAmount}}</p>
+          <p><strong>Total:</strong> \${{totalAmount}}</p>
         </div>
         <p>Your tickets are attached to this email. Please bring them to the event.</p>
         <a href="{{ticketUrl}}" style="background: #10B981; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">View Tickets</a>

@@ -298,7 +298,7 @@ export const getWidgetData = async (dashboardId: string, widgetId: string): Prom
 };
 
 // Initialize with some data for development
-if (process.env.NODE_ENV === 'development') {
+if (import.meta.env.DEV) {
   // You can add more specific mock initializations if needed
   console.log('Custom Dashboard Service initialized with mock data.');
 } 
