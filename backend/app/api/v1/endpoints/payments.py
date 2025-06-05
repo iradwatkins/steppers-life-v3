@@ -1,26 +1,72 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from uuid import UUID
+from pydantic import BaseModel
 import logging
 
 from app.core.database import get_db
 from app.core.auth import get_current_user
 from app.models.ticket import Ticket, PaymentStatus, TicketStatus
 from app.models.user import User
-from app.services.payment import PaymentService
-from app.schemas.ticket import TicketPayment
+from app.services.payment_service import payment_service, PaymentProvider, PaymentError
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-@router.post("/create-payment-intent/{ticket_id}")
-def create_payment_intent(
+class PaymentRequest(BaseModel):
+    provider: str  # square, paypal, cash
+    source_id: Optional[str] = None  # Square payment token
+    verification_token: Optional[str] = None  # Square CVV verification
+    verification_code: Optional[str] = None  # Cash payment verification code
+    return_url: Optional[str] = None  # PayPal return URL
+    cancel_url: Optional[str] = None  # PayPal cancel URL
+
+class PaymentConfirmation(BaseModel):
+    payment_id: str
+    provider: str
+    payer_id: Optional[str] = None  # PayPal payer ID
+
+@router.get("/providers")
+def get_payment_providers(
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get available payment providers."""
+    
+    providers = payment_service.get_available_providers()
+    
+    return {
+        "providers": providers,
+        "details": {
+            PaymentProvider.SQUARE: {
+                "name": "Square / Cash App",
+                "description": "Pay with credit/debit card or Cash App",
+                "supports_cards": True,
+                "supports_digital_wallets": True
+            },
+            PaymentProvider.PAYPAL: {
+                "name": "PayPal",
+                "description": "Pay with your PayPal account",
+                "supports_cards": False,
+                "supports_digital_wallets": True
+            },
+            PaymentProvider.CASH: {
+                "name": "Cash Payment",
+                "description": "Pay with cash at the event location",
+                "supports_cards": False,
+                "supports_digital_wallets": False
+            }
+        }
+    }
+
+@router.post("/create-payment/{ticket_id}")
+async def create_payment(
     ticket_id: UUID,
+    payment_request: PaymentRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Create a Stripe payment intent for a ticket."""
+    """Create a payment for a ticket."""
     
     # Get the ticket
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -45,44 +91,94 @@ def create_payment_intent(
         )
     
     try:
-        # Create payment intent with Stripe
-        payment_intent = PaymentService.create_payment_intent(
-            amount=ticket.total_price,
-            currency=ticket.currency,
-            metadata={
-                "ticket_id": str(ticket.id),
-                "ticket_number": ticket.ticket_number,
-                "event_id": str(ticket.event_id),
-                "user_id": str(ticket.user_id)
-            }
-        )
+        # Convert price to cents for Square
+        amount_cents = int(ticket.total_price * 100)
         
-        # Store payment intent ID in ticket
-        ticket.payment_intent_id = payment_intent["payment_intent_id"]
+        # Process payment based on provider
+        if payment_request.provider == PaymentProvider.SQUARE:
+            payment_result = await payment_service.create_square_payment(
+                amount_cents=amount_cents,
+                currency=ticket.currency,
+                source_id=payment_request.source_id,
+                verification_token=payment_request.verification_token,
+                order_id=str(ticket.id)
+            )
+            
+        elif payment_request.provider == PaymentProvider.PAYPAL:
+            payment_result = await payment_service.create_paypal_payment(
+                amount=ticket.total_price,
+                currency=ticket.currency,
+                description=f"SteppersLife Event Ticket - {ticket.ticket_number}",
+                return_url=payment_request.return_url,
+                cancel_url=payment_request.cancel_url
+            )
+            
+        elif payment_request.provider == PaymentProvider.CASH:
+            payment_result = await payment_service.process_cash_payment(
+                amount=ticket.total_price,
+                currency=ticket.currency,
+                verification_code=payment_request.verification_code
+            )
+            
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported payment provider: {payment_request.provider}"
+            )
+        
+        # Store payment information in ticket
+        ticket.payment_intent_id = payment_result['payment_id']
+        ticket.payment_method = payment_request.provider
+        
+        # For Square and Cash payments, mark as completed immediately
+        # For PayPal, wait for user to complete the flow
+        if payment_request.provider in [PaymentProvider.SQUARE, PaymentProvider.CASH]:
+            if payment_result.get('status') in ['COMPLETED', 'completed']:
+                ticket.payment_status = PaymentStatus.COMPLETED
+                ticket.status = TicketStatus.CONFIRMED
+        
         db.commit()
         
-        return {
-            "client_secret": payment_intent["client_secret"],
-            "payment_intent_id": payment_intent["payment_intent_id"],
-            "amount": payment_intent["amount"],
-            "currency": payment_intent["currency"]
+        response = {
+            "success": payment_result['success'],
+            "payment_id": payment_result['payment_id'],
+            "provider": payment_result['provider'],
+            "status": payment_result.get('status'),
+            "amount": ticket.total_price,
+            "currency": ticket.currency
         }
         
+        # Add provider-specific data
+        if payment_request.provider == PaymentProvider.PAYPAL:
+            response["approval_url"] = payment_result.get('approval_url')
+        elif payment_request.provider == PaymentProvider.SQUARE:
+            response["receipt_number"] = payment_result.get('receipt_number')
+        elif payment_request.provider == PaymentProvider.CASH:
+            response["verification_code"] = payment_result.get('verification_code')
+        
+        return response
+        
+    except PaymentError as e:
+        logger.error(f"Payment creation failed: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Payment processing failed: {e.message}"
+        )
     except Exception as e:
-        logger.error(f"Payment intent creation failed: {str(e)}")
+        logger.error(f"Payment creation failed: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create payment intent"
+            detail="Failed to create payment"
         )
 
 @router.post("/confirm-payment/{ticket_id}")
-def confirm_payment(
+async def confirm_payment(
     ticket_id: UUID,
-    payment_data: TicketPayment,
+    payment_confirmation: PaymentConfirmation,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
-    """Confirm payment for a ticket."""
+    """Confirm payment for a ticket (mainly for PayPal)."""
     
     # Get the ticket
     ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
@@ -100,32 +196,52 @@ def confirm_payment(
         )
     
     try:
-        # Confirm payment with Stripe
-        payment_confirmation = PaymentService.confirm_payment(
-            payment_data.payment_intent_id
-        )
-        
-        if payment_confirmation["status"] == "succeeded":
-            # Update ticket status
-            ticket.payment_status = PaymentStatus.COMPLETED
-            ticket.status = TicketStatus.CONFIRMED
-            ticket.payment_method = payment_data.payment_method
-            ticket.payment_intent_id = payment_confirmation["payment_intent_id"]
+        # Execute payment based on provider
+        if payment_confirmation.provider == PaymentProvider.PAYPAL:
+            if not payment_confirmation.payer_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="PayPal payer ID is required"
+                )
             
-            db.commit()
-            
-            return {
-                "status": "success",
-                "message": "Payment confirmed successfully",
-                "ticket_id": str(ticket.id),
-                "payment_intent_id": payment_confirmation["payment_intent_id"]
-            }
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Payment not successful: {payment_confirmation['status']}"
+            payment_result = await payment_service.execute_paypal_payment(
+                payment_id=payment_confirmation.payment_id,
+                payer_id=payment_confirmation.payer_id
             )
             
+            if payment_result['success'] and payment_result.get('status') in ['approved', 'completed']:
+                ticket.payment_status = PaymentStatus.COMPLETED
+                ticket.status = TicketStatus.CONFIRMED
+                db.commit()
+                
+                return {
+                    "status": "success",
+                    "message": "Payment confirmed successfully",
+                    "ticket_id": str(ticket.id),
+                    "payment_id": payment_result['payment_id'],
+                    "transaction_id": payment_result.get('transaction_id')
+                }
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Payment execution failed"
+                )
+        
+        else:
+            # For Square and Cash, payment should already be confirmed
+            return {
+                "status": "success",
+                "message": "Payment already confirmed",
+                "ticket_id": str(ticket.id),
+                "payment_id": payment_confirmation.payment_id
+            }
+            
+    except PaymentError as e:
+        logger.error(f"Payment confirmation failed: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Payment confirmation failed: {e.message}"
+        )
     except Exception as e:
         logger.error(f"Payment confirmation failed: {str(e)}")
         raise HTTPException(
@@ -134,9 +250,10 @@ def confirm_payment(
         )
 
 @router.post("/refund/{ticket_id}")
-def create_refund(
+async def create_refund(
     ticket_id: UUID,
-    refund_amount: float = None,
+    refund_amount: Optional[float] = None,
+    reason: str = "Customer refund request",
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
@@ -169,17 +286,23 @@ def create_refund(
     if not ticket.payment_intent_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No payment intent found for this ticket"
+            detail="No payment ID found for this ticket"
         )
     
     try:
-        # Create refund with Stripe
-        refund = PaymentService.create_refund(
-            payment_intent_id=ticket.payment_intent_id,
-            amount=refund_amount or ticket.total_price
+        # Calculate refund amount in cents
+        refund_amount_to_process = refund_amount or ticket.total_price
+        refund_amount_cents = int(refund_amount_to_process * 100)
+        
+        # Create refund
+        refund_result = await payment_service.refund_payment(
+            payment_id=ticket.payment_intent_id,
+            provider=ticket.payment_method,
+            amount_cents=refund_amount_cents,
+            reason=reason
         )
         
-        if refund["status"] == "succeeded":
+        if refund_result['success']:
             # Update ticket status
             ticket.payment_status = PaymentStatus.REFUNDED
             ticket.status = TicketStatus.REFUNDED
@@ -189,16 +312,23 @@ def create_refund(
             return {
                 "status": "success",
                 "message": "Refund processed successfully",
-                "refund_id": refund["refund_id"],
-                "amount": refund["amount"],
-                "currency": refund["currency"]
+                "refund_id": refund_result['refund_id'],
+                "amount": refund_amount_to_process,
+                "currency": ticket.currency,
+                "provider": refund_result['provider']
             }
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Refund processing failed: {refund['status']}"
+                detail="Refund processing failed"
             )
             
+    except PaymentError as e:
+        logger.error(f"Refund creation failed: {e.message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Refund processing failed: {e.message}"
+        )
     except Exception as e:
         logger.error(f"Refund creation failed: {str(e)}")
         raise HTTPException(
@@ -206,59 +336,66 @@ def create_refund(
             detail="Failed to process refund"
         )
 
-@router.post("/webhook")
-async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
-    """Handle Stripe webhooks."""
+@router.get("/status/{ticket_id}")
+async def get_payment_status(
+    ticket_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """Get payment status for a ticket."""
     
-    payload = await request.body()
-    sig_header = request.headers.get("stripe-signature")
-    
-    if not sig_header:
+    # Get the ticket
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Missing stripe-signature header"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found"
+        )
+    
+    # Check if user owns the ticket or is admin
+    if ticket.user_id != current_user.id and current_user.role.value not in ["admin", "moderator"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to view payment status for this ticket"
         )
     
     try:
-        # Verify webhook signature
-        event = PaymentService.verify_webhook_signature(payload, sig_header)
-        
-        # Handle different event types
-        if event["type"] == "payment_intent.succeeded":
-            payment_intent = event["data"]["object"]
+        if ticket.payment_intent_id and ticket.payment_method:
+            # Get status from payment provider
+            status_result = await payment_service.get_payment_status(
+                payment_id=ticket.payment_intent_id,
+                provider=ticket.payment_method
+            )
             
-            # Find the ticket by payment intent ID
-            ticket = db.query(Ticket).filter(
-                Ticket.payment_intent_id == payment_intent["id"]
-            ).first()
+            return {
+                "ticket_id": str(ticket.id),
+                "payment_status": ticket.payment_status.value,
+                "ticket_status": ticket.status.value,
+                "provider_status": status_result.get('status'),
+                "provider": status_result.get('provider'),
+                "payment_id": status_result.get('payment_id'),
+                "amount": ticket.total_price,
+                "currency": ticket.currency
+            }
+        else:
+            return {
+                "ticket_id": str(ticket.id),
+                "payment_status": ticket.payment_status.value,
+                "ticket_status": ticket.status.value,
+                "amount": ticket.total_price,
+                "currency": ticket.currency
+            }
             
-            if ticket:
-                ticket.payment_status = PaymentStatus.COMPLETED
-                ticket.status = TicketStatus.CONFIRMED
-                db.commit()
-                logger.info(f"Payment confirmed for ticket {ticket.id}")
-        
-        elif event["type"] == "payment_intent.payment_failed":
-            payment_intent = event["data"]["object"]
-            
-            # Find the ticket by payment intent ID
-            ticket = db.query(Ticket).filter(
-                Ticket.payment_intent_id == payment_intent["id"]
-            ).first()
-            
-            if ticket:
-                ticket.payment_status = PaymentStatus.FAILED
-                db.commit()
-                logger.info(f"Payment failed for ticket {ticket.id}")
-        
-        return {"status": "success"}
-        
     except Exception as e:
-        logger.error(f"Webhook processing failed: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Webhook processing failed"
-        )
+        logger.error(f"Payment status check failed: {str(e)}")
+        return {
+            "ticket_id": str(ticket.id),
+            "payment_status": ticket.payment_status.value,
+            "ticket_status": ticket.status.value,
+            "amount": ticket.total_price,
+            "currency": ticket.currency,
+            "error": "Could not retrieve provider status"
+        }
 
 @router.get("/config")
 def get_payment_config(
@@ -268,9 +405,27 @@ def get_payment_config(
     
     from app.core.config import settings
     
-    return {
-        "stripe_public_key": settings.STRIPE_PUBLIC_KEY,
-        "supported_currencies": ["USD", "EUR", "GBP"],
-        "payment_methods": ["card"],
-        "test_mode": settings.ENVIRONMENT != "production"
-    } 
+    # Get available payment providers
+    providers = payment_service.get_available_providers()
+    
+    config = {
+        "available_providers": providers,
+        "supported_currencies": ["USD"],
+        "test_mode": getattr(settings, 'ENVIRONMENT', 'development') != "production",
+        "provider_config": {}
+    }
+    
+    # Add provider-specific configuration
+    if PaymentProvider.SQUARE in providers:
+        config["provider_config"]["square"] = {
+            "app_id": getattr(settings, 'SQUARE_APPLICATION_ID', None),
+            "environment": getattr(settings, 'SQUARE_ENVIRONMENT', 'sandbox')
+        }
+    
+    if PaymentProvider.PAYPAL in providers:
+        config["provider_config"]["paypal"] = {
+            "client_id": getattr(settings, 'PAYPAL_CLIENT_ID', None),
+            "environment": getattr(settings, 'PAYPAL_MODE', 'sandbox')
+        }
+    
+    return config 

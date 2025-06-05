@@ -57,7 +57,7 @@ class Ticket(Base):
     
     # Notes and metadata
     notes = Column(Text, nullable=True)
-    metadata = Column(Text, nullable=True)  # JSON string for additional data
+    extra_data = Column(Text, nullable=True)  # JSON string for additional data
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
