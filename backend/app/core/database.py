@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
@@ -78,7 +78,9 @@ def check_db_health() -> bool:
     """
     try:
         db = SessionLocal()
-        db.execute("SELECT 1")
+        # Use SQLAlchemy 2.0 syntax
+        result = db.execute(text("SELECT 1"))
+        result.fetchone()
         db.close()
         return True
     except Exception as e:

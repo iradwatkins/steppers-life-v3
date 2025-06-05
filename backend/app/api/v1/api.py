@@ -4,7 +4,7 @@ from app.api.v1.endpoints import admin_categories, auth
 # Import other endpoint routers here as your project grows, for example:
 # from app.api.v1.endpoints import events, users
 
-api_router_v1 = APIRouter(prefix="/v1")
+api_router_v1 = APIRouter()
 
 # Include the authentication router
 api_router_v1.include_router(
