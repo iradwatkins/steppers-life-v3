@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
 import enum
 
 from app.core.database import Base
@@ -48,6 +49,10 @@ class User(Base):
     # Password reset
     reset_token = Column(String(255), nullable=True)
     reset_token_expires = Column(DateTime(timezone=True), nullable=True)
+    
+    # Relationships
+    created_events = relationship("Event", back_populates="creator")
+    tickets = relationship("Ticket", foreign_keys="Ticket.user_id", back_populates="user")
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role.value}')>" 

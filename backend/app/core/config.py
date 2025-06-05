@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     # External Services
     STRIPE_PUBLIC_KEY: Optional[str] = None
     STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
     SQUARE_ACCESS_TOKEN: Optional[str] = None
     SQUARE_APPLICATION_ID: Optional[str] = None
     
