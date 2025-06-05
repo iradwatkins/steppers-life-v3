@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import AppLayout from "./components/layout/AppLayout";
 import PWALayout from "./components/layout/PWALayout";
+import AdminLayout from "./components/layout/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
 import UserDashboard from "./pages/UserDashboard";
@@ -60,7 +61,7 @@ import VenueDetailPage from "./components/VenueDetailPage";
 // Blog imports
 import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
-import BlogManagementPage from "./pages/admin/BlogManagementPage";
+import BlogRouter from "./pages/admin/BlogRouter";
 
 // Store Directory imports
 import { SubmitStore } from "./pages/stores/SubmitStore";
@@ -96,6 +97,22 @@ import AdminEmailManagementPage from "./pages/admin/AdminEmailManagementPage";
 // Epic X - Advertising System imports
 import AdminAdvertisingPage from "./pages/admin/AdminAdvertisingPage";
 import AdPortalPage from "./pages/ads/AdPortalPage";
+
+// New Admin Dashboard imports
+import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
+import AdminAnalyticsHub from "./pages/admin/AdminAnalyticsHub";
+import AdminSystemSettings from "./pages/admin/AdminSystemSettings";
+import UserManagementPage from "./pages/admin/UserManagementPage";
+
+// Missing Admin Page imports
+import AdminThemePage from "./pages/admin/AdminThemePage";
+import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
+import AdminExportPage from "./pages/admin/AdminExportPage";
+import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
+import AdminContentPage from "./pages/admin/AdminContentPage";
+import AdminEventsPage from "./pages/admin/AdminEventsPage";
+import AdminUserCreatePage from "./pages/admin/AdminUserCreatePage";
+import AdminUserRolesPage from "./pages/admin/AdminUserRolesPage";
 
 const queryClient = new QueryClient();
 
@@ -154,42 +171,39 @@ const App = () => (
                 <Profile />
               </ProtectedRoute>
             } />
+            {/* Admin Routes with AdminLayout */}
             <Route path="/admin" element={
               <ProtectedRoute>
+                <AdminLayout />
+              </ProtectedRoute>
+            }>
+              <Route index element={<AdminDashboardOverview />} />
+              <Route path="analytics" element={<AdminAnalyticsHub />} />
+              <Route path="users" element={<UserManagementPage />} />
+              <Route path="users/create" element={<AdminUserCreatePage />} />
+              <Route path="users/roles" element={<AdminUserRolesPage />} />
+              <Route path="settings" element={<AdminSystemSettings />} />
+              <Route path="theme" element={<AdminThemePage />} />
+              <Route path="payments" element={<AdminPaymentsPage />} />
+              <Route path="export" element={<AdminExportPage />} />
+              <Route path="notifications" element={<AdminNotificationsPage />} />
+              <Route path="content" element={<AdminContentPage />} />
+              <Route path="events" element={<AdminEventsPage />} />
+              <Route path="blog/*" element={<BlogRouter />} />
+              <Route path="stores" element={<StoreDirectoryAdminPage />} />
+              <Route path="vanity-urls" element={<AdminVanityUrlPage />} />
+              <Route path="email-management" element={<AdminEmailManagementPage />} />
+              <Route path="advertising" element={<AdminAdvertisingPage />} />
+              <Route path="event-claims" element={<EventClaimsPage />} />
+              <Route path="events/create-assign" element={<AdminCreateEventPage />} />
+              <Route path="inventory" element={<InventoryDashboardPage />} />
+              <Route path="event/:eventId/checkin" element={<CheckinManagementPage />} />
+            </Route>
+            
+            {/* Legacy admin route for backwards compatibility */}
+            <Route path="/admin/legacy" element={
+              <ProtectedRoute>
                 <Admin />
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin blog management routes */}
-            <Route path="/admin/blog" element={
-              <ProtectedRoute>
-                <BlogManagementPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* Admin store directory management routes */}
-            <Route path="/admin/stores" element={
-              <ProtectedRoute>
-                <StoreDirectoryAdminPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* Epic M - Admin management routes */}
-            <Route path="/admin/vanity-urls" element={
-              <ProtectedRoute>
-                <AdminVanityUrlPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/email-management" element={
-              <ProtectedRoute>
-                <AdminEmailManagementPage />
-              </ProtectedRoute>
-            } />
-            
-            {/* Epic X - Advertising System routes */}
-            <Route path="/admin/advertising" element={
-              <ProtectedRoute>
-                <AdminAdvertisingPage />
               </ProtectedRoute>
             } />
             <Route path="/ads/portal" element={
@@ -352,26 +366,7 @@ const App = () => (
                 <ClaimableEventsPage />
               </ProtectedRoute>
             } />
-            <Route path="/admin/event-claims" element={
-              <ProtectedRoute>
-                <EventClaimsPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/events/create-assign" element={
-              <ProtectedRoute>
-                <AdminCreateEventPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/inventory" element={
-              <ProtectedRoute>
-                <InventoryDashboardPage />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/event/:eventId/checkin" element={
-              <ProtectedRoute>
-                <CheckinManagementPage />
-              </ProtectedRoute>
-            } />
+
             
             {/* ===== SEO-FRIENDLY SLUG-BASED EVENT ROUTES ===== */}
             {/* New slug-based event details route */}

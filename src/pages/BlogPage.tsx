@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import ImageWithLoading from '@/components/ui/ImageWithLoading';
 import {
   Select,
   SelectContent,
@@ -90,24 +91,12 @@ export default function BlogPage() {
       onClick={() => navigate(`/blog/${post.slug}`)}
     >
       {post.featuredImage && (
-        <div className="aspect-video overflow-hidden rounded-t-lg bg-muted">
-          <img
-            src={post.featuredImage}
-            alt={post.title}
-            loading="lazy"
-            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-            onError={(e) => {
-              const target = e.currentTarget;
-              target.style.display = 'none';
-              target.parentElement!.style.display = 'none';
-            }}
-            onLoad={(e) => {
-              const target = e.currentTarget;
-              target.style.opacity = '1';
-            }}
-            style={{ opacity: '0', transition: 'opacity 0.3s ease-in-out' }}
-          />
-        </div>
+        <ImageWithLoading
+          src={post.featuredImage}
+          alt={post.title}
+          className="aspect-video rounded-t-lg bg-muted"
+          loading="lazy"
+        />
       )}
       <CardHeader className="pb-2">
         <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
@@ -161,24 +150,12 @@ export default function BlogPage() {
     >
       <div className="flex flex-col md:flex-row">
         {post.featuredImage && (
-          <div className="md:w-1/3 aspect-video md:aspect-square overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-t-none bg-muted">
-            <img
-              src={post.featuredImage}
-              alt={post.title}
-              loading="lazy"
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-              onError={(e) => {
-                const target = e.currentTarget;
-                target.style.display = 'none';
-                target.parentElement!.style.display = 'none';
-              }}
-              onLoad={(e) => {
-                const target = e.currentTarget;
-                target.style.opacity = '1';
-              }}
-              style={{ opacity: '0', transition: 'opacity 0.3s ease-in-out' }}
-            />
-          </div>
+          <ImageWithLoading
+            src={post.featuredImage}
+            alt={post.title}
+            className="md:w-1/3 aspect-video md:aspect-square rounded-t-lg md:rounded-l-lg md:rounded-t-none bg-muted"
+            loading="lazy"
+          />
         )}
         <div className="flex-1 p-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
@@ -252,12 +229,18 @@ export default function BlogPage() {
       <div className="mb-8">
         <div className="flex flex-col sm:flex-row gap-4 mb-4">
           <div className="relative flex-1">
+            <label htmlFor="blog-search" className="sr-only">
+              Search blog posts
+            </label>
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
+              id="blog-search"
+              name="blog-search"
               placeholder="Search blog posts..."
               value={filters.query}
               onChange={(e) => handleFilterChange('query', e.target.value)}
               className="pl-10"
+              aria-label="Search blog posts"
             />
           </div>
           <Button
@@ -274,9 +257,9 @@ export default function BlogPage() {
           <Card className="p-4 mb-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Category</label>
+                <label htmlFor="category-filter" className="text-sm font-medium mb-2 block">Category</label>
                 <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger id="category-filter" name="category-filter" aria-label="Filter posts by category">
                     <SelectValue placeholder="All categories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -290,11 +273,14 @@ export default function BlogPage() {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-2 block">Tag</label>
+                <label htmlFor="tag-filter" className="text-sm font-medium mb-2 block">Tag</label>
                 <Input
+                  id="tag-filter"
+                  name="tag-filter"
                   placeholder="Filter by tag..."
                   value={filters.tag}
                   onChange={(e) => handleFilterChange('tag', e.target.value)}
+                  aria-label="Filter posts by tag"
                 />
               </div>
             </div>
