@@ -779,64 +779,62 @@ const Events = () => {
                 <Link to="/events/featured">View All Featured</Link>
               </Button>
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {featuredEvents.slice(0, 3).map((event) => (
-                <Card key={event.id} className="overflow-hidden bg-gradient-to-br from-brand-primary via-brand-primary to-brand-primary-hover text-text-on-primary group hover:shadow-2xl transition-all duration-300 rounded-3xl">
-                  <div className="relative">
-                    <img 
-                      src={event.image} 
-                      alt={event.title}
-                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-white/95 text-brand-primary border-0 font-semibold">
-                        ⭐ Featured
-                      </Badge>
-                    </div>
-                    <div className="absolute top-4 right-4 flex gap-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20 rounded-full">
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20 rounded-full">
-                        <Share2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="flex items-center gap-2 text-white/90 text-sm mb-2">
-                        <Calendar className="w-4 h-4" />
-                        <span>{new Date(event.date).toLocaleDateString()}</span>
-                        <span>•</span>
-                        <span>{event.time}</span>
+                <Link key={event.id} to={`/event/${event.id}/tickets`} className="block group">
+                  <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden h-full bg-white rounded-3xl">
+                    <div className="relative">
+                      <img 
+                        src={event.image} 
+                        alt={event.title}
+                        className="w-full h-60 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      
+                      {/* Price Badge - Top Left */}
+                      <div className="absolute top-4 left-4">
+                        <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-4 py-2 shadow-lg">
+                          <span className="text-xl font-bold text-gray-900">${event.price}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Featured Badge */}
+                      <div className="absolute top-4 right-4">
+                        <Badge className="bg-brand-primary text-white border-0 px-3 py-1.5 font-semibold rounded-xl">
+                          ⭐ Featured
+                        </Badge>
                       </div>
                     </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="font-bold text-xl mb-3 line-clamp-2">{event.title}</h3>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center text-white/90 text-sm">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        <span>{event.location}, {event.city}</span>
+
+                    {/* Text Section */}
+                    <div className="bg-white rounded-3xl p-6 text-center mx-4 mb-4">
+                      {/* Event Title */}
+                      <h3 className="font-bold text-xl text-gray-900 mb-4 line-clamp-2 group-hover:text-brand-primary transition-colors">
+                        {event.title}
+                      </h3>
+
+                      {/* Date and Time */}
+                      <div className="flex items-center justify-center text-gray-600 text-sm mb-3">
+                        <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="font-medium">{new Date(event.date).toLocaleDateString()}</span>
+                        <span className="mx-2">•</span>
+                        <span className="font-medium">{event.time}</span>
                       </div>
-                      <div className="flex items-center text-white/90 text-sm">
-                        <Star className="w-4 h-4 mr-2 fill-current text-yellow-300" />
-                        <span>{event.rating} rating • {event.attendees} attending</span>
+
+                      {/* Location */}
+                      <div className="flex items-center justify-center text-gray-600 text-sm mb-6">
+                        <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+                        <span className="font-medium">{event.location}</span>
                       </div>
-                    </div>
-                    <p className="text-sm mb-6 opacity-90 line-clamp-2">{event.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-3xl font-bold">${event.price}</span>
+
+                      {/* Tickets Button */}
                       <Button 
-                        asChild 
-                        className="bg-white text-brand-primary hover:bg-white/90 rounded-full px-6 font-semibold"
+                        className="w-full rounded-full py-3 font-medium bg-brand-primary hover:bg-brand-primary-hover hover:scale-105 transition-all"
                       >
-                        <Link to={`/event/${event.id}/tickets`}>
-                          Get Tickets
-                        </Link>
+                        Tickets
                       </Button>
                     </div>
-                  </CardContent>
-                </Card>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>
@@ -847,36 +845,63 @@ const Events = () => {
           <h2 className="text-2xl font-semibold text-text-primary mb-6 flex items-center gap-2">
             🔥 Popular This Week
           </h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {mockEvents
               .filter(event => event.attendees > 80)
               .slice(0, 4)
               .map((event) => (
-                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 rounded-2xl">
-                  <div className="relative">
-                    <img 
-                      src={event.image} 
-                      alt={event.title}
-                      className="w-full h-32 object-cover"
-                    />
-                    <div className="absolute top-2 left-2">
-                      <Badge className="bg-red-500 text-white text-xs font-medium">
-                        🔥 Hot
-                      </Badge>
+                <Link key={event.id} to={`/event/${event.id}/tickets`} className="block group">
+                  <Card className="cursor-pointer hover:shadow-2xl transition-all duration-300 border-0 shadow-lg overflow-hidden h-full bg-white rounded-3xl">
+                    <div className="relative">
+                      <img 
+                        src={event.image} 
+                        alt={event.title}
+                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      
+                      {/* Price Badge - Top Left */}
+                      <div className="absolute top-4 left-4">
+                        <div className="bg-white/95 backdrop-blur-sm rounded-2xl px-3 py-2 shadow-lg">
+                          <span className="text-lg font-bold text-gray-900">${event.price}</span>
+                        </div>
+                      </div>
+                      
+                      {/* Hot Badge */}
+                      <div className="absolute top-4 right-4">
+                        <Badge className="bg-red-500 text-white border-0 px-3 py-1.5 font-medium rounded-xl">
+                          🔥 Hot
+                        </Badge>
+                      </div>
                     </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h4 className="font-semibold text-sm mb-2 line-clamp-1">{event.title}</h4>
-                    <div className="flex items-center text-xs text-gray-600 mb-2">
-                      <Calendar className="w-3 h-3 mr-1" />
-                      <span>{new Date(event.date).toLocaleDateString()}</span>
+
+                    {/* Text Section */}
+                    <div className="bg-white rounded-3xl p-6 text-center mx-4 mb-4">
+                      {/* Event Title */}
+                      <h3 className="font-bold text-lg text-gray-900 mb-3 line-clamp-2 group-hover:text-brand-primary transition-colors">
+                        {event.title}
+                      </h3>
+
+                      {/* Date and Time */}
+                      <div className="flex items-center justify-center text-gray-600 text-sm mb-3">
+                        <Calendar className="h-3 w-3 mr-2 text-gray-500" />
+                        <span className="font-medium">{new Date(event.date).toLocaleDateString()}</span>
+                      </div>
+
+                      {/* Location */}
+                      <div className="flex items-center justify-center text-gray-600 text-sm mb-4">
+                        <MapPin className="h-3 w-3 mr-2 text-gray-500" />
+                        <span className="font-medium">{event.location}</span>
+                      </div>
+
+                      {/* Tickets Button */}
+                      <Button 
+                        className="w-full rounded-full py-2 font-medium bg-brand-primary hover:bg-brand-primary-hover hover:scale-105 transition-all text-sm"
+                      >
+                        Tickets
+                      </Button>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-lg">${event.price}</span>
-                      <span className="text-xs text-gray-500">{event.attendees} going</span>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </Card>
+                </Link>
               ))}
           </div>
         </div>
@@ -1107,7 +1132,7 @@ const Events = () => {
           />
         ) : (
           <div className={`
-            ${viewMode === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}
+            ${viewMode === 'grid' ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6' : 'space-y-4'}
           `}>
             {upcomingEvents.length > 0 ? (
               upcomingEvents.map((event) => (

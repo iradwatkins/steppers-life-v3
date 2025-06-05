@@ -222,7 +222,7 @@ const Index = () => {
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 xs:grid-cols-1 sm:grid-cols-2 fold-open:grid-cols-3 md:grid-cols-3 gap-4 xs:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 xs:gap-6">
             {upcomingEvents.map((event) => (
               <EventCard key={event.id} event={event} />
             ))}
@@ -242,7 +242,7 @@ const Index = () => {
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 xs:grid-cols-1 fold-open:grid-cols-2 md:grid-cols-2 gap-4 xs:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 xs:gap-6">
             {instructors.map((instructor) => (
               <InstructorCard key={instructor.id} instructor={instructor} />
             ))}

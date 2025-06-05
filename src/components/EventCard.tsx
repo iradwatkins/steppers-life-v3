@@ -78,7 +78,7 @@ const EventCard = ({ event }: EventCardProps) => {
           <img 
             src={event.image} 
             alt={event.title}
-            className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-60 object-cover group-hover:scale-105 transition-transform duration-300"
           />
           
           {/* Price Badge - Top Left */}
@@ -166,98 +166,28 @@ const EventCard = ({ event }: EventCardProps) => {
           </div>
         </div>
 
-        <div className="p-6 flex flex-col">
-          {/* Title and Rating */}
-          <div className="mb-4">
-            <div className="flex items-start justify-between mb-2">
-              <h3 className="font-bold text-xl text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors flex-1 leading-tight pr-2">
-                {event.title}
-              </h3>
-              {event.rating && (
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <Star className="h-4 w-4 text-yellow-500 fill-current" />
-                  <span className="text-sm font-medium text-gray-700">{event.rating}</span>
-                </div>
-              )}
-            </div>
-            
-            {event.skillLevel && (
-              <Badge variant="outline" className="rounded-full border-gray-300 text-gray-700 text-xs">
-                {event.skillLevel}
-              </Badge>
-            )}
+        {/* Text Section */}
+        <div className="bg-white rounded-3xl p-6 text-center mx-4 mb-4">
+          {/* Event Title */}
+          <h3 className="font-bold text-xl text-gray-900 mb-4 line-clamp-2 group-hover:text-brand-primary transition-colors">
+            {event.title}
+          </h3>
+
+          {/* Date and Time */}
+          <div className="flex items-center justify-center text-gray-600 text-sm mb-3">
+            <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+            <span className="font-medium">{new Date(event.date).toLocaleDateString()}</span>
+            <span className="mx-2">•</span>
+            <span className="font-medium">{event.time}</span>
           </div>
 
-          {/* Event Details */}
-          <div className="space-y-3 mb-5 flex-1">
-            <div className="flex items-center text-gray-600 text-sm">
-              <Calendar className="h-4 w-4 mr-3 flex-shrink-0 text-gray-500" />
-              <span className="font-medium">{new Date(event.date).toLocaleDateString()}</span>
-              <span className="mx-2 text-gray-400">•</span>
-              <span className="font-medium">{event.time}</span>
-            </div>
-            
-            <div className="flex items-start text-gray-600 text-sm">
-              <MapPin className="h-4 w-4 mr-3 mt-0.5 flex-shrink-0 text-gray-500" />
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{event.location}</div>
-                <div className="text-gray-500 text-xs">{event.city}, {event.state}</div>
-              </div>
-            </div>
-            
-            <div className="flex items-center text-gray-600 text-sm">
-              <Users className="h-4 w-4 mr-3 flex-shrink-0 text-gray-500" />
-              <span className="font-medium">
-                {event.attendees} {event.capacity ? `of ${event.capacity}` : ''} attending
-              </span>
-            </div>
-
-            {/* Instructor */}
-            <div className="pt-2 border-t border-gray-100">
-              <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Instructor</div>
-              <div className="font-medium text-gray-900">{event.instructor}</div>
-              {event.organizer && (
-                <div className="text-xs text-gray-500">by {event.organizer}</div>
-              )}
-            </div>
+          {/* Location */}
+          <div className="flex items-center justify-center text-gray-600 text-sm mb-6">
+            <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+            <span className="font-medium">{event.location}</span>
           </div>
 
-          {/* Progress bar for capacity */}
-          {event.capacity && (
-            <div className="mb-4">
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full transition-all ${
-                    availabilityPercentage > 90 ? 'bg-red-500' :
-                    availabilityPercentage > 80 ? 'bg-orange-500' :
-                    'bg-green-500'
-                  }`}
-                  style={{ width: `${Math.min(availabilityPercentage, 100)}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                {event.capacity - event.attendees} spots remaining
-              </p>
-            </div>
-          )}
-
-          {/* Tags */}
-          {event.tags && event.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-5">
-              {event.tags.slice(0, 2).map((tag, index) => (
-                <Badge key={index} variant="outline" className="text-xs rounded-full border-gray-300 text-gray-600 px-2 py-0.5">
-                  {tag}
-                </Badge>
-              ))}
-              {event.tags.length > 2 && (
-                <Badge variant="outline" className="text-xs rounded-full border-gray-300 text-gray-600 px-2 py-0.5">
-                  +{event.tags.length - 2}
-                </Badge>
-              )}
-            </div>
-          )}
-
-          {/* Action Button */}
+          {/* Tickets Button */}
           <Button 
             className={`w-full rounded-full py-3 font-medium transition-all ${
               event.soldOut 
@@ -266,7 +196,7 @@ const EventCard = ({ event }: EventCardProps) => {
             }`}
             disabled={event.soldOut}
           >
-            {event.soldOut ? 'Sold Out' : 'View Details'}
+            {event.soldOut ? 'Sold Out' : 'Tickets'}
           </Button>
         </div>
       </Card>

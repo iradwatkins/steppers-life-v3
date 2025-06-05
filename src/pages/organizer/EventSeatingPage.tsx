@@ -281,14 +281,14 @@ const EventSeatingPage = () => {
 
               <TabsContent value="setup" className="space-y-6">
                 <div className="space-y-6">
-                  <div>
+            <div>
                     <h3 className="text-lg font-medium text-text-primary mb-2">
                       Define Your Pricing Structure
                     </h3>
                     <p className="text-text-secondary mb-4">
                       Set up your ticket types and pricing before mapping seats. This ensures consistency between your seating chart and ticket sales.
                     </p>
-                  </div>
+            </div>
 
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                     <h4 className="text-blue-900 font-semibold mb-2">Recommended Workflow</h4>
@@ -386,7 +386,7 @@ const EventSeatingPage = () => {
                         }}
                       >
                         + Add Price Category
-                      </Button>
+                  </Button>
                     </CardContent>
                   </Card>
 
@@ -435,7 +435,7 @@ const EventSeatingPage = () => {
                       )}
                     </CardContent>
                   </Card>
-                </div>
+                  </div>
               </TabsContent>
 
               <TabsContent value="upload" className="space-y-6">
@@ -660,7 +660,7 @@ const EventSeatingPage = () => {
                               <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                                 {placingADA ? 'Click to disable ADA mode' : 'Click to enable ADA mode'}
                               </div>
-                            </Button>
+                  </Button>
                           </div>
                           
                           {/* Enhanced Current Selection Display */}
@@ -741,12 +741,12 @@ const EventSeatingPage = () => {
                             title={`${seat.seatNumber} - ${priceCategories.find(cat => cat.id === seat.priceCategory)?.name}`}
                           >
                             {seat.isADA ? '♿' : seat.seatNumber.slice(-2)}
-                          </div>
-                        ))}
                       </div>
-                    </div>
-                  </>
-                )}
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
               </TabsContent>
 
               <TabsContent value="configure" className="space-y-6">
