@@ -1332,6 +1332,11 @@ class ComparativeAnalyticsService {
     const clicks = Math.floor(impressions * (Math.random() * 0.05 + 0.01)); // 1-5% CTR
     const conversions = Math.floor(clicks * (Math.random() * 0.1 + 0.01)); // 1-10% conversion from clicks
     const cost = parseFloat((Math.random() * 2000 + 500).toFixed(2));
+    
+    // Calculate average ticket price and revenue from pricing for this calculation
+    const avgTicketPrice = parseFloat((Math.random() * 60 + 20).toFixed(2));
+    const revenueFromPricing = avgTicketPrice * conversions;
+    
     const roi = conversions > 0 ? parseFloat(((revenueFromPricing - cost) / cost * 100).toFixed(2)) : 0;
     const cpa = conversions > 0 ? parseFloat((cost / conversions).toFixed(2)) : cost; // If no conversions, CPA is just cost
 
