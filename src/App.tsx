@@ -1,3 +1,4 @@
+import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { FaviconManager } from "@/components/ui/FaviconManager";
@@ -55,6 +56,11 @@ import ProfileManagement from "./pages/buyer/ProfileManagement";
 import AccountSettings from "./pages/buyer/AccountSettings";
 import VenueDetailPage from "./components/VenueDetailPage";
 
+// Blog imports
+import BlogPage from "./pages/BlogPage";
+import BlogPostPage from "./pages/BlogPostPage";
+import BlogManagementPage from "./pages/admin/BlogManagementPage";
+
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
 import PWADashboardPage from "./pages/pwa/PWADashboardPage";
@@ -68,6 +74,10 @@ import SalesAgentDashboardPage from './pages/agent/SalesAgentDashboardPage';
 import CommissionPaymentPage from './pages/organizer/CommissionPaymentPage';
 import AdvancedSeatingEditorPage from "./pages/organizer/AdvancedSeatingEditorPage";
 import PWASeatingPage from "./pages/pwa/PWASeatingPage";
+
+// Import react-grid-layout and react-resizable CSS
+import '/node_modules/react-grid-layout/css/styles.css';
+import '/node_modules/react-resizable/css/styles.css';
 
 const queryClient = new QueryClient();
 
@@ -108,6 +118,11 @@ const App = () => (
             <Route path="/venue/:venueId" element={<VenueDetailPage />} />
             <Route path="/classes" element={<Classes />} />
             <Route path="/community" element={<Community />} />
+            
+            {/* Blog routes (public) */}
+            <Route path="/blog" element={<BlogPage />} />
+            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            
             <Route path="/profile" element={
               <ProtectedRoute>
                 <Profile />
@@ -118,6 +133,14 @@ const App = () => (
                 <Admin />
               </ProtectedRoute>
             } />
+            
+            {/* Admin blog management routes */}
+            <Route path="/admin/blog" element={
+              <ProtectedRoute>
+                <BlogManagementPage />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/docs" element={
               <ProtectedRoute>
                 <Docs />

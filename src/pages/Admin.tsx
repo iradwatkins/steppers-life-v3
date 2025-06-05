@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
-import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare, Smartphone } from 'lucide-react';
+import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare, Smartphone, Edit } from 'lucide-react';
 import GitHubSync from '@/components/GitHubSync';
 import PWAAnalyticsDashboard from '@/components/admin/PWAAnalyticsDashboard';
 import { Link } from 'react-router-dom';
@@ -212,6 +212,17 @@ const Admin = () => {
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-text-primary mb-4">Management Tools</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <Link to="/admin/blog">
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Blog Management</CardTitle>
+                    <Edit className="h-4 w-4 text-text-secondary" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-text-secondary">Create, edit, and manage blog posts including featured content and embeds.</p>
+                  </CardContent>
+                </Card>
+              </Link>
               <Link to="/admin/event-claims">
                 <Card className="hover:shadow-lg transition-shadow duration-200">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

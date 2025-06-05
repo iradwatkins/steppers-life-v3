@@ -17,12 +17,25 @@ import {
   AlertTriangle,
   CheckCircle,
   Clock,
-  Settings
+  Settings,
+  Lightbulb,
+  Award,
+  X,
+  Team,
+  BrainCircuit
 } from 'lucide-react';
 import { useComparativeAnalytics } from '@/hooks/useComparativeAnalytics';
 import EventComparisonSelector from '@/components/analytics/EventComparisonSelector';
 import ComparisonChartsSection from '@/components/analytics/ComparisonChartsSection';
 import PerformanceMetricsTable from '@/components/analytics/PerformanceMetricsTable';
+import PerformanceScoringSection from '@/components/analytics/PerformanceScoringSection';
+import SuccessFactorAnalysis from '@/components/analytics/SuccessFactorAnalysis';
+import MarketAnalysisSection from '@/components/analytics/MarketAnalysisSection';
+import VenueAnalysisSection from '@/components/analytics/VenueAnalysisSection';
+import PricingAnalyticsSection from '@/components/analytics/PricingAnalyticsSection';
+import MarketingAnalyticsSection from '@/components/analytics/MarketingAnalyticsSection';
+import TeamPerformanceSection from '@/components/analytics/TeamPerformanceSection';
+import PredictiveAnalyticsSection from '@/components/analytics/PredictiveAnalyticsSection';
 import { toast } from 'sonner';
 
 const ComparativeAnalyticsPage: React.FC = () => {
@@ -32,61 +45,130 @@ const ComparativeAnalyticsPage: React.FC = () => {
   const [autoRefresh, setAutoRefresh] = useState(false);
 
   const {
-    currentComparison,
-    benchmarks,
-    performanceScore,
-    loading,
-    comparingEvents,
-    fetchingBenchmarks,
-    error,
+    state,
     compareEvents,
-    fetchIndustryBenchmarks,
-    calculatePerformanceScore,
-    refreshAllData,
-    clearAnalysis,
-    exportComparison,
-    hasComparison
-  } = useComparativeAnalytics({ autoRefresh, refreshInterval: 300000 });
+    calculatePerformanceScores,
+    analyzeSuccessFactors,
+    exportComparisonData,
+    refreshData,
+    clearComparison,
+    fetchMarketPositioningData,
+    fetchSeasonalTrendData,
+    fetchVenueComparisonData,
+    fetchPricingAnalytics,
+    fetchMarketingChannelPerformance,
+    fetchTeamPerformance,
+    fetchPredictiveAnalytics,
+  } = useComparativeAnalytics();
 
   // Handle event selection and automatic comparison
   useEffect(() => {
-    if (selectedEventIds.length >= 2 && !comparingEvents) {
-      handleCompareEvents();
+    if (selectedEventIds.length >= 2 && !state.loading) {
+      handleCompareAndAnalyzeEvents();
     }
-  }, [selectedEventIds]);
+    if (activeTab === 'market-analysis' && selectedEventIds.length > 0) {
+        selectedEventIds.forEach(eventId => fetchMarketPositioningData(eventId));
+    }
+    if (activeTab === 'pricing-analytics' && selectedEventIds.length > 0) {
+        selectedEventIds.forEach(eventId => fetchPricingAnalytics(eventId));
+    }
+    if (activeTab === 'marketing-analytics' && selectedEventIds.length > 0) {
+        selectedEventIds.forEach(eventId => fetchMarketingChannelPerformance(eventId));
+    }
+    if (activeTab === 'predictive-analytics' && selectedEventIds.length > 0) {
+        selectedEventIds.forEach(eventId => fetchPredictiveAnalytics(eventId));
+    }
+  }, [selectedEventIds, activeTab]);
 
-  const handleCompareEvents = async () => {
-    if (selectedEventIds.length < 2) {
-      toast.error('Please select at least 2 events to compare');
+  useEffect(() => {
+    if (activeTab === 'market-analysis' && !state.seasonalAnalysis.current) {
+        fetchSeasonalTrendData();
+    }
+    if (activeTab === 'venue-analysis' && Object.keys(state.venueAnalysis).length === 0) {
+        fetchVenueComparisonData();
+    }
+    if (activeTab === 'team-performance' && Object.keys(state.teamPerformance).length === 0) {
+        fetchTeamPerformance();
+    }
+  }, [activeTab]);
+
+  const handleCompareAndAnalyzeEvents = async () => {
+    if (selectedEventIds.length < 1) {
+      toast.error('Please select at least 1 event to analyze');
       return;
     }
 
-    const comparison = await compareEvents(selectedEventIds);
-    if (comparison) {
+    const comparisonResult = await compareEvents(selectedEventIds);
+    if (comparisonResult) {
       setActiveTab('charts');
+      await calculatePerformanceScores(selectedEventIds);
+      await analyzeSuccessFactors(selectedEventIds);
+      toast.success('Events compared, scores calculated, and factors analyzed.');
     }
   };
 
   const handleExportReport = async (format: 'csv' | 'excel' | 'pdf') => {
-    if (!currentComparison) {
-      toast.error('No comparison data to export');
+    let dataToExport: any[] = [];
+    let fileNamePrefix = 'comparative-analytics';
+
+    switch (activeTab) {
+      case 'charts':
+      case 'metrics':
+      case 'performance-insights':
+        dataToExport = state.comparisonData;
+        fileNamePrefix = 'event-comparison';
+        break;
+      case 'market-analysis':
+        dataToExport = [...Object.values(state.marketPositioning), ...(state.seasonalAnalysis.current ? Object.values(state.seasonalAnalysis.current) : [])];
+        fileNamePrefix = 'market-analysis';
+        break;
+      case 'venue-analysis':
+        dataToExport = Object.values(state.venueAnalysis).flat();
+        fileNamePrefix = 'venue-analysis';
+        break;
+      case 'pricing-analytics':
+        dataToExport = Object.values(state.pricingAnalytics);
+        fileNamePrefix = 'pricing-analytics';
+        break;
+      case 'marketing-analytics':
+        dataToExport = Object.values(state.marketingChannelPerformance).flat();
+        fileNamePrefix = 'marketing-analytics';
+        break;
+      case 'team-performance':
+        dataToExport = Object.values(state.teamPerformance);
+        fileNamePrefix = 'team-performance';
+        break;
+      case 'predictive-analytics':
+        dataToExport = Object.values(state.predictiveModels);
+        fileNamePrefix = 'predictive-analytics';
+        break;
+      default:
+        toast.error('No data available for export in the current tab.');
+        return;
+    }
+
+    if (!dataToExport || dataToExport.length === 0) {
+      toast.error('No data to export for the current view.');
       return;
     }
 
+    const filename = `${fileNamePrefix}_${new Date().toISOString().split('T')[0]}.${format}`;
+
     try {
-      await exportComparison(currentComparison, format);
+      await exportComparisonData(dataToExport, format as 'CSV' | 'Excel' | 'PDF' | 'JSON', filename);
     } catch (error) {
       toast.error(`Failed to export ${format.toUpperCase()} report`);
     }
   };
 
   const handleShareInsights = async () => {
-    if (!currentComparison) return;
+    if (!state.comparisonData || state.comparisonData.length === 0) return;
 
     try {
+      const eventNames = state.comparisonData.map(e => e.eventName).join(', ');
       const shareData = {
-        title: `Event Comparison: ${currentComparison.name}`,
-        text: `Check out this event performance comparison with ${currentComparison.events.length} events analyzed.`,
+        title: `Event Comparison: ${eventNames}`,
+        text: `Check out this event performance comparison for ${state.comparisonData.length} events analyzed.`,
         url: window.location.href
       };
 
@@ -102,23 +184,23 @@ const ComparativeAnalyticsPage: React.FC = () => {
   };
 
   const getComparisonSummary = () => {
-    if (!currentComparison) return null;
+    if (!state.comparisonData || state.comparisonData.length === 0) return null;
 
-    const bestPerformer = currentComparison.insights.best_performer;
-    const worstPerformer = currentComparison.insights.worst_performer;
-    const keyDifferences = currentComparison.insights.key_differences;
-
+    const bestPerformer = state.comparisonData.reduce((prev, current) => (prev.totalRevenue > current.totalRevenue) ? prev : current, state.comparisonData[0]);
+    const worstPerformer = state.comparisonData.reduce((prev, current) => (prev.totalRevenue < current.totalRevenue) ? prev : current, state.comparisonData[0]);
+    
     return {
-      bestPerformer,
-      worstPerformer,
-      totalRevenue: currentComparison.events.reduce((sum, event) => sum + event.revenue.gross, 0),
-      avgAttendance: currentComparison.events.reduce((sum, event) => sum + event.metrics.attendance_rate, 0) / currentComparison.events.length,
-      totalAttendees: currentComparison.events.reduce((sum, event) => sum + event.tickets_sold, 0),
-      highImpactDifferences: keyDifferences.filter(diff => diff.significance === 'high').length
+      bestPerformerName: bestPerformer?.eventName,
+      worstPerformerName: worstPerformer?.eventName,
+      totalRevenue: state.comparisonData.reduce((sum, event) => sum + event.totalRevenue, 0),
+      avgAttendanceRate: state.comparisonData.reduce((sum, event) => sum + event.sellThroughRate, 0) / state.comparisonData.length,
+      totalAttendees: state.comparisonData.reduce((sum, event) => sum + event.ticketsSold, 0),
+      keyInsightsCount: state.successFactors?.insights?.length || 0
     };
   };
 
   const summary = getComparisonSummary();
+  const hasComparisonData = state.comparisonData && state.comparisonData.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -142,10 +224,10 @@ const ComparativeAnalyticsPage: React.FC = () => {
                 className={autoRefresh ? 'bg-green-50 border-green-200' : ''}
               >
                 <RefreshCw className={`h-4 w-4 mr-2 ${autoRefresh ? 'animate-spin' : ''}`} />
-                Auto Refresh
+                {state.refreshing ? 'Refreshing...' : 'Auto Refresh'}
               </Button>
               
-              {hasComparison && (
+              {hasComparisonData && (
                 <>
                   <Button variant="outline" onClick={handleShareInsights}>
                     <Share2 className="h-4 w-4 mr-2" />
@@ -157,6 +239,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleExportReport('csv')}
+                      disabled={!hasComparisonData || state.exportLoading}
                     >
                       CSV
                     </Button>
@@ -164,6 +247,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleExportReport('excel')}
+                      disabled={!hasComparisonData || state.exportLoading}
                     >
                       Excel
                     </Button>
@@ -171,6 +255,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleExportReport('pdf')}
+                      disabled={!hasComparisonData || state.exportLoading}
                     >
                       PDF
                     </Button>
@@ -182,11 +267,11 @@ const ComparativeAnalyticsPage: React.FC = () => {
         </div>
 
         {/* Status Banner */}
-        {error && (
+        {state.error && (
           <Alert className="mb-6 border-red-200 bg-red-50">
             <AlertTriangle className="h-4 w-4 text-red-600" />
             <AlertDescription className="text-red-800">
-              {error}
+              {state.error}
             </AlertDescription>
           </Alert>
         )}
@@ -226,9 +311,9 @@ const ComparativeAnalyticsPage: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-muted-foreground">Avg Attendance</p>
+                    <p className="text-sm font-medium text-muted-foreground">Avg Sell-Through</p>
                     <p className="text-2xl font-bold text-foreground">
-                      {summary.avgAttendance.toFixed(1)}%
+                      {summary.avgAttendanceRate.toFixed(1)}%
                     </p>
                   </div>
                   <Target className="h-8 w-8 text-orange-500" />
@@ -242,10 +327,10 @@ const ComparativeAnalyticsPage: React.FC = () => {
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Key Insights</p>
                     <p className="text-2xl font-bold text-foreground">
-                      {summary.highImpactDifferences}
+                      {summary.keyInsightsCount}
                     </p>
                   </div>
-                  <TrendingUp className="h-8 w-8 text-purple-500" />
+                  <Lightbulb className="h-8 w-8 text-purple-500" />
                 </div>
               </CardContent>
             </Card>
@@ -254,31 +339,17 @@ const ComparativeAnalyticsPage: React.FC = () => {
 
         {/* Main Content */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 mb-8">
-            <TabsTrigger value="selector" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
-              Setup
-            </TabsTrigger>
-            <TabsTrigger value="charts" disabled={!hasComparison} className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Charts
-            </TabsTrigger>
-            <TabsTrigger value="metrics" disabled={!hasComparison} className="flex items-center gap-2">
-              <Target className="h-4 w-4" />
-              Metrics
-            </TabsTrigger>
-            <TabsTrigger value="trends" disabled={!hasComparison} className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Trends
-            </TabsTrigger>
-            <TabsTrigger value="benchmarks" disabled={!hasComparison} className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Benchmarks
-            </TabsTrigger>
-            <TabsTrigger value="reports" disabled={!hasComparison} className="flex items-center gap-2">
-              <Download className="h-4 w-4" />
-              Reports
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-8 md:grid-cols-8 lg:grid-cols-8 h-12">
+            <TabsTrigger value="selector">Select Events</TabsTrigger>
+            <TabsTrigger value="charts" disabled={!hasComparisonData}>Comparison Charts</TabsTrigger>
+            <TabsTrigger value="metrics" disabled={!hasComparisonData}>Metrics Table</TabsTrigger>
+            <TabsTrigger value="performance-insights" disabled={!hasComparisonData}>Performance Insights</TabsTrigger>
+            <TabsTrigger value="market-analysis" disabled={!hasComparisonData}>Market Analysis</TabsTrigger>
+            <TabsTrigger value="venue-analysis" disabled={!hasComparisonData}>Venue Analysis</TabsTrigger>
+            <TabsTrigger value="pricing-analytics" disabled={!hasComparisonData}>Pricing Analytics</TabsTrigger>
+            <TabsTrigger value="marketing-analytics" disabled={!hasComparisonData}>Marketing Analytics</TabsTrigger>
+            <TabsTrigger value="team-performance" disabled={!hasComparisonData}>Team Performance</TabsTrigger>
+            <TabsTrigger value="predictive-analytics" disabled={!hasComparisonData}>Predictive Analytics</TabsTrigger>
           </TabsList>
 
           {/* Event Selection */}
@@ -291,25 +362,25 @@ const ComparativeAnalyticsPage: React.FC = () => {
               maxSelections={10}
             />
             
-            {selectedEventIds.length >= 2 && (
+            {selectedEventIds.length >= 1 && (
               <Card>
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-foreground mb-1">
-                        Ready to Compare {selectedEventIds.length} Events
+                        Ready to Analyze {selectedEventIds.length} Event{selectedEventIds.length === 1 ? '' : 's'}
                       </h3>
                       <p className="text-muted-foreground">
-                        Click "Generate Comparison" to analyze performance metrics and insights
+                        Click "Generate Analysis" to view performance metrics, scores, and insights
                       </p>
                     </div>
                     
                     <Button 
-                      onClick={handleCompareEvents}
-                      disabled={comparingEvents}
+                      onClick={handleCompareAndAnalyzeEvents}
+                      disabled={state.loading}
                       size="lg"
                     >
-                      {comparingEvents ? (
+                      {state.loading ? (
                         <>
                           <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
                           Analyzing...
@@ -317,7 +388,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       ) : (
                         <>
                           <BarChart3 className="h-4 w-4 mr-2" />
-                          Generate Comparison
+                          Generate Analysis
                         </>
                       )}
                     </Button>
@@ -329,9 +400,18 @@ const ComparativeAnalyticsPage: React.FC = () => {
 
           {/* Comparison Charts */}
           <TabsContent value="charts" className="space-y-6">
-            {currentComparison ? (
+            {hasComparisonData ? (
               <ComparisonChartsSection 
-                comparison={currentComparison}
+                comparison={{
+                  name: 'Event Comparison',
+                  events: state.comparisonData,
+                  insights: {
+                    best_performer: state.comparisonData.reduce((p,c) => p.totalRevenue > c.totalRevenue ? p : c, state.comparisonData[0]), 
+                    worst_performer: state.comparisonData.reduce((p,c) => p.totalRevenue < c.totalRevenue ? p : c, state.comparisonData[0]),
+                    key_differences: [] 
+                  },
+                  created_at: new Date().toISOString()
+                }}
               />
             ) : (
               <Card>
@@ -353,9 +433,18 @@ const ComparativeAnalyticsPage: React.FC = () => {
 
           {/* Performance Metrics Table */}
           <TabsContent value="metrics" className="space-y-6">
-            {currentComparison ? (
+            {hasComparisonData ? (
               <PerformanceMetricsTable 
-                comparison={currentComparison}
+                comparison={{
+                  name: 'Event Metrics',
+                  events: state.comparisonData,
+                  insights: {
+                    best_performer: state.comparisonData.reduce((p,c) => p.totalRevenue > c.totalRevenue ? p : c, state.comparisonData[0]), 
+                    worst_performer: state.comparisonData.reduce((p,c) => p.totalRevenue < c.totalRevenue ? p : c, state.comparisonData[0]),
+                    key_differences: []
+                  },
+                  created_at: new Date().toISOString()
+                }}
                 onExport={() => handleExportReport('csv')}
                 showCalculations={true}
               />
@@ -369,6 +458,64 @@ const ComparativeAnalyticsPage: React.FC = () => {
                   <p className="text-muted-foreground">
                     Generate a comparison to view detailed performance metrics
                   </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Performance Insights Tab (New) */}
+          <TabsContent value="performance-insights" className="space-y-6">
+            {hasComparisonData ? (
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Award className="h-5 w-5 text-brand-primary" />
+                      Performance Scoring
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {state.performanceScores && Object.keys(state.performanceScores).length > 0 ? (
+                       <PerformanceScoringSection performanceScores={state.performanceScores} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground p-4 text-center">
+                        {state.loading ? 'Calculating scores...' : 'No performance scores calculated yet for the selected events. Ensure events are compared first.'}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Target className="h-5 w-5 text-brand-primary" />
+                      Success Factor Analysis
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {state.successFactors ? (
+                      <SuccessFactorAnalysis successFactorsData={state.successFactors} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground p-4 text-center">
+                        {state.loading ? 'Analyzing factors...' : 'Success factor analysis not yet generated or no data available.'}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Lightbulb className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Analysis Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab and generate analysis to view performance insights.
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -443,7 +590,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       variant="outline" 
                       className="w-full justify-start"
                       onClick={() => handleExportReport('csv')}
-                      disabled={!hasComparison || loading}
+                      disabled={!hasComparisonData || state.exportLoading}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Export as CSV
@@ -453,7 +600,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       variant="outline" 
                       className="w-full justify-start"
                       onClick={() => handleExportReport('excel')}
-                      disabled={!hasComparison || loading}
+                      disabled={!hasComparisonData || state.exportLoading}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Export as Excel
@@ -463,7 +610,7 @@ const ComparativeAnalyticsPage: React.FC = () => {
                       variant="outline" 
                       className="w-full justify-start"
                       onClick={() => handleExportReport('pdf')}
-                      disabled={!hasComparison || loading}
+                      disabled={!hasComparisonData || state.exportLoading}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Export as PDF Report
@@ -510,29 +657,182 @@ const ComparativeAnalyticsPage: React.FC = () => {
               </Card>
             </div>
           </TabsContent>
+
+          {/* New Market Analysis Tab */}
+          <TabsContent value="market-analysis" className="space-y-6">
+            {hasComparisonData ? (
+              <MarketAnalysisSection 
+                marketPositioningData={Object.values(state.marketPositioning)} 
+                seasonalTrendData={state.seasonalAnalysis.current ? Object.values(state.seasonalAnalysis.current) : []} 
+                loading={state.loading} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Lightbulb className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Market Analysis Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab to view market analysis
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* New Venue Analysis Tab */}
+          <TabsContent value="venue-analysis" className="space-y-6">
+            {hasComparisonData ? (
+              <VenueAnalysisSection 
+                venuePerformanceData={Object.values(state.venueAnalysis).flat()}
+                loading={state.loading} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Target className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Venue Analysis Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab to view venue analysis
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* New Pricing Analytics Tab */}
+          <TabsContent value="pricing-analytics" className="space-y-6">
+            {hasComparisonData ? (
+              <PricingAnalyticsSection 
+                pricingAnalyticsData={Object.values(state.pricingAnalytics)} 
+                loading={state.loading} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Lightbulb className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Pricing Analysis Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab to view pricing analysis
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* New Marketing Analytics Tab */}
+          <TabsContent value="marketing-analytics" className="space-y-6">
+            {hasComparisonData ? (
+              <MarketingAnalyticsSection 
+                marketingChannelPerformanceData={Object.values(state.marketingChannelPerformance).flat()}
+                loading={state.loading} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Lightbulb className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Marketing Analysis Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab to view marketing analysis
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* New Team Performance Tab */}
+          <TabsContent value="team-performance" className="space-y-6">
+            {hasComparisonData ? (
+              <TeamPerformanceSection 
+                teamPerformanceData={Object.values(state.teamPerformance)} 
+                loading={state.loading} 
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Lightbulb className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Team Performance Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab to view team performance analytics
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* New Predictive Analytics Tab */}
+          <TabsContent value="predictive-analytics" className="space-y-6">
+            {hasComparisonData ? (
+              <PredictiveAnalyticsSection 
+                predictiveAnalyticsData={Object.values(state.predictiveModels)} 
+                loading={state.loading} 
+                selectedEventIds={selectedEventIds}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <Lightbulb className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    No Predictive Analysis Data
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Select events in the Setup tab to view predictive analytics
+                  </p>
+                  <Button onClick={() => setActiveTab('selector')}>
+                    Select Events
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
         </Tabs>
 
         {/* Bottom Actions */}
-        {hasComparison && (
+        {hasComparisonData && (
           <Card className="mt-8">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground mb-1">
-                    Comparison Analysis Complete
+                    Analysis Complete
                   </h3>
                   <p className="text-muted-foreground">
-                    {currentComparison?.events.length} events analyzed • Generated {new Date(currentComparison?.created_at || '').toLocaleDateString()}
+                    {state.comparisonData.length} event{state.comparisonData.length === 1 ? '' : 's'} analyzed 
+                    {state.lastRefresh ? `• Generated ${new Date(state.lastRefresh).toLocaleDateString()}` : ''}
                   </p>
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Button variant="outline" onClick={refreshAllData} disabled={loading}>
-                    <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                    Refresh Data
+                  <Button variant="outline" onClick={refreshData} disabled={state.loading || state.refreshing}>
+                    <RefreshCw className={`h-4 w-4 mr-2 ${state.loading || state.refreshing ? 'animate-spin' : ''}`} />
+                    {state.refreshing ? 'Refreshing...' : 'Refresh Data'}
                   </Button>
                   
-                  <Button variant="outline" onClick={clearAnalysis}>
+                  <Button variant="outline" onClick={clearComparison}>
                     <X className="h-4 w-4 mr-2" />
                     Clear Analysis
                   </Button>

@@ -10,7 +10,12 @@ import {
   VenuePerformanceAnalysis,
   MarketPositioning,
   SeasonalAnalysis,
-  PredictiveModeling
+  PredictiveModeling,
+  MarketPositioningData,
+  SeasonalTrendData,
+  VenuePerformanceData,
+  PricingAnalyticsData,
+  MarketingChannelPerformanceData
 } from '../services/comparativeAnalyticsService';
 
 interface ComparisonState {
@@ -21,9 +26,11 @@ interface ComparisonState {
   performanceScores: Record<string, PerformanceScore>;
   successFactors: SuccessFactorAnalysis | null;
   venueAnalysis: Record<string, VenuePerformanceAnalysis>;
-  marketPositioning: Record<string, MarketPositioning>;
-  seasonalAnalysis: Record<string, SeasonalAnalysis>;
+  marketPositioning: Record<string, MarketPositioningData>;
+  seasonalAnalysis: Record<string, SeasonalTrendData>;
   predictiveModels: Record<string, PredictiveModeling>;
+  pricingAnalytics: Record<string, PricingAnalyticsData>;
+  marketingChannelPerformance: Record<string, MarketingChannelPerformanceData[]>;
   
   // UI State
   loading: boolean;
@@ -80,6 +87,13 @@ interface UseComparativeAnalyticsReturn {
   // Venue & Market Analysis
   analyzeVenuePerformance: (venueId: string) => Promise<void>;
   analyzeMarketPositioning: (eventId: string) => Promise<void>;
+  fetchSeasonalTrendData: () => Promise<void>;
+  fetchVenueComparisonData: (venueId?: string) => Promise<void>;
+  fetchMarketPositioningData: (eventId: string) => Promise<void>;
+  
+  // Pricing & Marketing Analytics
+  fetchPricingAnalytics: (eventId: string) => Promise<void>;
+  fetchMarketingChannelPerformance: (eventId: string) => Promise<void>;
   
   // Seasonal & Predictive Analysis
   fetchSeasonalAnalysis: (eventCategory: string) => Promise<void>;
@@ -142,6 +156,8 @@ export const useComparativeAnalytics = (): UseComparativeAnalyticsReturn => {
     marketPositioning: {},
     seasonalAnalysis: {},
     predictiveModels: {},
+    pricingAnalytics: {},
+    marketingChannelPerformance: {},
     
     loading: false,
     error: null,
@@ -240,7 +256,12 @@ export const useComparativeAnalytics = (): UseComparativeAnalyticsReturn => {
       comparisonData: [],
       timePeriodComparison: null,
       performanceScores: {},
-      successFactors: null
+      successFactors: null,
+      marketPositioning: {},
+      seasonalAnalysis: {},
+      venueAnalysis: {},
+      pricingAnalytics: {},
+      marketingChannelPerformance: {},
     });
     toast.success('Comparison cleared');
   }, [updateState]);
@@ -516,6 +537,8 @@ export const useComparativeAnalytics = (): UseComparativeAnalyticsReturn => {
       marketPositioning: {},
       seasonalAnalysis: {},
       predictiveModels: {},
+      pricingAnalytics: {},
+      marketingChannelPerformance: {},
       lastRefresh: null
     });
     toast.success('Cache cleared');

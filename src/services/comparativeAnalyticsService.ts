@@ -317,6 +317,94 @@ export interface PredictiveModeling {
   }[];
 }
 
+export interface MarketPositioningData {
+  eventName: string;
+  marketShare: number; // Percentage
+  competitors: { name: string; marketShare: number; }[];
+  avgTicketPrice: number;
+  competitorAvgTicketPrice: number;
+  marketGrowth: number; // Percentage
+  keyDifferentiators: string[];
+}
+
+export interface SeasonalTrendData {
+  year: number;
+  quarter: number;
+  season: 'Spring' | 'Summer' | 'Autumn' | 'Winter';
+  eventCount: number;
+  avgAttendance: number;
+  totalRevenue: number;
+  peakMonth: string;
+  offPeakMonth: string;
+}
+
+export interface VenuePerformanceData {
+  venueName: string;
+  totalEventsHosted: number;
+  avgAttendancePerEvent: number;
+  avgRevenuePerEvent: number;
+  utilizationRate: number; // Percentage
+  attendeeSatisfactionScore: number; // 1-5 scale
+  operationalEfficiencyScore: number; // 1-100 scale
+  recommendedEventTypes: string[];
+  capacity: number;
+  location: string;
+}
+
+export interface PricingAnalyticsData {
+  eventId: string;
+  eventName: string;
+  pricingStrategy: string; // e.g., 'Dynamic', 'Fixed', 'Early Bird'
+  avgTicketPrice: number;
+  ticketsSoldAtAvgPrice: number;
+  revenueFromPricing: number;
+  conversionRateAtPrice: number; // Percentage
+  priceElasticity: number; // How demand changes with price
+  competitivePricing: { competitor: string; avgPrice: number; }[];
+  pricingRecommendations: string[];
+}
+
+export interface MarketingChannelPerformanceData {
+  eventId: string;
+  eventName: string;
+  channel: string; // e.g., 'Email', 'Social Media', 'Paid Ads', 'Organic Search'
+  impressions: number;
+  clicks: number;
+  conversions: number; // Ticket purchases
+  cost: number;
+  roi: number; // Return on Investment
+  cpa: number; // Cost Per Acquisition
+  engagementRate: number; // Percentage
+  recommendations: string[];
+}
+
+export interface TeamPerformanceData {
+  teamMemberId: string;
+  name: string;
+  role: string;
+  eventsAssigned: number;
+  avgRating: number; // For staff, e.g., attendee satisfaction with their service
+  ticketsSold?: number; // For sales agents
+  revenueGenerated?: number; // For sales agents
+  checkInsProcessed?: number; // For check-in staff
+  efficiencyScore: number; // 1-100
+  productivityMetrics: Record<string, number>; // e.g., 'hoursWorked', 'tasksCompleted'
+  incidentsReported: number;
+  recommendations: string[];
+}
+
+export interface PredictiveAnalyticsData {
+  eventId: string;
+  eventName: string;
+  forecastedTicketSales: { date: string; sales: number; }[];
+  confidenceInterval: { lower: number; upper: number; };
+  predictedAttendance: number;
+  forecastedRevenue: number;
+  riskFactors: string[]; // e.g., 'Weather', 'Competitor Event', 'Economic Downturn'
+  optimizationRecommendations: string[];
+  historicalPatterns: string[];
+}
+
 class ComparativeAnalyticsService {
   // Generate mock comparative analytics data
   private generateMockEventMetrics(eventId: string): EventComparisonMetrics {
@@ -1130,6 +1218,251 @@ class ComparativeAnalyticsService {
     }
     return JSON.stringify(data);
   }
+
+  // Mock Data Generators for Market & Venue Analysis
+  private generateMockMarketPositioningData(eventName: string): MarketPositioningData {
+    const competitors = [
+      { name: 'Competitor A', marketShare: parseFloat((Math.random() * 10 + 5).toFixed(2)) },
+      { name: 'Competitor B', marketShare: parseFloat((Math.random() * 8 + 3).toFixed(2)) },
+      { name: 'Competitor C', marketShare: parseFloat((Math.random() * 7 + 2).toFixed(2)) },
+    ];
+    const totalCompetitorShare = competitors.reduce((sum, c) => sum + c.marketShare, 0);
+
+    return {
+      eventName,
+      marketShare: parseFloat((Math.random() * 20 + 10).toFixed(2)),
+      competitors,
+      avgTicketPrice: parseFloat((Math.random() * 50 + 30).toFixed(2)),
+      competitorAvgTicketPrice: parseFloat((Math.random() * 45 + 25).toFixed(2)),
+      marketGrowth: parseFloat((Math.random() * 5 + 1).toFixed(2)),
+      keyDifferentiators: ['Unique themes', 'Experienced instructors', 'Loyalty program'],
+    };
+  }
+
+  private generateMockSeasonalTrendData(year: number, quarter: number, season: 'Spring' | 'Summer' | 'Autumn' | 'Winter'): SeasonalTrendData {
+    return {
+      year,
+      quarter,
+      season,
+      eventCount: Math.floor(Math.random() * 15) + 5,
+      avgAttendance: Math.floor(Math.random() * 200) + 50,
+      totalRevenue: parseFloat((Math.random() * 50000 + 10000).toFixed(2)),
+      peakMonth: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Math.floor(Math.random() * 12)],
+      offPeakMonth: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][Math.floor(Math.random() * 12)],
+    };
+  }
+
+  private generateMockVenuePerformanceData(venueName: string): VenuePerformanceData {
+    return {
+      venueName,
+      totalEventsHosted: Math.floor(Math.random() * 50) + 10,
+      avgAttendancePerEvent: Math.floor(Math.random() * 300) + 50,
+      avgRevenuePerEvent: parseFloat((Math.random() * 10000 + 2000).toFixed(2)),
+      utilizationRate: parseFloat((Math.random() * 30 + 50).toFixed(2)),
+      attendeeSatisfactionScore: parseFloat((Math.random() * 1 + 4).toFixed(1)),
+      operationalEfficiencyScore: parseFloat((Math.random() * 30 + 70).toFixed(2)),
+      recommendedEventTypes: ['Dance Workshops', 'Music Concerts', 'Community Gatherings'],
+      capacity: Math.floor(Math.random() * 1000) + 200,
+      location: `${Math.floor(Math.random() * 180) - 90}° N, ${Math.floor(Math.random() * 360) - 180}° E`,
+    };
+  }
+
+  private mockMarketPositioningData: MarketPositioningData[] = [];
+  private mockSeasonalTrendData: SeasonalTrendData[] = [];
+  private mockVenuePerformanceData: VenuePerformanceData[] = [];
+
+  private getMarketPositioningData = async (eventId: string): Promise<MarketPositioningData> => {
+    console.log(`Fetching market positioning data for event: ${eventId}`);
+    // In a real application, this would fetch data from a backend
+    // For now, return a random mock data or specific one based on eventId if needed
+    return new Promise((resolve) =>
+      setTimeout(() => resolve(this.mockMarketPositioningData[Math.floor(Math.random() * this.mockMarketPositioningData.length)]), 500)
+    );
+  };
+
+  private getSeasonalTrendData = async (): Promise<SeasonalTrendData[]> => {
+    console.log('Fetching seasonal trend data');
+    // In a real application, this would fetch data from a backend
+    return new Promise((resolve) => setTimeout(() => resolve(this.mockSeasonalTrendData), 500));
+  };
+
+  private getVenuePerformanceData = async (venueId?: string): Promise<VenuePerformanceData[]> => {
+    console.log(`Fetching venue performance data for venue: ${venueId || 'all'}`);
+    // In a real application, this would fetch data from a backend
+    // For now, return all mock data or filter by venueId if needed
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        if (venueId) {
+          resolve(this.mockVenuePerformanceData.filter(v => v.venueName.replace(/\s/g, '').toLowerCase().includes(venueId.toLowerCase())));
+        } else {
+          resolve(this.mockVenuePerformanceData);
+        }
+      }, 500);
+    });
+  };
+
+  private generateMockPricingAnalyticsData = (eventId: string, eventName: string): PricingAnalyticsData => {
+    const pricingStrategies = ['Dynamic', 'Fixed', 'Early Bird', 'Tiered'];
+    const competitivePricing = [
+      { competitor: 'Eventbrite', avgPrice: parseFloat((Math.random() * 40 + 20).toFixed(2)) },
+      { competitor: 'Meetup', avgPrice: parseFloat((Math.random() * 30 + 15).toFixed(2)) },
+    ];
+    const avgTicketPrice = parseFloat((Math.random() * 60 + 20).toFixed(2));
+    const ticketsSoldAtAvgPrice = Math.floor(Math.random() * 500) + 50;
+    const revenueFromPricing = avgTicketPrice * ticketsSoldAtAvgPrice;
+
+    return {
+      eventId,
+      eventName,
+      pricingStrategy: pricingStrategies[Math.floor(Math.random() * pricingStrategies.length)],
+      avgTicketPrice,
+      ticketsSoldAtAvgPrice,
+      revenueFromPricing,
+      conversionRateAtPrice: parseFloat((Math.random() * 5 + 1).toFixed(2)),
+      priceElasticity: parseFloat((Math.random() * 0.5 + 0.5).toFixed(2)), // 0.5 to 1.0
+      competitivePricing,
+      pricingRecommendations: ['Adjust pricing based on demand', 'Offer bundle deals', 'Introduce tiered pricing'],
+    };
+  };
+
+  private generateMockMarketingChannelPerformanceData = (eventId: string, eventName: string): MarketingChannelPerformanceData => {
+    const channels = ['Email', 'Social Media', 'Paid Ads', 'Organic Search', 'Partnerships'];
+    const channel = channels[Math.floor(Math.random() * channels.length)];
+    const impressions = Math.floor(Math.random() * 100000) + 10000;
+    const clicks = Math.floor(impressions * (Math.random() * 0.05 + 0.01)); // 1-5% CTR
+    const conversions = Math.floor(clicks * (Math.random() * 0.1 + 0.01)); // 1-10% conversion from clicks
+    const cost = parseFloat((Math.random() * 2000 + 500).toFixed(2));
+    const roi = conversions > 0 ? parseFloat(((revenueFromPricing - cost) / cost * 100).toFixed(2)) : 0;
+    const cpa = conversions > 0 ? parseFloat((cost / conversions).toFixed(2)) : cost; // If no conversions, CPA is just cost
+
+    return {
+      eventId,
+      eventName,
+      channel,
+      impressions,
+      clicks,
+      conversions,
+      cost,
+      roi,
+      cpa,
+      engagementRate: parseFloat((Math.random() * 10 + 1).toFixed(2)),
+      recommendations: [`Optimize ${channel} ads for higher CTR`, `Allocate more budget to high ROI channels`],
+    };
+  };
+
+  private mockPricingAnalyticsData: PricingAnalyticsData[] = [
+    this.generateMockPricingAnalyticsData('event-1', 'Summer Dance Fest'),
+    this.generateMockPricingAnalyticsData('event-2', 'Winter Jazz Gala'),
+    this.generateMockPricingAnalyticsData('event-3', 'Spring Yoga Retreat'),
+  ];
+
+  private mockMarketingChannelPerformanceData: MarketingChannelPerformanceData[] = [
+    this.generateMockMarketingChannelPerformanceData('event-1', 'Summer Dance Fest'),
+    this.generateMockMarketingChannelPerformanceData('event-1', 'Summer Dance Fest'),
+    this.generateMockMarketingChannelPerformanceData('event-2', 'Winter Jazz Gala'),
+    this.generateMockMarketingChannelPerformanceData('event-3', 'Spring Yoga Retreat'),
+    this.generateMockMarketingChannelPerformanceData('event-3', 'Spring Yoga Retreat'),
+  ];
+
+  private getPricingAnalytics = async (eventId: string): Promise<PricingAnalyticsData> => {
+    console.log(`Fetching pricing analytics for event: ${eventId}`);
+    return new Promise((resolve) =>
+      setTimeout(() => resolve(this.mockPricingAnalyticsData.find(d => d.eventId === eventId) || this.mockPricingAnalyticsData[0]), 500)
+    );
+  };
+
+  private getMarketingChannelPerformance = async (eventId: string): Promise<MarketingChannelPerformanceData[]> => {
+    console.log(`Fetching marketing channel performance for event: ${eventId}`);
+    return new Promise((resolve) =>
+      setTimeout(() => resolve(this.mockMarketingChannelPerformanceData.filter(d => d.eventId === eventId)), 500)
+    );
+  };
+
+  private generateMockTeamPerformanceData = (teamMemberId: string, name: string, role: string): TeamPerformanceData => {
+    const baseEfficiency = parseFloat((Math.random() * 20 + 70).toFixed(2)); // 70-90
+    const incidents = Math.floor(Math.random() * 3);
+    const events = Math.floor(Math.random() * 15) + 1;
+
+    let specificMetrics: any = {};
+    if (role === 'Sales Agent') {
+      specificMetrics = {
+        ticketsSold: Math.floor(Math.random() * 1000) + 100,
+        revenueGenerated: parseFloat((Math.random() * 20000 + 5000).toFixed(2)),
+      };
+    } else if (role === 'Event Staff') {
+      specificMetrics = {
+        checkInsProcessed: Math.floor(Math.random() * 2000) + 500,
+      };
+    }
+
+    return {
+      teamMemberId,
+      name,
+      role,
+      eventsAssigned: events,
+      avgRating: parseFloat((Math.random() * 1 + 4).toFixed(1)), // 4.0-5.0
+      efficiencyScore: baseEfficiency - (incidents * 5), // Deduct for incidents
+      productivityMetrics: {
+        hoursWorked: parseFloat((Math.random() * 160 + 40).toFixed(1)),
+        tasksCompleted: Math.floor(Math.random() * 50) + 10,
+      },
+      incidentsReported: incidents,
+      recommendations: [`Provide training on ${role} best practices`, `Recognize ${name} for high performance`],
+      ...specificMetrics,
+    };
+  };
+
+  private generateMockPredictiveAnalyticsData = (eventId: string, eventName: string): PredictiveAnalyticsData => {
+    const forecastedSales: { date: string; sales: number; }[] = [];
+    let currentSales = Math.floor(Math.random() * 1000) + 500; // Base sales
+    for (let i = 0; i < 7; i++) { // Forecast for next 7 days
+      currentSales += Math.floor(Math.random() * 100) - 20; // Daily fluctuation
+      forecastedSales.push({
+        date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        sales: Math.max(0, currentSales),
+      });
+    }
+
+    const predictedAttendance = Math.floor(forecastedSales[forecastedSales.length - 1].sales * (0.8 + Math.random() * 0.2)); // 80-100% of forecasted sales
+    const forecastedRevenue = parseFloat((predictedAttendance * (Math.random() * 50 + 30)).toFixed(2));
+
+    return {
+      eventId,
+      eventName,
+      forecastedTicketSales: forecastedSales,
+      confidenceInterval: { lower: 0.8 * forecastedRevenue, upper: 1.2 * forecastedRevenue },
+      predictedAttendance,
+      forecastedRevenue,
+      riskFactors: ['Bad weather', 'New competitor event', 'Low early bird sales'].filter(() => Math.random() > 0.5),
+      optimizationRecommendations: ['Run targeted ad campaign', 'Offer last-minute discounts', 'Engage influencers'],
+      historicalPatterns: ['High sales 2 weeks before event', 'Weekend sales spike'],
+    };
+  };
+
+  private mockTeamPerformanceData: TeamPerformanceData[] = [
+    this.generateMockTeamPerformanceData('agent-1', 'Alice Smith', 'Sales Agent'),
+    this.generateMockTeamPerformanceData('staff-1', 'Bob Johnson', 'Event Staff'),
+    this.generateMockTeamPerformanceData('agent-2', 'Charlie Brown', 'Sales Agent'),
+    this.generateMockTeamPerformanceData('staff-2', 'Diana Prince', 'Event Staff'),
+  ];
+
+  private mockPredictiveAnalyticsData: PredictiveAnalyticsData[] = [
+    this.generateMockPredictiveAnalyticsData('event-1', 'Summer Dance Fest'),
+    this.generateMockPredictiveAnalyticsData('event-2', 'Winter Jazz Gala'),
+    this.generateMockPredictiveAnalyticsData('event-3', 'Spring Yoga Retreat'),
+  ];
+
+  private getTeamPerformance = async (): Promise<TeamPerformanceData[]> => {
+    console.log('Fetching team performance data');
+    return new Promise((resolve) => setTimeout(() => resolve(this.mockTeamPerformanceData), 500));
+  };
+
+  private getPredictiveAnalytics = async (eventId: string): Promise<PredictiveAnalyticsData> => {
+    console.log(`Fetching predictive analytics for event: ${eventId}`);
+    return new Promise((resolve) =>
+      setTimeout(() => resolve(this.mockPredictiveAnalyticsData.find(d => d.eventId === eventId) || this.mockPredictiveAnalyticsData[0]), 500)
+    );
+  };
 }
 
 export const comparativeAnalyticsService = new ComparativeAnalyticsService(); 

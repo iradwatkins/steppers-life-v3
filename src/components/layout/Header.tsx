@@ -31,7 +31,7 @@ const Header = () => {
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
-    { name: 'Magazine', href: '/magazine' },
+    { name: 'Blog', href: '/blog' },
   ];
 
   const isActiveLink = (href: string) => {
