@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { reviewService, Review, ReviewStats, CreateReviewRequest, UpdateReviewRequest, OrganizerReplyRequest } from '@/services/reviewService';
 import { useAuth } from '@/hooks/useAuth';
 
-export const useReviews = (eventId: string) => {
+export const useReviews = (entityType?: string, entityId?: string) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewStats, setReviewStats] = useState<ReviewStats>({
     averageRating: 0,
@@ -11,17 +11,22 @@ export const useReviews = (eventId: string) => {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<'recent' | 'rating'>('recent');
+  const [sortBy, setSortBy] = useState<'recent' | 'rating' | 'helpful'>('recent');
   const { user } = useAuth();
 
   const loadReviews = async () => {
+    if (!entityType || !entityId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
       
       const [reviewsData, statsData] = await Promise.all([
-        reviewService.getEventReviews(eventId, sortBy),
-        reviewService.getEventReviewStats(eventId)
+        reviewService.getReviews(entityType, entityId, sortBy),
+        reviewService.getReviewStats(entityType, entityId)
       ]);
       
       setReviews(reviewsData);
@@ -34,18 +39,58 @@ export const useReviews = (eventId: string) => {
   };
 
   useEffect(() => {
-    if (eventId) {
+    if (entityType && entityId) {
       loadReviews();
     }
-  }, [eventId, sortBy]);
+  }, [entityType, entityId, sortBy]);
 
   const canUserReview = async (): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !entityType || !entityId) return false;
     
     try {
-      return await reviewService.canUserReview(eventId, user.id);
+      return await reviewService.canUserReview(entityType, entityId, user.id);
     } catch (err) {
       return false;
+    }
+  };
+
+  const submitReview = async (rating: number, reviewText?: string): Promise<void> => {
+    if (!user) {
+      throw new Error('Must be logged in to submit a review');
+    }
+
+    if (!entityType || !entityId) {
+      throw new Error('Entity type and ID are required');
+    }
+
+    try {
+      await reviewService.submitReview(
+        entityType,
+        entityId,
+        rating,
+        reviewText,
+        user.id,
+        user.email || 'Anonymous User',
+        user.email || ''
+      );
+      
+      // Reload reviews to show the new review
+      await loadReviews();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to submit review');
+    }
+  };
+
+  const voteOnReview = async (reviewId: string, isHelpful: boolean): Promise<void> => {
+    if (!user) {
+      throw new Error('Must be logged in to vote on reviews');
+    }
+
+    try {
+      await reviewService.voteOnReview(reviewId, user.id, isHelpful);
+      await loadReviews();
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to vote on review');
     }
   };
 
@@ -117,7 +162,7 @@ export const useReviews = (eventId: string) => {
     }
   };
 
-  const changeSortOrder = (newSortBy: 'recent' | 'rating') => {
+  const changeSortOrder = (newSortBy: 'recent' | 'rating' | 'helpful') => {
     setSortBy(newSortBy);
   };
 
@@ -133,6 +178,15 @@ export const useReviews = (eventId: string) => {
     return daysSinceCreation <= 30; // 30-day edit window
   };
 
+  // Generic methods that can work with any entity type
+  const getReviews = async (type: string, id: string, sort: 'recent' | 'rating' | 'helpful' = 'recent'): Promise<Review[]> => {
+    return await reviewService.getReviews(type, id, sort);
+  };
+
+  const getReviewStats = async (type: string, id: string): Promise<ReviewStats> => {
+    return await reviewService.getReviewStats(type, id);
+  };
+
   return {
     reviews,
     reviewStats,
@@ -140,6 +194,8 @@ export const useReviews = (eventId: string) => {
     error,
     sortBy,
     canUserReview,
+    submitReview,
+    voteOnReview,
     createReview,
     updateReview,
     deleteReview,
@@ -148,6 +204,8 @@ export const useReviews = (eventId: string) => {
     changeSortOrder,
     getUserReview,
     canEditReview,
+    getReviews,
+    getReviewStats,
     refresh: loadReviews
   };
 }; 

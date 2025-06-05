@@ -329,8 +329,10 @@ const Profile = () => {
                   <BookOpen className="h-12 w-12 text-text-secondary mx-auto mb-4" />
                   <h3 className="font-semibold text-text-primary mb-2">Instructor Dashboard</h3>
                   <p className="text-text-secondary mb-6">Manage your classes, view student enrollment, and access teaching resources.</p>
-                  <Button className="bg-brand-primary hover:bg-brand-primary-hover">
-                    Go to Instructor Tools
+                  <Button asChild className="bg-brand-primary hover:bg-brand-primary-hover">
+                    <Link to="/instructor/dashboard">
+                      Go to Instructor Tools
+                    </Link>
                   </Button>
                 </div>
               </TabsContent>

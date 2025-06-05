@@ -14,6 +14,7 @@ import {
   getDistanceText 
 } from '@/services/locationSearchService';
 import FollowButton from '@/components/FollowButton';
+import { Link } from 'react-router-dom';
 
 const Community = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -335,7 +336,14 @@ const Community = () => {
                     <div className="p-6">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-lg text-text-primary">{business.name}</h3>
+                          <Link 
+                            to={`/stores/${business.id}`}
+                            className="hover:text-brand-primary transition-colors"
+                          >
+                            <h3 className="font-semibold text-lg text-text-primary hover:text-brand-primary">
+                              {business.name}
+                            </h3>
+                          </Link>
                           <Badge variant="secondary" className="text-xs">{business.category}</Badge>
                         </div>
                         <div className="flex items-center gap-3">
@@ -500,9 +508,19 @@ const Community = () => {
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-lg text-text-primary">{business.name}</h3>
+                            <Link 
+                              to={`/stores/${business.id}`}
+                              className="hover:text-brand-primary transition-colors"
+                            >
+                              <h3 className="font-semibold text-lg text-text-primary hover:text-brand-primary">
+                                {business.name}
+                              </h3>
+                            </Link>
                             {business.verified && (
-                              <CheckCircle className="w-4 h-4 text-green-500" />
+                              <Badge variant="outline" className="text-xs">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Verified
+                              </Badge>
                             )}
                           </div>
                           <Badge variant="secondary" className="text-xs">{business.category}</Badge>
@@ -536,19 +554,32 @@ const Community = () => {
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center text-text-secondary">
-                          <Phone className="w-3 h-3 mr-2" />
-                          {business.phone}
-                        </div>
-                        {business.website && (
-                          <div className="flex items-center text-text-secondary">
-                            <Globe className="w-3 h-3 mr-2" />
-                            {business.website}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-sm text-text-secondary">
+                            <div className="flex items-center">
+                              <Phone className="w-4 h-4 mr-1" />
+                              {business.phone}
+                            </div>
+                            {business.website && (
+                              <div className="flex items-center">
+                                <Globe className="w-4 h-4 mr-1" />
+                                <a 
+                                  href={business.website} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="hover:text-brand-primary"
+                                >
+                                  Website
+                                </a>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <div className="flex items-center text-text-secondary">
-                          <Clock className="w-3 h-3 mr-2" />
-                          {business.hours}
+                          <Link 
+                            to={`/stores/${business.id}`}
+                            className="text-sm text-brand-primary hover:text-brand-primary-hover font-medium"
+                          >
+                            View Details
+                          </Link>
                         </div>
                       </div>
 

@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
-import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare, Smartphone, Edit } from 'lucide-react';
+import { Users, FileText, Calendar, Settings, Shield, AlertTriangle, CheckCircle, Info, PlusSquare, Smartphone, Edit, Store } from 'lucide-react';
 import GitHubSync from '@/components/GitHubSync';
 import PWAAnalyticsDashboard from '@/components/admin/PWAAnalyticsDashboard';
 import { Link } from 'react-router-dom';
@@ -220,6 +220,17 @@ const Admin = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-xs text-text-secondary">Create, edit, and manage blog posts including featured content and embeds.</p>
+                  </CardContent>
+                </Card>
+              </Link>
+              <Link to="/admin/stores">
+                <Card className="hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Store Directory</CardTitle>
+                    <Store className="h-4 w-4 text-text-secondary" />
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-xs text-text-secondary">Manage store categories, moderate listings, and oversee reviews in the community directory.</p>
                   </CardContent>
                 </Card>
               </Link>

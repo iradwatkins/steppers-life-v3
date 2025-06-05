@@ -9,6 +9,7 @@ import AppLayout from "./components/layout/AppLayout";
 import PWALayout from "./components/layout/PWALayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Index from "./pages/Index";
+import UserDashboard from "./pages/UserDashboard";
 import Events from "./pages/Events";
 import Classes from "./pages/Classes";
 import Community from "./pages/Community";
@@ -61,6 +62,11 @@ import BlogPage from "./pages/BlogPage";
 import BlogPostPage from "./pages/BlogPostPage";
 import BlogManagementPage from "./pages/admin/BlogManagementPage";
 
+// Store Directory imports
+import { SubmitStore } from "./pages/stores/SubmitStore";
+import StoreDetailPage from "./pages/stores/StoreDetailPage";
+import StoreDirectoryAdminPage from "./pages/admin/StoreDirectoryAdminPage";
+
 // PWA-specific imports
 import PWALoginPage from "./pages/pwa/PWALoginPage";
 import PWADashboardPage from "./pages/pwa/PWADashboardPage";
@@ -78,6 +84,14 @@ import PWASeatingPage from "./pages/pwa/PWASeatingPage";
 // Import react-grid-layout and react-resizable CSS
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
+
+// Instructor imports
+import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
+
+// Epic M imports
+import VanityUrlManagementPage from "./pages/VanityUrlManagementPage";
+import AdminVanityUrlPage from "./pages/admin/AdminVanityUrlPage";
+import AdminEmailManagementPage from "./pages/admin/AdminEmailManagementPage";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +128,14 @@ const App = () => (
           {/* Protected routes with layout */}
           <Route path="/" element={<AppLayout />}>
             <Route index element={<Index />} />
+            
+            {/* User Dashboard Route */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            } />
+            
             <Route path="/events" element={<Events />} />
             <Route path="/venue/:venueId" element={<VenueDetailPage />} />
             <Route path="/classes" element={<Classes />} />
@@ -138,6 +160,39 @@ const App = () => (
             <Route path="/admin/blog" element={
               <ProtectedRoute>
                 <BlogManagementPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin store directory management routes */}
+            <Route path="/admin/stores" element={
+              <ProtectedRoute>
+                <StoreDirectoryAdminPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Epic M - Admin management routes */}
+            <Route path="/admin/vanity-urls" element={
+              <ProtectedRoute>
+                <AdminVanityUrlPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/email-management" element={
+              <ProtectedRoute>
+                <AdminEmailManagementPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Instructor routes */}
+            <Route path="/instructor/dashboard" element={
+              <ProtectedRoute>
+                <InstructorDashboardPage />
+              </ProtectedRoute>
+            } />
+            
+            {/* Epic M - Vanity URL management */}
+            <Route path="/vanity-urls" element={
+              <ProtectedRoute>
+                <VanityUrlManagementPage />
               </ProtectedRoute>
             } />
             
@@ -347,6 +402,14 @@ const App = () => (
                 <AccountSettings />
               </ProtectedRoute>
             } />
+
+            {/* Store Directory Routes */}
+            <Route path="/stores/submit" element={
+              <ProtectedRoute>
+                <SubmitStore />
+              </ProtectedRoute>
+            } />
+            <Route path="/stores/:storeId" element={<StoreDetailPage />} />
           </Route>
           
           {/* Catch-all route */}

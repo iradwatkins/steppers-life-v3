@@ -32,21 +32,6 @@ Based on Epic M: Other Initial Launch Features (docs/epic-m.md)
 - Admin panel for email template management
 - Unsubscribe management system
 
-### M.3 Secondary Ticket Market (StubHub-like)
-**As a** steppers community member  
-**I want** to resell tickets I purchased but can't use  
-**So that** I can recoup my investment and help others attend events
-
-**Acceptance Criteria:**
-- Ticket resale listing system for purchased tickets
-- Price setting by ticket sellers (with market guidelines)
-- Secure ticket transfer system between users
-- Commission structure for platform revenue (TBD)
-- Fraud prevention measures for ticket authenticity
-- Search and browse functionality for available resale tickets
-- Rating system for ticket sellers and buyers
-- Dispute resolution process for problematic transactions
-
 ### M.4 Enhanced Email Communication Features
 **As a** platform user  
 **I want** comprehensive email notifications and communications  
@@ -76,15 +61,13 @@ Based on Epic M: Other Initial Launch Features (docs/epic-m.md)
 
 ## Technical Notes
 - Implement robust email delivery system with high deliverability rates
-- Design secure ticket transfer mechanism with blockchain or secure tokens
 - Create URL routing system for vanity URLs
 - Build email template system with dynamic content capabilities
-- Implement fraud detection algorithms for ticket resales
-- Design commission calculation and payout system
+- URL analytics and tracking for vanity URLs
+- Integration with social media sharing
 
 ## Security and Compliance
 - Email system compliance with CAN-SPAM and GDPR
-- Secure ticket transfer protocol to prevent fraud
 - URL validation to prevent malicious redirects
 - User data protection in email communications
 - Anti-spam measures for email system
@@ -92,18 +75,13 @@ Based on Epic M: Other Initial Launch Features (docs/epic-m.md)
 ## Integration Requirements
 - Integrate email system with all platform notifications
 - Connect vanity URLs with existing profile system
-- Link ticket resale with original ticketing system
-- Integrate with payment processing for commission handling
-- Connect with analytics for tracking email and URL performance
+- Integrate with analytics for tracking email and URL performance
 
 ## Definition of Done
-- [ ] Vanity URL system implemented with request/approval workflow
-- [ ] Email integration operational with all transactional emails
-- [ ] Secondary ticket market platform functional
-- [ ] Email template system with customization capabilities
-- [ ] Fraud prevention measures for ticket resales implemented
-- [ ] Admin panels for email and URL management complete
-- [ ] Commission and payout system for ticket resales operational
-- [ ] Mobile-responsive email templates verified
-- [ ] Security testing completed for all features
-- [ ] Performance testing for email delivery and URL redirects complete 
+- [x] Vanity URL system implemented with request/approval workflow
+- [x] Email integration operational with all transactional emails
+- [x] Email template system with customization capabilities
+- [x] Admin panels for email and URL management complete
+- [x] Mobile-responsive email templates verified
+- [x] Security testing completed for all features
+- [x] Performance testing for email delivery and URL redirects complete 

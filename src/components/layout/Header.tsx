@@ -34,6 +34,14 @@ const Header = () => {
     { name: 'Blog', href: '/blog' },
   ];
 
+  const userNavigation = [
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Events', href: '/events' },
+    { name: 'Classes', href: '/classes' },
+    { name: 'Community', href: '/community' },
+    { name: 'Blog', href: '/blog' },
+  ];
+
   const isActiveLink = (href: string) => {
     if (href === '/') {
       return location.pathname === '/';
@@ -52,7 +60,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navigation.map((item) => (
+            {(user ? userNavigation : navigation).map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -95,7 +103,7 @@ const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="#" className="flex items-center">
+                      <Link to="/instructor/dashboard" className="flex items-center">
                         <ListPlus className="mr-2 h-4 w-4" />
                         <span>List Class</span>
                       </Link>
@@ -194,7 +202,7 @@ const Header = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-border-default">
             <nav className="flex flex-col space-y-2">
-              {navigation.map((item) => (
+              {(user ? userNavigation : navigation).map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
@@ -262,7 +270,7 @@ const Header = () => {
                         <span>Post Event</span>
                       </Link>
                       <Link
-                        to="#"
+                        to="/instructor/dashboard"
                         className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
                         onClick={() => setIsMenuOpen(false)}
                       >
