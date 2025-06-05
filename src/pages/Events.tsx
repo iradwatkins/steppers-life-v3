@@ -51,7 +51,7 @@ const Events = () => {
   const mockEvents = [
     {
       id: 1,
-      title: "Chicago Step Championship",
+      title: "Chicago Step Championship 2024",
       date: "2024-07-15",
       time: "7:00 PM",
       location: "Chicago Cultural Center",
@@ -63,10 +63,10 @@ const Events = () => {
       attendees: 156,
       capacity: 200,
       instructor: "Marcus Johnson",
-      skillLevel: "Intermediate",
-      tags: ["Championship", "Competition", "Prizes"],
+      skillLevel: "Advanced",
+      tags: ["Championship", "Competition", "Prizes", "Professional"],
       rating: 4.8,
-      description: "Annual championship featuring the best Chicago steppers from across the city.",
+      description: "The annual premier stepping championship featuring the best dancers from across the Midwest. Multiple divisions with cash prizes and performance opportunities.",
       organizer: "Chicago Step Society",
       coordinates: { lat: 41.8836, lng: -87.6270 },
       featured: true,
@@ -74,7 +74,7 @@ const Events = () => {
     },
     {
       id: 2,
-      title: "Beginner's Step Workshop",
+      title: "Beginner's Step Workshop - Foundation Building",
       date: "2024-07-20",
       time: "2:00 PM",
       location: "South Shore Cultural Center",
@@ -87,9 +87,9 @@ const Events = () => {
       capacity: 50,
       instructor: "Lisa Thompson",
       skillLevel: "Beginner",
-      tags: ["Beginner", "Workshop", "Learning"],
+      tags: ["Beginner", "Workshop", "Learning", "Fundamentals"],
       rating: 4.9,
-      description: "Perfect for those new to Chicago stepping. Learn the basic steps and fundamentals.",
+      description: "Perfect introduction to Chicago stepping for newcomers. Learn basic steps, rhythm patterns, and proper technique in a supportive environment.",
       organizer: "Step Forward Chicago",
       coordinates: { lat: 41.7558, lng: -87.5691 },
       featured: false,
@@ -110,9 +110,9 @@ const Events = () => {
       capacity: 150,
       instructor: "DJ Smooth",
       skillLevel: "All Levels",
-      tags: ["Social", "Dancing", "Music"],
+      tags: ["Social", "Dancing", "Music", "Community"],
       rating: 4.6,
-      description: "Weekly social dance event with live DJ and open floor for all skill levels.",
+      description: "Weekly social dance event with live DJ and open floor for all skill levels. Great place to practice and meet fellow steppers.",
       organizer: "Friday Night Steppers",
       coordinates: { lat: 41.8781, lng: -87.6298 },
       featured: false,
@@ -133,9 +133,9 @@ const Events = () => {
       capacity: 30,
       instructor: "Robert Williams",
       skillLevel: "Advanced",
-      tags: ["Advanced", "Technique", "Masterclass"],
+      tags: ["Advanced", "Technique", "Masterclass", "Skills"],
       rating: 4.9,
-      description: "Intensive masterclass focusing on advanced stepping techniques and style.",
+      description: "Intensive masterclass focusing on advanced stepping techniques, styling, and performance quality. For experienced dancers only.",
       organizer: "Elite Step Academy",
       coordinates: { lat: 41.7910, lng: -87.6086 },
       featured: true,
@@ -143,7 +143,7 @@ const Events = () => {
     },
     {
       id: 5,
-      title: "Youth Step Program",
+      title: "Youth Step Program - Summer Camp",
       date: "2024-07-27",
       time: "4:00 PM",
       location: "Garfield Park Conservatory",
@@ -156,9 +156,9 @@ const Events = () => {
       capacity: 40,
       instructor: "Angela Davis",
       skillLevel: "Youth",
-      tags: ["Youth", "Kids", "Learning"],
+      tags: ["Youth", "Kids", "Learning", "Summer"],
       rating: 4.7,
-      description: "Fun and engaging step program designed specifically for young dancers.",
+      description: "Fun and engaging step program designed specifically for young dancers ages 8-16. Build confidence, coordination, and social skills.",
       organizer: "Youth Step Initiative",
       coordinates: { lat: 41.8847, lng: -87.7157 },
       featured: false,
@@ -166,7 +166,7 @@ const Events = () => {
     },
     {
       id: 6,
-      title: "Step & Soul Convention",
+      title: "Step & Soul Convention 2024",
       date: "2024-08-01",
       time: "10:00 AM",
       location: "Navy Pier",
@@ -179,9 +179,9 @@ const Events = () => {
       capacity: 300,
       instructor: "Multiple Instructors",
       skillLevel: "All Levels",
-      tags: ["Convention", "Multi-day", "Workshops"],
+      tags: ["Convention", "Multi-day", "Workshops", "Vendors"],
       rating: 4.8,
-      description: "Three-day convention featuring workshops, competitions, and performances.",
+      description: "Three-day convention featuring workshops, competitions, performances, and vendor marketplace. The largest stepping event in the Midwest.",
       organizer: "Step & Soul Productions",
       coordinates: { lat: 41.8919, lng: -87.6051 },
       featured: true,
@@ -189,7 +189,7 @@ const Events = () => {
     },
     {
       id: 7,
-      title: "Couples Step Workshop",
+      title: "Couples Step Workshop - Partner Connection",
       date: "2024-08-05",
       time: "7:30 PM",
       location: "Chicago Cultural Center",
@@ -202,9 +202,9 @@ const Events = () => {
       capacity: 80,
       instructor: "Mike & Sarah Johnson",
       skillLevel: "Intermediate",
-      tags: ["Couples", "Partner", "Romance"],
+      tags: ["Couples", "Partner", "Romance", "Connection"],
       rating: 4.7,
-      description: "Learn to step together as partners with synchronized moves and styling.",
+      description: "Learn to step together as partners with synchronized moves, styling, and connection techniques. Perfect for couples and dance partners.",
       organizer: "Couples Step Chicago",
       coordinates: { lat: 41.8836, lng: -87.6270 },
       featured: false,
@@ -225,13 +225,243 @@ const Events = () => {
       capacity: 250,
       instructor: "Chicago Step Ensemble",
       skillLevel: "Spectator",
-      tags: ["Performance", "Outdoor", "Celebration"],
+      tags: ["Performance", "Outdoor", "Celebration", "Memorial"],
       rating: 4.5,
-      description: "Outdoor celebration featuring performances by top Chicago stepping groups.",
+      description: "Outdoor celebration featuring performances by top Chicago stepping groups. Free community event with vendor booths and activities.",
       organizer: "Chicago Parks District",
       coordinates: { lat: 41.8826, lng: -87.6226 },
       featured: true,
       soldOut: true
+    },
+    {
+      id: 9,
+      title: "Smooth Step & Slow Jams",
+      date: "2024-08-12",
+      time: "9:00 PM",
+      location: "The Drake Hotel",
+      city: "Chicago",
+      state: "IL",
+      price: 40,
+      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop&auto=format",
+      category: "Social",
+      attendees: 78,
+      capacity: 120,
+      instructor: "DJ Marcus Love",
+      skillLevel: "Intermediate",
+      tags: ["Smooth", "Slow Jams", "Elegant", "Mature"],
+      rating: 4.6,
+      description: "Sophisticated evening of smooth stepping to classic slow jams and R&B. Dress code: cocktail attire. 21+ event.",
+      organizer: "Elegant Steppers Society",
+      coordinates: { lat: 41.8970, lng: -87.6274 },
+      featured: false,
+      soldOut: false
+    },
+    {
+      id: 10,
+      title: "Step Aerobics Fusion",
+      date: "2024-08-14",
+      time: "6:30 PM",
+      location: "FFC Gold Coast",
+      city: "Chicago",
+      state: "IL",
+      price: 30,
+      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop&auto=format",
+      category: "Class",
+      attendees: 22,
+      capacity: 25,
+      instructor: "Tanya Williams",
+      skillLevel: "All Levels",
+      tags: ["Fitness", "Aerobics", "Health", "Cardio"],
+      rating: 4.4,
+      description: "Unique fitness class combining stepping moves with aerobic exercise. Great cardio workout while learning dance fundamentals.",
+      organizer: "Step Fit Chicago",
+      coordinates: { lat: 41.9085, lng: -87.6270 },
+      featured: false,
+      soldOut: false
+    },
+    {
+      id: 11,
+      title: "Line Dancing & Step Fusion",
+      date: "2024-08-17",
+      time: "7:00 PM",
+      location: "Copernicus Center",
+      city: "Chicago",
+      state: "IL",
+      price: 22,
+      image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=600&h=400&fit=crop&auto=format",
+      category: "Workshop",
+      attendees: 45,
+      capacity: 60,
+      instructor: "Carmen Rodriguez",
+      skillLevel: "Beginner",
+      tags: ["Line Dancing", "Fusion", "Group", "Fun"],
+      rating: 4.3,
+      description: "Learn popular line dances with stepping elements. Perfect for beginners and those who want to expand their dance vocabulary.",
+      organizer: "Dance Fusion Studio",
+      coordinates: { lat: 41.9634, lng: -87.7069 },
+      featured: false,
+      soldOut: false
+    },
+    {
+      id: 12,
+      title: "Competitive Step Team Training",
+      date: "2024-08-19",
+      time: "5:00 PM",
+      location: "Jesse White Community Center",
+      city: "Chicago",
+      state: "IL",
+      price: 35,
+      image: "https://images.unsplash.com/photo-1504609813442-a8924e83f76e?w=600&h=400&fit=crop&auto=format",
+      category: "Class",
+      attendees: 18,
+      capacity: 20,
+      instructor: "Coach Thompson",
+      skillLevel: "Advanced",
+      tags: ["Team", "Competition", "Training", "Intensive"],
+      rating: 4.7,
+      description: "Intensive training for competitive step teams. Focus on synchronization, advanced patterns, and performance preparation.",
+      organizer: "Chicago Step Warriors",
+      coordinates: { lat: 41.8781, lng: -87.6298 },
+      featured: false,
+      soldOut: false
+    },
+    {
+      id: 13,
+      title: "Old School Step Revival",
+      date: "2024-08-22",
+      time: "8:30 PM",
+      location: "Chicago Theatre",
+      city: "Chicago",
+      state: "IL",
+      price: 55,
+      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop&auto=format",
+      category: "Performance",
+      attendees: 145,
+      capacity: 200,
+      instructor: "OG Steppers Collective",
+      skillLevel: "Spectator",
+      tags: ["Old School", "Revival", "History", "Legends"],
+      rating: 4.9,
+      description: "Celebration of classic stepping with performances by original Chicago step legends. Learn the history and see where it all began.",
+      organizer: "Chicago Step Heritage Foundation",
+      coordinates: { lat: 41.8852, lng: -87.6270 },
+      featured: true,
+      soldOut: false
+    },
+    {
+      id: 14,
+      title: "Step & Salsa Crossover",
+      date: "2024-08-24",
+      time: "7:30 PM",
+      location: "National Museum of Mexican Art",
+      city: "Chicago",
+      state: "IL",
+      price: 28,
+      image: "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=600&h=400&fit=crop&auto=format",
+      category: "Workshop",
+      attendees: 38,
+      capacity: 50,
+      instructor: "Carlos & Maria Santos",
+      skillLevel: "Intermediate",
+      tags: ["Salsa", "Crossover", "Latin", "Fusion"],
+      rating: 4.5,
+      description: "Explore the connections between stepping and salsa dancing. Learn how Latin rhythms can enhance your stepping style.",
+      organizer: "Cross Cultural Dance Collective",
+      coordinates: { lat: 41.8539, lng: -87.6700 },
+      featured: false,
+      soldOut: false
+    },
+    {
+      id: 15,
+      title: "Ladies Only Step Empowerment",
+      date: "2024-08-26",
+      time: "6:00 PM",
+      location: "Women & Children First",
+      city: "Chicago",
+      state: "IL",
+      price: 25,
+      image: "https://images.unsplash.com/photo-1545224190-fe43675ad656?w=600&h=400&fit=crop&auto=format",
+      category: "Workshop",
+      attendees: 32,
+      capacity: 35,
+      instructor: "Queen Latasha",
+      skillLevel: "All Levels",
+      tags: ["Ladies Only", "Empowerment", "Confidence", "Sisterhood"],
+      rating: 4.8,
+      description: "Empowering workshop for women focusing on confidence, grace, and personal style in stepping. Safe space for learning and growth.",
+      organizer: "Sisters in Step",
+      coordinates: { lat: 41.9738, lng: -87.6661 },
+      featured: false,
+      soldOut: true
+    },
+    {
+      id: 16,
+      title: "Midnight Step Express",
+      date: "2024-08-30",
+      time: "11:00 PM",
+      location: "Metro Chicago",
+      city: "Chicago",
+      state: "IL",
+      price: 45,
+      image: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&h=400&fit=crop&auto=format",
+      category: "Social",
+      attendees: 156,
+      capacity: 200,
+      instructor: "DJ Nightfall",
+      skillLevel: "All Levels",
+      tags: ["Late Night", "Energy", "Party", "Urban"],
+      rating: 4.6,
+      description: "High-energy late night stepping party with the hottest DJs and latest tracks. Dance until dawn with Chicago's night owls.",
+      organizer: "Midnight Movers",
+      coordinates: { lat: 41.9297, lng: -87.6598 },
+      featured: true,
+      soldOut: false
+    },
+    {
+      id: 17,
+      title: "Corporate Team Building Step",
+      date: "2024-09-02",
+      time: "12:00 PM",
+      location: "Chicago Marriott Downtown",
+      city: "Chicago",
+      state: "IL",
+      price: 60,
+      image: "https://images.unsplash.com/photo-1551818255-e6e10975bc17?w=600&h=400&fit=crop&auto=format",
+      category: "Workshop",
+      attendees: 24,
+      capacity: 30,
+      instructor: "Professional Development Dance",
+      skillLevel: "All Levels",
+      tags: ["Corporate", "Team Building", "Business", "Professional"],
+      rating: 4.2,
+      description: "Corporate team building through stepping. Improve communication, teamwork, and company culture through dance.",
+      organizer: "Corporate Culture Consultants",
+      coordinates: { lat: 41.8876, lng: -87.6229 },
+      featured: false,
+      soldOut: false
+    },
+    {
+      id: 18,
+      title: "Step & Gospel Praise Dance",
+      date: "2024-09-05",
+      time: "3:00 PM",
+      location: "Trinity United Church",
+      city: "Chicago",
+      state: "IL",
+      price: 20,
+      image: "https://images.unsplash.com/photo-1545224190-fe43675ad656?w=600&h=400&fit=crop&auto=format",
+      category: "Workshop",
+      attendees: 41,
+      capacity: 50,
+      instructor: "Minister Patricia Jones",
+      skillLevel: "All Levels",
+      tags: ["Gospel", "Praise", "Spiritual", "Worship"],
+      rating: 4.7,
+      description: "Combine stepping with praise dance for spiritual expression. Family-friendly workshop connecting faith and movement.",
+      organizer: "Faithful Steppers Ministry",
+      coordinates: { lat: 41.7537, lng: -87.6408 },
+      featured: false,
+      soldOut: false
     }
   ];
 
@@ -389,8 +619,74 @@ const Events = () => {
               </Button>
             </div>
           </div>
+        </div>
 
-          {/* Search Bar */}
+        {/* Promotional Banner */}
+        <div className="mb-8 -mx-2 md:-mx-6">
+          <Card className="overflow-hidden rounded-3xl bg-white text-white relative p-6 border-0 shadow-none">
+            <div className="absolute inset-6 bg-black/20 rounded-2xl"></div>
+            <div 
+              className="relative bg-cover bg-center min-h-[280px] md:min-h-[320px] flex items-center rounded-2xl"
+              style={{
+                backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=1400&h=600&fit=crop&auto=format')`
+              }}
+            >
+              <div className="container mx-auto px-6 md:px-8 lg:px-12 py-12">
+                <div className="max-w-3xl">
+                  <div className="flex items-center gap-3 mb-6">
+                    <Badge className="bg-brand-primary text-white border-0 px-4 py-2 rounded-full text-sm font-medium">
+                      ⭐ Featured Event
+                    </Badge>
+                    <Badge className="bg-red-500/90 text-white border-0 px-4 py-2 rounded-full backdrop-blur-sm text-sm font-medium animate-pulse">
+                      🔥 Early Bird Special
+                    </Badge>
+                    <Badge className="bg-white/20 text-white border-0 px-4 py-2 rounded-full backdrop-blur-sm text-sm">
+                      Limited Time
+                    </Badge>
+                  </div>
+                  <h2 className="font-serif text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                    Step & Soul Convention 2024
+                  </h2>
+                  <p className="text-xl md:text-2xl mb-8 text-white/90 leading-relaxed max-w-2xl">
+                    Join us for the largest stepping event in the Midwest! Three days of workshops, competitions, and performances featuring top instructors from across the country.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-6 mb-8 text-lg">
+                    <div className="flex items-center gap-3 text-white/90">
+                      <Calendar className="h-5 w-5" />
+                      <span className="font-medium">Aug 1-3, 2024</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-white/90">
+                      <MapPin className="h-5 w-5" />
+                      <span className="font-medium">Navy Pier, Chicago</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-white/90">
+                      <Users className="h-5 w-5" />
+                      <span className="font-medium">234 registered</span>
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl md:text-5xl font-bold">$75</span>
+                      <span className="text-white/70 line-through text-xl">$95</span>
+                    </div>
+                    <Button 
+                      size="lg" 
+                      className="bg-brand-primary hover:bg-brand-primary-hover text-white px-10 py-4 rounded-full font-semibold text-lg shadow-2xl hover:scale-105 transition-all"
+                      asChild
+                    >
+                      <Link to="/event/6/tickets">
+                        Get Early Bird Tickets →
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-8">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-secondary h-4 w-4" />
@@ -451,6 +747,137 @@ const Events = () => {
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="mb-8 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-brand-primary mb-1">18</div>
+            <div className="text-sm text-gray-600">Events This Month</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-brand-primary mb-1">1,200+</div>
+            <div className="text-sm text-gray-600">Active Steppers</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-brand-primary mb-1">25</div>
+            <div className="text-sm text-gray-600">Venues</div>
+          </Card>
+          <Card className="p-4 text-center">
+            <div className="text-2xl font-bold text-brand-primary mb-1">4.8★</div>
+            <div className="text-sm text-gray-600">Avg Rating</div>
+          </Card>
+        </div>
+
+        {/* Featured Events */}
+        {featuredEvents.length > 0 && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-3xl font-bold text-text-primary">🌟 Featured Events</h2>
+              <Button variant="outline" asChild>
+                <Link to="/events/featured">View All Featured</Link>
+              </Button>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredEvents.slice(0, 3).map((event) => (
+                <Card key={event.id} className="overflow-hidden bg-gradient-to-br from-brand-primary via-brand-primary to-brand-primary-hover text-text-on-primary group hover:shadow-2xl transition-all duration-300 rounded-3xl">
+                  <div className="relative">
+                    <img 
+                      src={event.image} 
+                      alt={event.title}
+                      className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-white/95 text-brand-primary border-0 font-semibold">
+                        ⭐ Featured
+                      </Badge>
+                    </div>
+                    <div className="absolute top-4 right-4 flex gap-2">
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20 rounded-full">
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-white hover:bg-white/20 rounded-full">
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <div className="flex items-center gap-2 text-white/90 text-sm mb-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{new Date(event.date).toLocaleDateString()}</span>
+                        <span>•</span>
+                        <span>{event.time}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <CardContent className="p-6">
+                    <h3 className="font-bold text-xl mb-3 line-clamp-2">{event.title}</h3>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-white/90 text-sm">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        <span>{event.location}, {event.city}</span>
+                      </div>
+                      <div className="flex items-center text-white/90 text-sm">
+                        <Star className="w-4 h-4 mr-2 fill-current text-yellow-300" />
+                        <span>{event.rating} rating • {event.attendees} attending</span>
+                      </div>
+                    </div>
+                    <p className="text-sm mb-6 opacity-90 line-clamp-2">{event.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl font-bold">${event.price}</span>
+                      <Button 
+                        asChild 
+                        className="bg-white text-brand-primary hover:bg-white/90 rounded-full px-6 font-semibold"
+                      >
+                        <Link to={`/event/${event.id}/tickets`}>
+                          Get Tickets
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Popular This Week */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold text-text-primary mb-6 flex items-center gap-2">
+            🔥 Popular This Week
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {mockEvents
+              .filter(event => event.attendees > 80)
+              .slice(0, 4)
+              .map((event) => (
+                <Card key={event.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 rounded-2xl">
+                  <div className="relative">
+                    <img 
+                      src={event.image} 
+                      alt={event.title}
+                      className="w-full h-32 object-cover"
+                    />
+                    <div className="absolute top-2 left-2">
+                      <Badge className="bg-red-500 text-white text-xs font-medium">
+                        🔥 Hot
+                      </Badge>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h4 className="font-semibold text-sm mb-2 line-clamp-1">{event.title}</h4>
+                    <div className="flex items-center text-xs text-gray-600 mb-2">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      <span>{new Date(event.date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-lg">${event.price}</span>
+                      <span className="text-xs text-gray-500">{event.attendees} going</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
           </div>
         </div>
 
@@ -615,58 +1042,6 @@ const Events = () => {
           </Card>
         )}
 
-        {/* Featured Events */}
-        {featuredEvents.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold text-text-primary mb-4">Featured Events</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {featuredEvents.slice(0, 2).map((event) => (
-                <Card key={event.id} className="overflow-hidden bg-gradient-to-r from-brand-primary to-brand-primary-hover text-text-on-primary">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <Badge className="bg-text-on-primary text-brand-primary">
-                        Featured
-                      </Badge>
-                      <div className="flex gap-2">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-text-on-primary hover:bg-white/20">
-                          <Heart className="h-4 w-4" />
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-text-on-primary hover:bg-white/20">
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <h3 className="font-serif text-2xl font-bold mb-3">{event.title}</h3>
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-2" />
-                        <span className="text-sm">{new Date(event.date).toLocaleDateString()} at {event.time}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className="w-4 h-4 mr-2" />
-                        <span className="text-sm">{event.location}, {event.city}, {event.state}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Star className="w-4 h-4 mr-2" />
-                        <span className="text-sm">{event.rating} rating • {event.attendees} attending</span>
-                      </div>
-                    </div>
-                    <p className="text-sm mb-4 opacity-90">{event.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold">${event.price}</span>
-                      <Button asChild className="bg-text-on-primary text-brand-primary hover:bg-text-on-primary/90">
-                        <Link to={`/event/${event.id}/tickets`}>
-                          Get Tickets
-                        </Link>
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Quick Category Filters */}
         <div className="mb-8">
           <div className="flex gap-2 flex-wrap">
@@ -732,7 +1107,7 @@ const Events = () => {
           />
         ) : (
           <div className={`
-            ${viewMode === 'grid' ? 'grid md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}
+            ${viewMode === 'grid' ? 'grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}
           `}>
             {upcomingEvents.length > 0 ? (
               upcomingEvents.map((event) => (
@@ -790,3 +1165,4 @@ const Events = () => {
 };
 
 export default Events;
+
