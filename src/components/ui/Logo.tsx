@@ -30,7 +30,7 @@ export const Logo: React.FC<LogoProps> = ({
   const { theme, systemTheme } = useTheme();
   const [imageError, setImageError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [logoKey, setLogoKey] = useState(Date.now() + 1000); // Force new cache key
+  const [logoKey, setLogoKey] = useState(() => Date.now()); // Initialize once
   
   // Determine the effective theme
   const effectiveTheme = theme === 'system' ? systemTheme : theme;
@@ -43,7 +43,10 @@ export const Logo: React.FC<LogoProps> = ({
   useEffect(() => {
     setImageError(false);
     setIsLoading(true);
-    setLogoKey(Date.now() + 1000); // Force a new cache-busted URL
+    // Only update logoKey if theme actually changed, not undefined
+    if (effectiveTheme !== undefined) {
+      setLogoKey(Date.now());
+    }
   }, [effectiveTheme]);
   
   if (useStaticImages) {
@@ -52,15 +55,17 @@ export const Logo: React.FC<LogoProps> = ({
       ? `/icons/logo-light.png?theme=dark&v=${logoKey}` 
       : `/icons/logo-dark.png?theme=light&v=${logoKey}`;
     
-    // Enhanced debug logging
-    console.log('🎨 Logo Theme Switch:', { 
-      theme, 
-      systemTheme, 
-      effectiveTheme, 
-      logoSrc,
-      isDark: effectiveTheme === 'dark',
-      timestamp: new Date().toISOString()
-    });
+    // Enhanced debug logging (only log when theme actually changes)
+    const shouldLog = import.meta.env.DEV && effectiveTheme !== undefined;
+    if (shouldLog) {
+      console.log('🎨 Logo Theme Switch:', { 
+        theme, 
+        systemTheme, 
+        effectiveTheme, 
+        logoSrc,
+        isDark: effectiveTheme === 'dark'
+      });
+    }
     
     // If we've had an error, try the database approach
     if (imageError) {

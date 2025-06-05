@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { blogService } from '@/services/blogService';
 import { 
@@ -18,8 +18,9 @@ export const useBlog = () => {
   const [featuredPosts, setFeaturedPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
-  const fetchPublishedPosts = async (filters: BlogSearchFilters = {}) => {
+  const fetchPublishedPosts = useCallback(async (filters: BlogSearchFilters = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -31,7 +32,7 @@ export const useBlog = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const fetchPostBySlug = async (slug: string): Promise<BlogPost | null> => {
     try {
@@ -48,30 +49,43 @@ export const useBlog = () => {
     }
   };
 
-  const fetchFeaturedPosts = async () => {
+  const fetchFeaturedPosts = useCallback(async () => {
     try {
       const featured = await blogService.getFeaturedPosts();
       setFeaturedPosts(featured);
     } catch (err) {
       console.error('Error fetching featured posts:', err);
     }
-  };
+  }, []);
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const cats = await blogService.getCategories();
       setCategories(cats);
     } catch (err) {
       console.error('Error fetching categories:', err);
     }
-  };
-
-  // Initialize data on mount
-  useEffect(() => {
-    fetchPublishedPosts();
-    fetchFeaturedPosts();
-    fetchCategories();
   }, []);
+
+  // Initialize data on mount - only once
+  useEffect(() => {
+    if (!initialized) {
+      const initializeData = async () => {
+        setLoading(true);
+        try {
+          await Promise.all([
+            fetchPublishedPosts(),
+            fetchFeaturedPosts(),
+            fetchCategories()
+          ]);
+        } finally {
+          setLoading(false);
+          setInitialized(true);
+        }
+      };
+      initializeData();
+    }
+  }, [initialized, fetchPublishedPosts, fetchFeaturedPosts, fetchCategories]);
 
   return {
     posts,

@@ -8,44 +8,28 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 let deferredPrompt: any = null;
 let installPromptReceived: boolean = false;
 
-// Enhanced development mode helpers - moved before usage to avoid temporal dead zone
+// Simplified development mode helpers
 const setupDevelopmentPWAHelpers = () => {
   if (!import.meta.env.DEV) return;
   
-  console.log('🛠️ Development PWA helpers enabled');
-  
   // Mock install prompt for development testing
   window.mockPWAInstall = () => {
-    console.log('🧪 Mocking PWA install prompt for development');
     const mockEvent = {
-      preventDefault: () => console.log('Mock preventDefault called'),
-      prompt: () => {
-        console.log('Mock prompt triggered');
-        return Promise.resolve({ outcome: 'accepted' });
-      }
+      preventDefault: () => {},
+      prompt: () => Promise.resolve({ outcome: 'accepted' })
     };
     handleBeforeInstallPrompt(mockEvent);
   };
   
   // Development PWA status checker
   window.checkPWAStatus = () => {
-    console.log('🔍 PWA Development Status:');
-    console.log('- Service Worker supported:', 'serviceWorker' in navigator);
-    console.log('- Install prompt received:', installPromptReceived);
-    console.log('- Deferred prompt:', !!deferredPrompt);
-    console.log('- Is HTTPS:', location.protocol === 'https:');
-    console.log('- Current display mode:', getDisplayMode());
-    console.log('- User engagement stored:', !!sessionStorage.getItem('pwa-engagement'));
+    console.log('PWA Status:', {
+      serviceWorker: 'serviceWorker' in navigator,
+      installPrompt: installPromptReceived,
+      deferredPrompt: !!deferredPrompt,
+      isHTTPS: location.protocol === 'https:'
+    });
   };
-  
-  // Warn about localhost limitations
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    console.warn('⚠️ Development on localhost: Chrome may not show install prompts');
-    console.log('💡 For full PWA testing:');
-    console.log('  1. Build production version: npm run build');
-    console.log('  2. Serve over HTTPS or use ngrok');
-    console.log('  3. Use: window.mockPWAInstall() to test install flow');
-  }
 };
 
 // Enhanced display mode detection
@@ -57,26 +41,13 @@ const getDisplayMode = () => {
   return 'browser';
 };
 
-// Enhanced beforeinstallprompt handler - defined after variable declarations
+// Simplified beforeinstallprompt handler
 const handleBeforeInstallPrompt = (e: any) => {
-  console.log('🎯 PWA Install Prompt received!', e);
-  
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
   e.preventDefault();
-  
-  // Store the event globally
   deferredPrompt = e;
   window.deferredPrompt = e;
   installPromptReceived = true;
-  
-  console.log('📱 PWA is now installable!');
-  
-  // Dispatch custom event for components to listen to
   window.dispatchEvent(new CustomEvent('pwainstallable', { detail: e }));
-  
-  // Show immediate notification
-  console.log('🎉 Install prompt is ready - look for install buttons!');
-  
   return false;
 };
 
@@ -100,49 +71,28 @@ const handleAppInstalled = (evt: any) => {
   }
 };
 
-// Register service worker for PWA functionality
+// Simplified service worker registration
 const registerServiceWorker = async () => {
   if ('serviceWorker' in navigator) {
     try {
-      console.log('🔧 Registering service worker...');
-      
-      // Use root path for service worker - this should work for both dev and production
-      const swPath = '/sw.js';
-      console.log(`📍 Service worker path: ${swPath}`);
-      
-      const registration = await navigator.serviceWorker.register(swPath, {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
         scope: '/'
       });
       
-      console.log('✅ SW registered successfully:', registration);
-      
-      // Check for updates immediately
-      if (registration.waiting) {
-        console.log('🔄 New service worker waiting');
-      }
-      
-      // Check for updates periodically
-      const updateInterval = 30000; // 30 seconds
+      // Check for updates periodically (less frequent to reduce overhead)
       setInterval(() => {
         registration.update();
-      }, updateInterval);
+      }, 60000); // 1 minute instead of 30 seconds
       
       return registration;
     } catch (error) {
-      console.error('❌ SW registration failed:', error);
-      
-      // Show less aggressive error messaging 
       if (import.meta.env.DEV) {
-        console.log('💡 Development note: Service worker errors are common in dev mode.');
+        console.log('Service worker registration failed (expected in development)');
       }
-      
-      // Don't throw the error to prevent breaking the app
       return null;
     }
-  } else {
-    console.warn('⚠️ Service Worker not supported');
-    return null;
   }
+  return null;
 };
 
 // Enhanced user engagement detection
@@ -155,11 +105,18 @@ const setupUserEngagement = () => {
   
   const trackEngagement = (type: string) => {
     engagementScore++;
-    console.log(`📈 User engagement: ${type} (score: ${engagementScore}/${requiredScore})`);
+    
+    // Only log significant engagement events to reduce console spam
+    const shouldLog = engagementScore <= requiredScore || type.includes('staff') || type.includes('immediate');
+    if (shouldLog && import.meta.env.DEV) {
+      console.log(`📈 User engagement: ${type} (score: ${engagementScore}/${requiredScore})`);
+    }
     
     if (engagementScore >= requiredScore || isDownloadPage) {
       sessionStorage.setItem('pwa-engagement', 'true');
-      console.log('✅ User engagement threshold met for PWA install');
+      if (import.meta.env.DEV && engagementScore === requiredScore) {
+        console.log('✅ User engagement threshold met for PWA install');
+      }
     }
   };
   
@@ -185,14 +142,24 @@ const setupUserEngagement = () => {
     trackEngagement('time-spent');
   }, isDownloadPage ? 1000 : 5000);
   
-  // Page navigation tracking
+  // Page navigation tracking - temporarily disabled to prevent browser throttling
+  // TODO: Re-enable with better implementation after performance issues are resolved
+  /*
   let navigationCount = 0;
+  let lastNavigationTime = 0;
+  const navigationThrottle = 5000; // Only track navigation once per 5 seconds
+  
   const originalPushState = history.pushState;
   history.pushState = function(...args) {
-    navigationCount++;
-    trackEngagement(`navigation-${navigationCount}`);
+    const now = Date.now();
+    if (now - lastNavigationTime >= navigationThrottle) {
+      navigationCount++;
+      trackEngagement(`navigation-${navigationCount}`);
+      lastNavigationTime = now;
+    }
     return originalPushState.apply(history, args);
   };
+  */
 };
 
 // Check if app is already installed with enhanced detection
@@ -236,64 +203,25 @@ const triggerInstallabilityCheck = () => {
   }, 2000);
 };
 
-// Main initialization
+// Simplified main initialization
 const initializePWA = async () => {
-  console.log('🚀 Initializing PWA...');
-  
-  // Set up development helpers first
+  // Set up development helpers
   setupDevelopmentPWAHelpers();
   
   // Set up user engagement tracking
   setupUserEngagement();
-  
-  // Check current installation status
-  checkInstallationStatus();
   
   // Add event listeners for PWA events
   window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
   window.addEventListener('appinstalled', handleAppInstalled);
   
   // Register service worker
-  try {
-    await registerServiceWorker();
-    console.log('✅ Service worker registration complete');
-  } catch (error) {
-    console.error('❌ Service worker registration failed:', error);
-  }
+  await registerServiceWorker();
   
-  // Set up periodic checks for install prompt - more aggressive on staff install page
-  const isDownloadPage = window.location.pathname === '/download';
-  let checkCount = 0;
-  const maxChecks = isDownloadPage ? 10 : 3; // More checks on staff page
-  const checkInterval = isDownloadPage ? 2000 : 15000; // More frequent on staff page
-  
-  const installPromptChecker = setInterval(() => {
-    checkCount++;
-    
-    if (installPromptReceived || checkInstallationStatus()) {
-      clearInterval(installPromptChecker);
-      return;
-    }
-    
-    if (checkCount >= maxChecks) {
-      if (import.meta.env.DEV) {
-        console.log('ℹ️ PWA install prompt checking complete (development mode)');
-      } else {
-        console.log('ℹ️ PWA install prompt checking complete');
-      }
-      clearInterval(installPromptChecker);
-      return;
-    }
-    
-    // More verbose logging on staff install page
-    if (isDownloadPage || checkCount === 1) {
-      console.log(`🔍 Checking for PWA install prompt... (${checkCount}/${maxChecks})`);
-    }
+  // Only do extensive checking on download page
+  if (window.location.pathname === '/download') {
     triggerInstallabilityCheck();
-  }, checkInterval);
-  
-  // Force initial installability check
-  triggerInstallabilityCheck();
+  }
 };
 
 // Global types for TypeScript

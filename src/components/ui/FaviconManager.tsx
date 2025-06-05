@@ -8,7 +8,8 @@ interface FaviconManagerProps {
 export const FaviconManager: React.FC<FaviconManagerProps> = ({ 
   fallbackFavicon = '/steppers-icon.svg' 
 }) => {
-  const { faviconUrl, loading, error } = useFavicon();
+  // Temporarily disabled to prevent Supabase 404 errors while backend is being set up
+  // const { faviconUrl, loading, error } = useFavicon();
 
   useEffect(() => {
     const updateFavicon = (url: string) => {
@@ -39,14 +40,16 @@ export const FaviconManager: React.FC<FaviconManagerProps> = ({
       });
     };
 
-    // Update favicon when URL is available
-    if (!loading && !error && faviconUrl) {
-      updateFavicon(faviconUrl);
-    } else if (!loading && (error || !faviconUrl)) {
-      // Fallback to default favicon if no managed favicon is available
-      updateFavicon(fallbackFavicon);
-    }
-  }, [faviconUrl, loading, error, fallbackFavicon]);
+    // Use fallback favicon until Supabase image management is properly set up
+    updateFavicon(fallbackFavicon);
+    
+    // Original logic (temporarily disabled):
+    // if (!loading && !error && faviconUrl) {
+    //   updateFavicon(faviconUrl);
+    // } else if (!loading && (error || !faviconUrl)) {
+    //   updateFavicon(fallbackFavicon);
+    // }
+  }, [fallbackFavicon]);
 
   // This component doesn't render anything visible
   return null;

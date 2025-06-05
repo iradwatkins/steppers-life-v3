@@ -18,6 +18,16 @@ export const useImageAssets = (options: UseImageAssetsOptions = {}) => {
       setLoading(true);
       setError(null);
       
+      // Temporarily disable database calls until Supabase is properly configured
+      // This prevents 404 errors and constant retrying
+      const isDatabaseReady = false; // Set to true when database is configured
+      
+      if (!isDatabaseReady) {
+        console.info('📁 Image management database disabled - using static assets');
+        setImages([]);
+        return;
+      }
+      
       const filters = {
         category: options.category,
         theme: options.theme,

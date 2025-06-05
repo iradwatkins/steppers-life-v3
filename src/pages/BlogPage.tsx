@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Search, Calendar, Tag, Filter, X } from 'lucide-react';
 import { useBlog } from '@/hooks/useBlog';
@@ -21,6 +21,7 @@ export default function BlogPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { posts, categories, featuredPosts, loading, error, fetchPublishedPosts } = useBlog();
+  const isInitialLoad = useRef(true);
   
   const [filters, setFilters] = useState<BlogSearchFilters>({
     query: searchParams.get('q') || '',
@@ -30,17 +31,33 @@ export default function BlogPage() {
 
   const [showFilters, setShowFilters] = useState(false);
 
-  // Apply filters when they change
+  // Apply filters when they change (debounced to prevent excessive calls)
   useEffect(() => {
-    fetchPublishedPosts(filters);
-    
-    // Update URL params
+    const timeoutId = setTimeout(() => {
+      if (isInitialLoad.current) {
+        // Check if we have URL params that require filtering
+        const hasUrlParams = searchParams.get('q') || searchParams.get('category') || searchParams.get('tag');
+        if (hasUrlParams) {
+          // Only fetch if we have URL params different from default
+          fetchPublishedPosts(filters);
+        }
+        isInitialLoad.current = false;
+      } else {
+        fetchPublishedPosts(filters);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [filters, fetchPublishedPosts, searchParams]);
+
+  // Update URL params when filters change (separate effect to avoid re-fetching loop)
+  useEffect(() => {
     const params = new URLSearchParams();
     if (filters.query) params.set('q', filters.query);
     if (filters.category) params.set('category', filters.category);
     if (filters.tag) params.set('tag', filters.tag);
     setSearchParams(params);
-  }, [filters, fetchPublishedPosts, setSearchParams]);
+  }, [filters, setSearchParams]);
 
   const handleFilterChange = (key: keyof BlogSearchFilters, value: string) => {
     setFilters(prev => ({
@@ -73,11 +90,22 @@ export default function BlogPage() {
       onClick={() => navigate(`/blog/${post.slug}`)}
     >
       {post.featuredImage && (
-        <div className="aspect-video overflow-hidden rounded-t-lg">
+        <div className="aspect-video overflow-hidden rounded-t-lg bg-muted">
           <img
             src={post.featuredImage}
             alt={post.title}
+            loading="lazy"
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+            onError={(e) => {
+              const target = e.currentTarget;
+              target.style.display = 'none';
+              target.parentElement!.style.display = 'none';
+            }}
+            onLoad={(e) => {
+              const target = e.currentTarget;
+              target.style.opacity = '1';
+            }}
+            style={{ opacity: '0', transition: 'opacity 0.3s ease-in-out' }}
           />
         </div>
       )}
@@ -133,11 +161,22 @@ export default function BlogPage() {
     >
       <div className="flex flex-col md:flex-row">
         {post.featuredImage && (
-          <div className="md:w-1/3 aspect-video md:aspect-square overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-t-none">
+          <div className="md:w-1/3 aspect-video md:aspect-square overflow-hidden rounded-t-lg md:rounded-l-lg md:rounded-t-none bg-muted">
             <img
               src={post.featuredImage}
               alt={post.title}
+              loading="lazy"
               className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+              onError={(e) => {
+                const target = e.currentTarget;
+                target.style.display = 'none';
+                target.parentElement!.style.display = 'none';
+              }}
+              onLoad={(e) => {
+                const target = e.currentTarget;
+                target.style.opacity = '1';
+              }}
+              style={{ opacity: '0', transition: 'opacity 0.3s ease-in-out' }}
             />
           </div>
         )}

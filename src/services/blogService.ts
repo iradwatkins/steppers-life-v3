@@ -368,7 +368,7 @@ Draft content for upcoming blog post about selecting appropriate dance footwear 
 export const blogService = {
   // Public API functions
   async getPublishedPosts(filters: BlogSearchFilters = {}): Promise<BlogListResponse> {
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    await new Promise(resolve => setTimeout(resolve, 100)); // Reduced delay for smoother experience
     
     let filteredPosts = mockPosts.filter(post => post.status === 'published');
     
@@ -413,7 +413,7 @@ export const blogService = {
   },
 
   async getPostBySlug(slug: string): Promise<BlogPost | null> {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     const post = mockPosts.find(p => p.slug === slug && p.status === 'published');
     
@@ -426,7 +426,7 @@ export const blogService = {
   },
 
   async getFeaturedPosts(): Promise<BlogPost[]> {
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 100));
     
     return mockPosts
       .filter(post => post.status === 'published' && post.featured)
@@ -435,7 +435,7 @@ export const blogService = {
   },
 
   async getCategories(): Promise<BlogCategory[]> {
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 100));
     return mockCategories;
   },
 
