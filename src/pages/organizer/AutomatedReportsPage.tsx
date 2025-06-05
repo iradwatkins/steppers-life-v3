@@ -38,6 +38,9 @@ import {
 } from 'lucide-react';
 import { useAutomatedReports } from '../../hooks/useAutomatedReports';
 import { ReportTemplate, ScheduledReport, AlertRule, ReportExecution } from '../../services/automatedReportsService';
+import { TemplateBuilder } from '../../components/reports/TemplateBuilder';
+import { ReportScheduler } from '../../components/reports/ReportScheduler';
+import { AlertConfiguration } from '../../components/reports/AlertConfiguration';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatNumber, formatPercentage } from '@/lib/utils';
 
@@ -87,6 +90,14 @@ const AutomatedReportsPage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Modal states
+  const [showTemplateBuilder, setShowTemplateBuilder] = useState(false);
+  const [showReportScheduler, setShowReportScheduler] = useState(false);
+  const [showAlertConfiguration, setShowAlertConfiguration] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ReportTemplate | null>(null);
+  const [editingReport, setEditingReport] = useState<ScheduledReport | null>(null);
+  const [editingAlert, setEditingAlert] = useState<AlertRule | null>(null);
 
   const handleExport = async (type: 'templates' | 'reports', format: 'JSON' | 'CSV') => {
     if (type === 'templates') {
@@ -95,6 +106,125 @@ const AutomatedReportsPage: React.FC = () => {
       await exportScheduledReports(format);
     }
   };
+
+  // Template Builder handlers
+  const handleCreateTemplate = () => {
+    setEditingTemplate(null);
+    setShowTemplateBuilder(true);
+  };
+
+  const handleEditTemplate = (template: ReportTemplate) => {
+    setEditingTemplate(template);
+    setShowTemplateBuilder(true);
+  };
+
+  const handleSaveTemplate = async (templateData: Omit<ReportTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      if (editingTemplate) {
+        await updateTemplate(editingTemplate.id, templateData);
+      } else {
+        await createTemplate(templateData);
+      }
+      setShowTemplateBuilder(false);
+      setEditingTemplate(null);
+    } catch (error) {
+      console.error('Error saving template:', error);
+    }
+  };
+
+  // Report Scheduler handlers
+  const handleCreateScheduledReport = () => {
+    setEditingReport(null);
+    setShowReportScheduler(true);
+  };
+
+  const handleEditScheduledReport = (report: ScheduledReport) => {
+    setEditingReport(report);
+    setShowReportScheduler(true);
+  };
+
+  const handleSaveScheduledReport = async (reportData: Omit<ScheduledReport, 'id' | 'createdAt' | 'nextRun'>) => {
+    try {
+      if (editingReport) {
+        await updateScheduledReport(editingReport.id, reportData);
+      } else {
+        await createScheduledReport(reportData);
+      }
+      setShowReportScheduler(false);
+      setEditingReport(null);
+    } catch (error) {
+      console.error('Error saving scheduled report:', error);
+    }
+  };
+
+  // Alert Configuration handlers
+  const handleCreateAlert = () => {
+    setEditingAlert(null);
+    setShowAlertConfiguration(true);
+  };
+
+  const handleEditAlert = (alert: AlertRule) => {
+    setEditingAlert(alert);
+    setShowAlertConfiguration(true);
+  };
+
+  const handleSaveAlert = async (alertData: Omit<AlertRule, 'id' | 'createdAt' | 'triggerCount'>) => {
+    try {
+      if (editingAlert) {
+        await updateAlert(editingAlert.id, alertData);
+      } else {
+        await createAlert(alertData);
+      }
+      setShowAlertConfiguration(false);
+      setEditingAlert(null);
+    } catch (error) {
+      console.error('Error saving alert:', error);
+    }
+  };
+
+  // Show modals/components
+  if (showTemplateBuilder) {
+    return (
+      <TemplateBuilder
+        template={editingTemplate || undefined}
+        onSave={handleSaveTemplate}
+        onCancel={() => {
+          setShowTemplateBuilder(false);
+          setEditingTemplate(null);
+        }}
+        isEditing={!!editingTemplate}
+      />
+    );
+  }
+
+  if (showReportScheduler) {
+    return (
+      <ReportScheduler
+        templates={state.templates}
+        scheduledReport={editingReport || undefined}
+        onSave={handleSaveScheduledReport}
+        onCancel={() => {
+          setShowReportScheduler(false);
+          setEditingReport(null);
+        }}
+        isEditing={!!editingReport}
+      />
+    );
+  }
+
+  if (showAlertConfiguration) {
+    return (
+      <AlertConfiguration
+        alert={editingAlert || undefined}
+        onSave={handleSaveAlert}
+        onCancel={() => {
+          setShowAlertConfiguration(false);
+          setEditingAlert(null);
+        }}
+        isEditing={!!editingAlert}
+      />
+    );
+  }
 
   const getStatusBadge = (status: string, type: 'report' | 'execution' | 'alert' = 'report') => {
     const variants: Record<string, { variant: any; color: string }> = {
@@ -177,7 +307,7 @@ const AutomatedReportsPage: React.FC = () => {
             Refresh
           </Button>
           
-          <Button className="flex items-center gap-2">
+          <Button onClick={handleCreateScheduledReport} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Report
           </Button>
@@ -521,7 +651,7 @@ const AutomatedReportsPage: React.FC = () => {
                     <Download className="h-4 w-4 mr-1" />
                     CSV
                   </Button>
-                  <Button size="sm">
+                  <Button size="sm" onClick={handleCreateTemplate}>
                     <Plus className="h-4 w-4 mr-1" />
                     New Template
                   </Button>
@@ -561,7 +691,7 @@ const AutomatedReportsPage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => selectTemplate(template)}
+                        onClick={() => handleEditTemplate(template)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -605,7 +735,7 @@ const AutomatedReportsPage: React.FC = () => {
                     <Download className="h-4 w-4 mr-1" />
                     CSV
                   </Button>
-                  <Button size="sm">
+                  <Button size="sm" onClick={handleCreateScheduledReport}>
                     <Plus className="h-4 w-4 mr-1" />
                     Schedule Report
                   </Button>
@@ -659,7 +789,7 @@ const AutomatedReportsPage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => selectReport(report)}
+                        onClick={() => handleEditScheduledReport(report)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -773,7 +903,7 @@ const AutomatedReportsPage: React.FC = () => {
                   <Bell className="h-5 w-5" />
                   Alert Rules ({filteredAlerts.length})
                 </span>
-                <Button size="sm">
+                <Button size="sm" onClick={handleCreateAlert}>
                   <Plus className="h-4 w-4 mr-1" />
                   New Alert
                 </Button>
@@ -805,6 +935,7 @@ const AutomatedReportsPage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
+                        onClick={() => handleEditAlert(alert)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
