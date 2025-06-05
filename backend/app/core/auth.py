@@ -5,6 +5,9 @@ from passlib.context import CryptContext
 from passlib.hash import bcrypt
 import secrets
 import os
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
 
 # Password hashing context
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -16,6 +19,9 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
+
+# Security scheme
+security = HTTPBearer()
 
 class AuthService:
     @staticmethod
@@ -105,4 +111,7 @@ class AuthService:
                 return None
             return payload.get("email")
         except JWTError:
-            return None 
+            return None
+
+
+# Authentication dependency functions will be imported dynamically to avoid circular imports 

@@ -8,6 +8,7 @@ from app.core.database import Base
 class UserRole(enum.Enum):
     USER = "user"
     ORGANIZER = "organizer"
+    PROMOTER = "promoter"
     INSTRUCTOR = "instructor"
     ADMIN = "admin"
     MODERATOR = "moderator"
@@ -53,6 +54,9 @@ class User(Base):
     # Relationships
     created_events = relationship("Event", back_populates="creator")
     tickets = relationship("Ticket", foreign_keys="Ticket.user_id", back_populates="user")
+    payment_info = relationship("UserPaymentInfo", back_populates="user", uselist=False)
+    disbursements = relationship("PaymentDisbursement", back_populates="recipient")
+    account = relationship("UserAccount", back_populates="user", uselist=False)
 
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', role='{self.role.value}')>" 

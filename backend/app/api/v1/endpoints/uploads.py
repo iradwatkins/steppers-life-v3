@@ -6,7 +6,7 @@ from pathlib import Path
 import logging
 
 from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.core.dependencies import get_current_user
 from app.models.user import User
 from app.services.file_upload import FileUploadService
 from app.core.config import settings

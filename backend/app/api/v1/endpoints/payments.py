@@ -6,7 +6,7 @@ from pydantic import BaseModel
 import logging
 
 from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.core.dependencies import get_current_user
 from app.models.ticket import Ticket, PaymentStatus, TicketStatus
 from app.models.user import User
 from app.services.payment_service import payment_service, PaymentProvider, PaymentError

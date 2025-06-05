@@ -36,7 +36,7 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
     
-    # Square Payment Settings
+    # Square Payment Settings (for receiving payments)
     SQUARE_ACCESS_TOKEN: Optional[str] = None
     SQUARE_APPLICATION_ID: Optional[str] = None
     SQUARE_ENVIRONMENT: str = "sandbox"  # sandbox or production
@@ -45,6 +45,17 @@ class Settings(BaseSettings):
     PAYPAL_CLIENT_ID: Optional[str] = None
     PAYPAL_CLIENT_SECRET: Optional[str] = None
     PAYPAL_MODE: str = "sandbox"  # sandbox or live
+    
+    # CashApp Settings (for disbursements/payouts)
+    CASHAPP_API_KEY: Optional[str] = None
+    CASHAPP_CLIENT_ID: Optional[str] = None
+    CASHAPP_ENVIRONMENT: str = "sandbox"  # sandbox or production
+    
+    # Zelle Settings (for tracking manual payments)
+    ZELLE_TRACKING_ENABLED: bool = True
+    
+    # Bank Transfer Settings (for tracking manual payments)
+    BANK_TRANSFER_TRACKING_ENABLED: bool = True
     
     # Frontend URL for payment redirects
     FRONTEND_URL: str = "http://localhost:8082"

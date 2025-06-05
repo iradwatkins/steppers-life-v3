@@ -31,7 +31,7 @@ const Header = () => {
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
-    { name: 'Blog', href: '/blog' },
+    { name: 'Magazine', href: '/magazine' },
   ];
 
   const userNavigation = [
@@ -39,7 +39,7 @@ const Header = () => {
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
-    { name: 'Blog', href: '/blog' },
+    { name: 'Magazine', href: '/magazine' },
   ];
 
   const isActiveLink = (href: string) => {

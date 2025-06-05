@@ -212,14 +212,14 @@ const Admin = () => {
           <div className="mb-8">
             <h2 className="text-xl font-semibold text-text-primary mb-4">Management Tools</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Link to="/admin/blog">
+              <Link to="/admin/magazine">
                 <Card className="hover:shadow-lg transition-shadow duration-200">
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Blog Management</CardTitle>
+                    <CardTitle className="text-sm font-medium">Magazine Management</CardTitle>
                     <Edit className="h-4 w-4 text-text-secondary" />
                   </CardHeader>
                   <CardContent>
-                    <p className="text-xs text-text-secondary">Create, edit, and manage blog posts including featured content and embeds.</p>
+                    <p className="text-xs text-text-secondary">Create, edit, and manage magazine articles with block-based content including categories and rich media.</p>
                   </CardContent>
                 </Card>
               </Link>

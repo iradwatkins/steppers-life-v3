@@ -58,10 +58,11 @@ import ProfileManagement from "./pages/buyer/ProfileManagement";
 import AccountSettings from "./pages/buyer/AccountSettings";
 import VenueDetailPage from "./components/VenueDetailPage";
 
-// Blog imports
-import BlogPage from "./pages/BlogPage";
-import BlogPostPage from "./pages/BlogPostPage";
-import BlogRouter from "./pages/admin/BlogRouter";
+// Magazine imports
+import MagazinePage from "./pages/MagazinePage";
+import MagazineCategoryPage from "./pages/MagazineCategoryPage";
+import MagazineArticlePage from "./pages/MagazineArticlePage";
+import MagazineRouter from "./pages/admin/MagazineRouter";
 
 // Store Directory imports
 import { SubmitStore } from "./pages/stores/SubmitStore";
@@ -162,9 +163,10 @@ const App = () => (
             <Route path="/classes" element={<Classes />} />
             <Route path="/community" element={<Community />} />
             
-            {/* Blog routes (public) */}
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:slug" element={<BlogPostPage />} />
+            {/* Magazine routes (public) */}
+            <Route path="/magazine" element={<MagazinePage />} />
+            <Route path="/magazine/:categorySlug" element={<MagazineCategoryPage />} />
+            <Route path="/magazine/article/:articleSlug" element={<MagazineArticlePage />} />
             
             <Route path="/profile" element={
               <ProtectedRoute>
@@ -189,7 +191,7 @@ const App = () => (
               <Route path="notifications" element={<AdminNotificationsPage />} />
               <Route path="content" element={<AdminContentPage />} />
               <Route path="events" element={<AdminEventsPage />} />
-              <Route path="blog/*" element={<BlogRouter />} />
+              <Route path="magazine/*" element={<MagazineRouter />} />
               <Route path="stores" element={<StoreDirectoryAdminPage />} />
               <Route path="vanity-urls" element={<AdminVanityUrlPage />} />
               <Route path="email-management" element={<AdminEmailManagementPage />} />

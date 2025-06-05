@@ -22,10 +22,12 @@ import { AdSettingsManagement } from '@/components/advertising/AdSettingsManagem
 import { AdAnalyticsDashboard } from '@/components/advertising/AdAnalyticsDashboard';
 import { AdModerationPanel } from '@/components/advertising/AdModerationPanel';
 import { CreateAdZoneDialog } from '@/components/advertising/CreateAdZoneDialog';
+import { toast } from 'sonner';
 
 const AdminAdvertisingPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [showCreateZoneDialog, setShowCreateZoneDialog] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const {
     adZones,
@@ -52,7 +54,16 @@ const AdminAdvertisingPage: React.FC = () => {
   ).length;
 
   const handleRefresh = async () => {
-    await refreshAllData();
+    try {
+      setIsRefreshing(true);
+      await refreshAllData();
+      toast.success('All advertising data refreshed successfully');
+    } catch (error) {
+      console.error('Refresh error:', error);
+      toast.error('Failed to refresh data. Please try again.');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleExportData = () => {
@@ -96,10 +107,10 @@ const AdminAdvertisingPage: React.FC = () => {
           <Button
             variant="outline"
             onClick={handleRefresh}
-            disabled={loadingZones || loadingAds || loadingAnalytics}
+            disabled={loadingZones || loadingAds || loadingAnalytics || isRefreshing}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
           </Button>
           <Button
             variant="outline"

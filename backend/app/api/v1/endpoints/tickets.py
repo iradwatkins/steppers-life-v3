@@ -6,7 +6,7 @@ from uuid import UUID
 import secrets
 
 from app.core.database import get_db
-from app.core.auth import get_current_user
+from app.core.dependencies import get_current_user
 from app.models.ticket import Ticket, TicketStatus, PaymentStatus
 from app.models.event import Event
 from app.models.user import User

@@ -35,6 +35,25 @@ class AdvertisingService {
     // Initialize mock ad zones
     this.adZones = [
       {
+        id: 'zone_hero_banner',
+        name: 'Hero Banner',
+        description: 'Premium hero section placement with full-width display',
+        dimensions: { width: 1920, height: 600 },
+        placement: AdPlacement.HEADER_BANNER,
+        pricing: {
+          basePricePerDay: 100,
+          isPremium: true,
+          weeklyDiscount: 15,
+          monthlyDiscount: 25
+        },
+        isActive: true,
+        supportedFormats: ['jpg', 'png', 'webp'],
+        maxFileSize: 5,
+        isRandomPlacement: true,
+        createdAt: new Date('2024-01-01'),
+        updatedAt: new Date('2024-01-01')
+      },
+      {
         id: 'zone_header_banner',
         name: 'Header Banner',
         description: 'Prime banner placement at the top of all pages',
@@ -115,6 +134,96 @@ class AdvertisingService {
     // Initialize mock direct user ads
     this.directUserAds = [
       {
+        id: 'ad_hero_001',
+        advertiserId: 'user_business_hero_001',
+        advertiserInfo: {
+          name: 'Elite Dance Academy',
+          email: 'info@elitedanceacademy.com',
+          userType: 'business'
+        },
+        adZoneId: 'zone_hero_banner',
+        title: 'Master the Art of Chicago Stepping',
+        description: 'Join Elite Dance Academy - Where Passion Meets Precision. Professional instruction, state-of-the-art facilities, and a community that dances as one.',
+        creativeUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+        clickThroughUrl: 'https://elitedanceacademy.com/chicago-stepping',
+        status: AdStatus.RUNNING,
+        schedule: {
+          startDate: new Date('2024-12-15'),
+          endDate: new Date('2025-01-15'),
+          duration: 31
+        },
+        pricing: {
+          totalCost: 2325,
+          pricePerDay: 75,
+          discountApplied: 775
+        },
+        performance: {
+          impressions: 28750,
+          clicks: 432,
+          clickThroughRate: 1.50,
+          totalRevenue: 2325,
+          dateRange: {
+            start: new Date('2024-12-15'),
+            end: new Date('2024-12-19')
+          },
+          dailyStats: [
+            { date: new Date('2024-12-15'), impressions: 5750, clicks: 86, revenue: 75 },
+            { date: new Date('2024-12-16'), impressions: 5800, clicks: 88, revenue: 75 },
+            { date: new Date('2024-12-17'), impressions: 5700, clicks: 84, revenue: 75 },
+            { date: new Date('2024-12-18'), impressions: 5900, clicks: 90, revenue: 75 },
+            { date: new Date('2024-12-19'), impressions: 5600, clicks: 84, revenue: 75 }
+          ]
+        },
+        createdAt: new Date('2024-12-10'),
+        updatedAt: new Date('2024-12-15'),
+        approvedAt: new Date('2024-12-12')
+      },
+      {
+        id: 'ad_hero_002',
+        advertiserId: 'user_business_hero_002',
+        advertiserInfo: {
+          name: 'Chicago Step Shoes Co.',
+          email: 'sales@chicagostepshoes.com',
+          userType: 'business'
+        },
+        adZoneId: 'zone_hero_banner',
+        title: 'Step Up Your Game with Professional Dance Shoes',
+        description: 'Discover the perfect blend of comfort, style, and performance. Trusted by professional dancers nationwide.',
+        creativeUrl: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80',
+        clickThroughUrl: 'https://chicagostepshoes.com/professional-line',
+        status: AdStatus.RUNNING,
+        schedule: {
+          startDate: new Date('2024-12-15'),
+          endDate: new Date('2025-01-15'),
+          duration: 31
+        },
+        pricing: {
+          totalCost: 2325,
+          pricePerDay: 75,
+          discountApplied: 775
+        },
+        performance: {
+          impressions: 31200,
+          clicks: 468,
+          clickThroughRate: 1.50,
+          totalRevenue: 2325,
+          dateRange: {
+            start: new Date('2024-12-15'),
+            end: new Date('2024-12-19')
+          },
+          dailyStats: [
+            { date: new Date('2024-12-15'), impressions: 6240, clicks: 94, revenue: 75 },
+            { date: new Date('2024-12-16'), impressions: 6300, clicks: 95, revenue: 75 },
+            { date: new Date('2024-12-17'), impressions: 6100, clicks: 92, revenue: 75 },
+            { date: new Date('2024-12-18'), impressions: 6400, clicks: 96, revenue: 75 },
+            { date: new Date('2024-12-19'), impressions: 6160, clicks: 91, revenue: 75 }
+          ]
+        },
+        createdAt: new Date('2024-12-10'),
+        updatedAt: new Date('2024-12-15'),
+        approvedAt: new Date('2024-12-12')
+      },
+      {
         id: 'ad_001',
         advertiserId: 'user_organizer_001',
         advertiserInfo: {
@@ -125,7 +234,7 @@ class AdvertisingService {
         adZoneId: 'zone_header_banner',
         title: 'Join Atlanta Step Masters - Weekly Classes',
         description: 'Premier stepping instruction with championship-winning instructors',
-        creativeUrl: '/mock-ads/atlanta-step-masters-banner.jpg',
+        creativeUrl: 'https://images.unsplash.com/photo-1574947671515-c8a58abf1d77?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
         clickThroughUrl: 'https://atlantastepmasters.com/classes',
         status: AdStatus.RUNNING,
         schedule: {
@@ -213,6 +322,141 @@ class AdvertisingService {
         },
         createdAt: new Date('2024-12-18'),
         updatedAt: new Date('2024-12-18')
+      },
+      {
+        id: 'ad_sidebar_001',
+        advertiserId: 'user_business_sidebar_001',
+        advertiserInfo: {
+          name: 'Step Style Boutique',
+          email: 'info@stepstyle.com',
+          userType: 'business'
+        },
+        adZoneId: 'zone_sidebar_right',
+        title: 'Fashion Forward Dance Wear',
+        description: 'Elegant attire for every step you take',
+        creativeUrl: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+        clickThroughUrl: 'https://stepstyle.com/collections/dance-wear',
+        status: AdStatus.RUNNING,
+        schedule: {
+          startDate: new Date('2024-12-15'),
+          endDate: new Date('2025-01-15'),
+          duration: 31
+        },
+        pricing: {
+          totalCost: 930,
+          pricePerDay: 30,
+          discountApplied: 310
+        },
+        performance: {
+          impressions: 12400,
+          clicks: 186,
+          clickThroughRate: 1.50,
+          totalRevenue: 930,
+          dateRange: {
+            start: new Date('2024-12-15'),
+            end: new Date('2024-12-19')
+          },
+          dailyStats: [
+            { date: new Date('2024-12-15'), impressions: 2480, clicks: 37, revenue: 30 },
+            { date: new Date('2024-12-16'), impressions: 2520, clicks: 38, revenue: 30 },
+            { date: new Date('2024-12-17'), impressions: 2440, clicks: 37, revenue: 30 },
+            { date: new Date('2024-12-18'), impressions: 2560, clicks: 38, revenue: 30 },
+            { date: new Date('2024-12-19'), impressions: 2400, clicks: 36, revenue: 30 }
+          ]
+        },
+        createdAt: new Date('2024-12-10'),
+        updatedAt: new Date('2024-12-15'),
+        approvedAt: new Date('2024-12-12')
+      },
+      {
+        id: 'ad_infeed_001',
+        advertiserId: 'user_business_infeed_001',
+        advertiserInfo: {
+          name: 'Rhythm City Events',
+          email: 'bookings@rhythmcity.com',
+          userType: 'organizer'
+        },
+        adZoneId: 'zone_in_feed',
+        title: 'Monthly Stepping Competition',
+        description: 'Win cash prizes and showcase your skills at Rhythm City\'s premier stepping competition',
+        creativeUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        clickThroughUrl: 'https://rhythmcity.com/competitions',
+        status: AdStatus.RUNNING,
+        schedule: {
+          startDate: new Date('2024-12-15'),
+          endDate: new Date('2025-01-15'),
+          duration: 31
+        },
+        pricing: {
+          totalCost: 1240,
+          pricePerDay: 40,
+          discountApplied: 0
+        },
+        performance: {
+          impressions: 18600,
+          clicks: 279,
+          clickThroughRate: 1.50,
+          totalRevenue: 1240,
+          dateRange: {
+            start: new Date('2024-12-15'),
+            end: new Date('2024-12-19')
+          },
+          dailyStats: [
+            { date: new Date('2024-12-15'), impressions: 3720, clicks: 56, revenue: 40 },
+            { date: new Date('2024-12-16'), impressions: 3780, clicks: 57, revenue: 40 },
+            { date: new Date('2024-12-17'), impressions: 3660, clicks: 55, revenue: 40 },
+            { date: new Date('2024-12-18'), impressions: 3840, clicks: 58, revenue: 40 },
+            { date: new Date('2024-12-19'), impressions: 3600, clicks: 53, revenue: 40 }
+          ]
+        },
+        createdAt: new Date('2024-12-10'),
+        updatedAt: new Date('2024-12-15'),
+        approvedAt: new Date('2024-12-12')
+      },
+      {
+        id: 'ad_between_content_001',
+        advertiserId: 'user_business_content_001',
+        advertiserInfo: {
+          name: 'StepFit Nutrition',
+          email: 'hello@stepfitnutrition.com',
+          userType: 'business'
+        },
+        adZoneId: 'zone_between_content',
+        title: 'Fuel Your Dance with Premium Nutrition',
+        description: 'Performance supplements designed specifically for dancers',
+        creativeUrl: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        clickThroughUrl: 'https://stepfitnutrition.com/dancer-series',
+        status: AdStatus.RUNNING,
+        schedule: {
+          startDate: new Date('2024-12-15'),
+          endDate: new Date('2025-01-15'),
+          duration: 31
+        },
+        pricing: {
+          totalCost: 775,
+          pricePerDay: 25,
+          discountApplied: 0
+        },
+        performance: {
+          impressions: 9300,
+          clicks: 140,
+          clickThroughRate: 1.50,
+          totalRevenue: 775,
+          dateRange: {
+            start: new Date('2024-12-15'),
+            end: new Date('2024-12-19')
+          },
+          dailyStats: [
+            { date: new Date('2024-12-15'), impressions: 1860, clicks: 28, revenue: 25 },
+            { date: new Date('2024-12-16'), impressions: 1890, clicks: 28, revenue: 25 },
+            { date: new Date('2024-12-17'), impressions: 1830, clicks: 27, revenue: 25 },
+            { date: new Date('2024-12-18'), impressions: 1920, clicks: 29, revenue: 25 },
+            { date: new Date('2024-12-19'), impressions: 1800, clicks: 28, revenue: 25 }
+          ]
+        },
+        createdAt: new Date('2024-12-10'),
+        updatedAt: new Date('2024-12-15'),
+        approvedAt: new Date('2024-12-12')
       }
     ];
 

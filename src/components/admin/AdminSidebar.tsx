@@ -84,9 +84,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
           href: "/admin/events",
           icon: Calendar,
         },
-        {
-          title: "Blog",
-          href: "/admin/blog",
+            {
+      title: "Magazine",
+      href: "/admin/magazine",
           icon: FileText,
         },
         {

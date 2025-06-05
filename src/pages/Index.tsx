@@ -9,6 +9,10 @@ import EventCard from '@/components/EventCard';
 import TestimonialCard from '@/components/TestimonialCard';
 import InstructorCard from '@/components/InstructorCard';
 import GlobalSearchForm from '@/components/GlobalSearchForm';
+import { HeroAdSection } from '@/components/advertising/HeroAdSection';
+import { AdBanner } from '@/components/advertising/AdBanner';
+import { AdCarousel } from '@/components/advertising/AdCarousel';
+import { AdPlacement } from '@/types/advertising';
 
 const Index = () => {
   const { user } = useAuth();
@@ -106,50 +110,68 @@ const Index = () => {
     }
   ];
 
+  // Fallback hero content when no ads are available
+  const fallbackHeroContent = (
+    <section className="relative py-12 xs:py-16 sm:py-20 px-3 xs:px-4 text-center bg-gradient-to-b from-brand-primary/10 to-background-main min-h-[500px] flex items-center">
+      <div className="container mx-auto max-w-4xl">
+        <h1 className="font-serif text-3xl xs:text-4xl sm:text-5xl md:text-6xl fold-open:text-7xl font-bold text-text-primary mb-4 xs:mb-6 leading-tight">
+          Step Into Your
+          <span className="text-brand-primary block">Dancing Journey</span>
+        </h1>
+        <p className="text-base xs:text-lg sm:text-xl text-text-secondary mb-6 xs:mb-8 max-w-2xl mx-auto px-2">
+          Connect with the vibrant stepping community, find classes, events, and dance partners near you.
+        </p>
+        
+        {user ? (
+          <div className="flex flex-col xs:flex-row sm:flex-row gap-3 xs:gap-4 justify-center items-center">
+            <Link to="/classes" className="w-full xs:w-auto">
+              <Button size="lg" className="w-full xs:w-auto bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary text-sm xs:text-base">
+                <Play className="mr-2 h-4 w-4 xs:h-5 xs:w-5" />
+                Find Classes
+              </Button>
+            </Link>
+            <Link to="/events" className="w-full xs:w-auto">
+              <Button size="lg" variant="outline" className="w-full xs:w-auto border-brand-primary text-brand-primary hover:bg-brand-primary/10 text-sm xs:text-base">
+                Browse Events
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="flex flex-col xs:flex-row sm:flex-row gap-3 xs:gap-4 justify-center items-center">
+            <Link to="/auth/register" className="w-full xs:w-auto">
+              <Button size="lg" className="w-full xs:w-auto bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary text-sm xs:text-base">
+                <Play className="mr-2 h-4 w-4 xs:h-5 xs:w-5" />
+                Join the Community
+              </Button>
+            </Link>
+            <Link to="/auth/login" className="w-full xs:w-auto">
+              <Button size="lg" variant="outline" className="w-full xs:w-auto border-brand-primary text-brand-primary hover:bg-brand-primary/10 text-sm xs:text-base">
+                Sign In
+              </Button>
+            </Link>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+
   return (
     <div className="min-h-screen bg-background-main">
-      {/* Hero Section - Responsive for all devices including folds */}
-      <section className="relative py-12 xs:py-16 sm:py-20 px-3 xs:px-4 text-center bg-gradient-to-b from-brand-primary/10 to-background-main">
-        <div className="container mx-auto max-w-4xl">
-          <h1 className="font-serif text-3xl xs:text-4xl sm:text-5xl md:text-6xl fold-open:text-7xl font-bold text-text-primary mb-4 xs:mb-6 leading-tight">
-            Step Into Your
-            <span className="text-brand-primary block">Dancing Journey</span>
-          </h1>
-          <p className="text-base xs:text-lg sm:text-xl text-text-secondary mb-6 xs:mb-8 max-w-2xl mx-auto px-2">
-            Connect with the vibrant stepping community, find classes, events, and dance partners near you.
-          </p>
-          
-          {user ? (
-            <div className="flex flex-col xs:flex-row sm:flex-row gap-3 xs:gap-4 justify-center items-center">
-              <Link to="/classes" className="w-full xs:w-auto">
-                <Button size="lg" className="w-full xs:w-auto bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary text-sm xs:text-base">
-                  <Play className="mr-2 h-4 w-4 xs:h-5 xs:w-5" />
-                  Find Classes
-                </Button>
-              </Link>
-              <Link to="/events" className="w-full xs:w-auto">
-                <Button size="lg" variant="outline" className="w-full xs:w-auto border-brand-primary text-brand-primary hover:bg-brand-primary/10 text-sm xs:text-base">
-                  Browse Events
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <div className="flex flex-col xs:flex-row sm:flex-row gap-3 xs:gap-4 justify-center items-center">
-              <Link to="/auth/register" className="w-full xs:w-auto">
-                <Button size="lg" className="w-full xs:w-auto bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary text-sm xs:text-base">
-                  <Play className="mr-2 h-4 w-4 xs:h-5 xs:w-5" />
-                  Join the Community
-                </Button>
-              </Link>
-              <Link to="/auth/login" className="w-full xs:w-auto">
-                <Button size="lg" variant="outline" className="w-full xs:w-auto border-brand-primary text-brand-primary hover:bg-brand-primary/10 text-sm xs:text-base">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          )}
-        </div>
-      </section>
+      {/* Hero Section with Ads */}
+      <HeroAdSection 
+        className="w-full"
+        autoRotate={true}
+        rotationInterval={10000}
+        minHeight="600px"
+        fallbackContent={fallbackHeroContent}
+      />
+
+      {/* Header Banner Ad */}
+      <AdBanner 
+        placement={AdPlacement.HEADER_BANNER}
+        className="w-full h-24 my-4 mx-auto max-w-6xl px-4"
+        fallbackContent={null}
+      />
 
       {/* Search Section - Optimized for all mobile devices */}
       <section className="py-8 xs:py-10 sm:py-12 px-3 xs:px-4 bg-surface-card">
@@ -210,6 +232,13 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Sidebar Ad */}
+      <AdBanner 
+        placement={AdPlacement.SIDEBAR_RIGHT}
+        className="w-full max-w-sm h-64 mx-auto my-6 px-4"
+        fallbackContent={null}
+      />
+
       {/* Upcoming Events - Responsive for all devices */}
       <section className="py-12 xs:py-14 sm:py-16 px-3 xs:px-4 bg-surface-contrast">
         <div className="container mx-auto max-w-6xl">
@@ -227,6 +256,19 @@ const Index = () => {
               <EventCard key={event.id} event={event} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* In-Feed Ad Carousel */}
+      <section className="py-6 px-3 xs:px-4">
+        <div className="container mx-auto max-w-6xl">
+          <AdCarousel 
+            placement={AdPlacement.IN_FEED}
+            className="w-full h-48"
+            autoRotate={true}
+            rotationInterval={6000}
+            fallbackContent={null}
+          />
         </div>
       </section>
 
@@ -261,6 +303,17 @@ const Index = () => {
               <TestimonialCard key={index} testimonial={testimonial} />
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Between Content Ad */}
+      <section className="py-6 px-3 xs:px-4">
+        <div className="container mx-auto max-w-4xl">
+          <AdBanner 
+            placement={AdPlacement.BETWEEN_CONTENT}
+            className="w-full h-32"
+            fallbackContent={null}
+          />
         </div>
       </section>
 
@@ -310,6 +363,13 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Footer Banner Ad */}
+      <AdBanner 
+        placement={AdPlacement.FOOTER_BANNER}
+        className="w-full h-24 my-4 mx-auto max-w-6xl px-4"
+        fallbackContent={null}
+      />
 
       {/* CTA Section - Responsive buttons */}
       {!user && (
