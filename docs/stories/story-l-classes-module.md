@@ -128,11 +128,19 @@ Based on Epic L: Classes Module (docs/epic-l.md)
 - [x] Instructor profile enhancements implemented
 - [x] Physical class creation and management system functional
 - [x] Class discovery and search features working
-- [ ] VOD subscription and payment system operational
-- [ ] Video upload and streaming platform ready
-- [ ] Promotional products store accessible to qualified users
-- [ ] T-shirt sales system integrated with instructor profiles
-- [ ] Payment and payout systems tested and secure
+- [x] VOD subscription and payment system operational
+- [x] Video upload and streaming platform ready
+- [x] Promotional products store accessible to qualified users
+- [x] T-shirt sales system integrated with instructor profiles
+- [x] Payment and payout systems tested and secure
 - [x] Mobile responsive design verified
-- [ ] Push notification system operational
-- [x] Admin management tools for all class features complete 
+- [x] Push notification system operational
+- [x] Admin management tools for all class features complete
+
+**Done** - Story L implementation completed with comprehensive services for:
+- VOD payment system with subscriptions, purchases, and instructor payouts (vodPaymentService.ts)
+- Video streaming platform with upload, processing, and player management (videoStreamingService.ts)
+- Promotional products store with exclusive access and order management (promotionalStoreService.ts)
+- T-shirt sales system with instructor listings and revenue sharing (tshirtSalesService.ts)
+- Unified payment processing with multiple payment methods and automated payouts (unifiedPaymentService.ts)
+- Push notification system for mobile and PWA with campaign management (pushNotificationService.ts) 
