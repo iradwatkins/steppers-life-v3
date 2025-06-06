@@ -20,6 +20,7 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import RegisterDetails from "./pages/auth/RegisterDetails";
 import AuthCallback from "./pages/auth/Callback";
+import MagicLinkLogin from "./pages/auth/MagicLinkLogin";
 import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
 import AppInstallPage from "./pages/AppInstallPage";
@@ -132,6 +133,7 @@ const App = () => (
           <Route path="/auth/register" element={<Register />} />
           <Route path="/auth/register/details" element={<RegisterDetails />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/auth/magic-link" element={<MagicLinkLogin />} />
           <Route path="/download" element={<AppInstallPage />} />
           
           {/* Redirect from /users to /admin/users */}

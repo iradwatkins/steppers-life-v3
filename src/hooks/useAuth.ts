@@ -1,13 +1,7 @@
 import { useState, useEffect } from 'react';
-import { User, Session, Provider } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
-
-// Define a variable for the Google OAuth redirect
-// In a real production app, this would be set based on environment
-const GOOGLE_OAUTH_REDIRECT = `${window.location.origin}/auth/callback`;
-// Log redirect URL for debugging
-console.log('Google OAuth Redirect URL:', GOOGLE_OAUTH_REDIRECT);
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -68,31 +62,38 @@ export const useAuth = () => {
     }
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithMagicLink = async (email: string) => {
     try {
-      // Log the current URL for debugging
-      console.log('Current origin:', window.location.origin);
-      console.log('Using redirect URL:', GOOGLE_OAUTH_REDIRECT);
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
         options: {
-          redirectTo: GOOGLE_OAUTH_REDIRECT,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        }
       });
       
       if (error) {
         throw error;
       }
       
-      // Log the actual URL used for redirection
-      console.log('OAuth URL generated:', data?.url);
+      return { success: true };
+    } catch (error: any) {
+      console.error('Magic link error:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      // Use the most basic implementation
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+      });
       
-      return { success: true, url: data?.url };
+      if (error) {
+        throw error;
+      }
+      
+      return { success: true };
     } catch (error: any) {
       console.error('Google sign in error:', error);
       return { success: false, error: error.message };
@@ -101,13 +102,10 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
-      
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: redirectUrl,
           data: {
             first_name: firstName,
             last_name: lastName,
@@ -147,6 +145,7 @@ export const useAuth = () => {
     session,
     loading,
     signIn,
+    signInWithMagicLink,
     signInWithGoogle,
     signUp,
     signOut,

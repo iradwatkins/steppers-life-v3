@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 import { Spinner } from '@/components/ui/spinner';
+import { Mail } from 'lucide-react';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -234,9 +235,18 @@ const Register = () => {
           </p>
         </div>
 
-        <div className="mt-6 text-center">
-          <Link to="/auth/login" className="text-blue-600 hover:underline">
-            Need help finding your tickets?
+        <div className="mt-6 text-center space-y-2">
+          <Link to="/auth/login" className="text-blue-600 hover:underline block">
+            Already have an account? Sign in
+          </Link>
+          <Link to="/auth/magic-link" className="block w-full">
+            <Button 
+              type="button"
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              <span>Use magic link (passwordless login)</span>
+            </Button>
           </Link>
         </div>
       </div>
