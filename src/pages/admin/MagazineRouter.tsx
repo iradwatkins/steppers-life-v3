@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Outlet } from 'react-router-dom';
 import MagazineManagementPage from './MagazineManagementPage';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -159,15 +159,22 @@ const MagazineCategoriesPage: React.FC = () => {
   );
 };
 
+// The Router component has been simplified to directly export the correct pages
 const MagazineRouter: React.FC = () => {
-  return (
-    <Routes>
-      <Route index element={<MagazineManagementPage />} />
-      <Route path="create" element={<MagazineCreatePage />} />
-      <Route path="edit/:id" element={<MagazineEditPage />} />
-      <Route path="categories" element={<MagazineCategoriesPage />} />
-    </Routes>
-  );
+  const location = useLocation();
+  const path = location.pathname;
+
+  // Render the appropriate component based on the current path
+  if (path.endsWith('/create')) {
+    return <MagazineCreatePage />;
+  } else if (path.includes('/edit/')) {
+    return <MagazineEditPage />;
+  } else if (path.endsWith('/categories')) {
+    return <MagazineCategoriesPage />;
+  }
+  
+  // Default to the management page
+  return <MagazineManagementPage />;
 };
 
 export default MagazineRouter; 
