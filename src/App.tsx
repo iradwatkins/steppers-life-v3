@@ -226,7 +226,7 @@ const App = () => (
             
             {/* Instructor routes */}
             <Route path="/instructor/dashboard" element={
-              <RoleProtectedRoute allowedRoles={['instructor']}>
+              <RoleProtectedRoute allowedRoles={['instructor', 'admin']}>
                 <InstructorDashboardPage />
               </RoleProtectedRoute>
             } />
@@ -244,137 +244,137 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/organizer/events/create" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <CreateEventPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/ticketing" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventTicketingPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/seating" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventSeatingPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/seating/advanced" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <AdvancedSeatingEditorPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/custom-questions" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventCustomQuestionsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/manage" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <ManageEventPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/promo-codes" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventPromoCodesPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/refunds" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventRefundsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/cash-payments" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventCashPaymentPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/email-campaigns" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventEmailCampaignsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/performance" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventPerformancePage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/financial-reports" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <FinancialReportsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/attendees" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <AttendeeReportPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/customer-analytics" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <CustomerAnalyticsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/comparative-analytics" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <ComparativeAnalyticsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/automated-reports" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <AutomatedReportsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/collections" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <EventCollectionsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/analytics" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <MultiEventAnalyticsPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/team" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <FollowerManagementPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/roles" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <RoleManagementPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/sales-agents" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <SalesAgentManagementPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/team" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <FollowerManagementPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/sales-agents" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <SalesAgentManagementPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/commission-payments" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <CommissionPaymentPage />
               </RoleProtectedRoute>
             } />
             <Route path="/organizer/commission-payments" element={
-              <RoleProtectedRoute allowedRoles={['organizer']}>
+              <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <CommissionPaymentPage />
               </RoleProtectedRoute>
             } />
             <Route path="/agent/dashboard" element={
-              <RoleProtectedRoute allowedRoles={['agent']}>
+              <RoleProtectedRoute allowedRoles={['sales_agent', 'admin']}>
                 <SalesAgentDashboardPage />
               </RoleProtectedRoute>
             } />
             <Route path="/promoter/events/claim" element={
-              <RoleProtectedRoute allowedRoles={['promoter']}>
+              <RoleProtectedRoute allowedRoles={['buyer', 'organizer', 'admin']}>
                 <ClaimableEventsPage />
               </RoleProtectedRoute>
             } />

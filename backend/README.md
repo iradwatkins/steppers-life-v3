@@ -269,3 +269,32 @@ backend/
 Full interactive API documentation is available at:
 - **Swagger UI**: http://localhost:8000/api/v1/docs
 - **ReDoc**: http://localhost:8000/api/v1/redoc 
+
+## 📧 Email Integration
+
+### SendGrid Setup
+
+SteppersLife uses SendGrid for email delivery. To set up SendGrid:
+
+1. Create a SendGrid account at [sendgrid.com](https://sendgrid.com)
+2. Create an API key with "Mail Send" permissions
+3. Add the API key to your `.env` file:
+   ```
+   SENDGRID_API_KEY=your-sendgrid-api-key-here
+   SENDGRID_FROM_EMAIL=noreply@stepperslife.com
+   SENDGRID_FROM_NAME=SteppersLife
+   ```
+
+### Testing Email Integration
+
+You can test the SendGrid integration using the provided script:
+
+```
+python scripts/test_sendgrid.py recipient@example.com
+```
+
+Or with a specific API key:
+
+```
+python scripts/test_sendgrid.py recipient@example.com --api-key=your-api-key
+``` 

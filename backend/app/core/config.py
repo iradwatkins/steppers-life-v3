@@ -18,13 +18,23 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # Email Configuration
+    # Supabase Configuration
+    SUPABASE_URL: str = "https://revmdncwzztxxinjlzoc.supabase.co"
+    SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldm1kbmN3enp0eHhpbmpsem9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4NzY4NjEsImV4cCI6MjA2NDQ1Mjg2MX0.J7Wj8t8gYsErt29TsFXyPGAR7YbUEKdlbCeUTJwK7ic"
+    SUPABASE_JWT_SECRET: Optional[str] = None
+    
+    # Email Configuration - SMTP
     SMTP_SERVER: Optional[str] = None
     SMTP_PORT: int = 587
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM_EMAIL: str = "noreply@stepperslife.com"
     SMTP_FROM_NAME: str = "SteppersLife"
+    
+    # Email Configuration - SendGrid
+    SENDGRID_API_KEY: Optional[str] = os.environ.get("SENDGRID_API_KEY")
+    SENDGRID_FROM_EMAIL: Optional[str] = os.environ.get("SENDGRID_FROM_EMAIL", "noreply@stepperslife.com")
+    SENDGRID_FROM_NAME: Optional[str] = os.environ.get("SENDGRID_FROM_NAME", "SteppersLife")
     
     # File Upload
     MAX_FILE_SIZE_MB: int = 10
@@ -90,4 +100,22 @@ def get_upload_config() -> dict:
         "max_size_mb": settings.MAX_FILE_SIZE_MB,
         "allowed_extensions": settings.ALLOWED_FILE_EXTENSIONS.split(","),
         "upload_path": settings.UPLOAD_PATH
+    }
+
+def get_email_config() -> dict:
+    """Get email configuration."""
+    return {
+        "smtp": {
+            "server": settings.SMTP_SERVER,
+            "port": settings.SMTP_PORT,
+            "username": settings.SMTP_USERNAME,
+            "password": settings.SMTP_PASSWORD,
+            "from_email": settings.SMTP_FROM_EMAIL,
+            "from_name": settings.SMTP_FROM_NAME,
+        },
+        "sendgrid": {
+            "api_key": settings.SENDGRID_API_KEY,
+            "from_email": settings.SENDGRID_FROM_EMAIL or settings.SMTP_FROM_EMAIL,
+            "from_name": settings.SENDGRID_FROM_NAME or settings.SMTP_FROM_NAME,
+        }
     } 

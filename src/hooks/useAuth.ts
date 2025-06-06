@@ -2,15 +2,32 @@ import { useState, useEffect } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
+import { Database } from '@/integrations/supabase/types';
+import apiService from '@/services/apiService';
+
+type UserRole = Database['public']['Enums']['app_role'];
+
+// Extended user type with backend profile data
+interface ExtendedUser extends User {
+  backendProfile?: {
+    id: number;
+    role: string;
+    status: string;
+    is_verified: boolean;
+    is_active: boolean;
+  };
+}
 
 export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<UserRole>('buyer');
 
   // Function to fetch user role from database
-  const fetchUserRole = async (userId: string) => {
+  const fetchUserRole = async (userId: string): Promise<UserRole> => {
     try {
+      console.log('Fetching role for user:', userId);
       const { data, error } = await supabase
         .from('user_roles')
         .select('role')
@@ -22,7 +39,8 @@ export const useAuth = () => {
         return 'buyer'; // Default to buyer if error
       }
 
-      return data?.role || 'buyer';
+      console.log('User role data:', data);
+      return data?.role as UserRole || 'buyer';
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
       return 'buyer'; // Default to buyer if any exception
@@ -30,7 +48,7 @@ export const useAuth = () => {
   };
 
   // Function to update user's metadata with their role
-  const updateUserMetadata = async (userId: string, role: string) => {
+  const updateUserMetadata = async (userId: string, role: UserRole): Promise<void> => {
     try {
       const { error } = await supabase.auth.updateUser({
         data: { role }
@@ -38,31 +56,82 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Error updating user metadata:', error);
+      } else {
+        console.log('User metadata updated with role:', role);
       }
     } catch (error) {
       console.error('Error in updateUserMetadata:', error);
     }
   };
 
-  // Function to get a user with their role
-  const getUserWithRole = async (currentUser: User): Promise<User> => {
-    // If user already has role in metadata, return as is
-    if (currentUser.user_metadata?.role) {
-      return currentUser;
-    }
-
-    // Otherwise fetch role and update metadata
-    const role = await fetchUserRole(currentUser.id);
-    await updateUserMetadata(currentUser.id, role);
-    
-    // Return updated user
-    return {
-      ...currentUser,
-      user_metadata: {
-        ...currentUser.user_metadata,
-        role
+  // Function to create a user role if it doesn't exist
+  const ensureUserRole = async (userId: string, role: UserRole = 'buyer'): Promise<void> => {
+    try {
+      // First check if the user already has a role
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
+        console.error('Error checking user role:', error);
+        return;
       }
-    };
+      
+      // If user doesn't have a role yet, create one
+      if (!data) {
+        console.log('Creating new user role:', role);
+        const { error: insertError } = await supabase
+          .from('user_roles')
+          .insert({ user_id: userId, role });
+        
+        if (insertError) {
+          console.error('Error creating user role:', insertError);
+        }
+      }
+    } catch (error) {
+      console.error('Error in ensureUserRole:', error);
+    }
+  };
+
+  // Function to get a user with their role
+  const getUserWithRole = async (currentUser: User): Promise<ExtendedUser> => {
+    // If user already has role in metadata, use it
+    if (currentUser.user_metadata?.role) {
+      setUserRole(currentUser.user_metadata.role as UserRole);
+    } else {
+      // Otherwise fetch role and update metadata
+      const role = await fetchUserRole(currentUser.id);
+      await updateUserMetadata(currentUser.id, role);
+      setUserRole(role);
+    }
+    
+    // Get backend profile data if available
+    try {
+      const backendProfile = await apiService.getUserProfile();
+      
+      // Return extended user with backend profile
+      return {
+        ...currentUser,
+        backendProfile,
+        user_metadata: {
+          ...currentUser.user_metadata,
+          role: userRole
+        }
+      };
+    } catch (error) {
+      console.error('Failed to get backend profile:', error);
+      
+      // Return user without backend profile
+      return {
+        ...currentUser,
+        user_metadata: {
+          ...currentUser.user_metadata,
+          role: userRole
+        }
+      };
+    }
   };
 
   useEffect(() => {
@@ -73,10 +142,14 @@ export const useAuth = () => {
         setSession(session);
         
         if (session?.user) {
+          // Ensure user has a role in the database
+          await ensureUserRole(session.user.id);
+          // Get user with role and backend profile
           const userWithRole = await getUserWithRole(session.user);
           setUser(userWithRole);
         } else {
           setUser(null);
+          setUserRole('buyer');
         }
         
         setLoading(false);
@@ -95,10 +168,14 @@ export const useAuth = () => {
       setSession(session);
       
       if (session?.user) {
+        // Ensure user has a role in the database
+        await ensureUserRole(session.user.id);
+        // Get user with role and backend profile
         const userWithRole = await getUserWithRole(session.user);
         setUser(userWithRole);
       } else {
         setUser(null);
+        setUserRole('buyer');
       }
       
       setLoading(false);
@@ -109,13 +186,18 @@ export const useAuth = () => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
         throw error;
+      }
+      
+      // Ensure user has a role
+      if (data.user) {
+        await ensureUserRole(data.user.id);
       }
       
       return { success: true };
@@ -158,6 +240,9 @@ export const useAuth = () => {
       // Use the most basic implementation
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        }
       });
       
       if (error) {
@@ -173,7 +258,7 @@ export const useAuth = () => {
 
   const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -181,12 +266,18 @@ export const useAuth = () => {
             first_name: firstName,
             last_name: lastName,
             role: 'buyer', // Set default role to buyer
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         }
       });
       
       if (error) {
         throw error;
+      }
+      
+      // Create user role entry
+      if (data.user) {
+        await ensureUserRole(data.user.id, 'buyer');
       }
       
       return { success: true };
@@ -205,6 +296,7 @@ export const useAuth = () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      setUserRole('buyer');
       return { success: true };
     } catch (error: any) {
       console.error('Sign out error:', error);
@@ -213,16 +305,31 @@ export const useAuth = () => {
   };
 
   // Helper function to check if user has a specific role
-  const hasRole = (role: string | string[]): boolean => {
+  const hasRole = (role: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     
-    const userRole = user.user_metadata?.role || 'buyer';
+    const currentRole = userRole || user.user_metadata?.role || 'buyer';
     
     if (Array.isArray(role)) {
-      return role.includes(userRole);
+      return role.includes(currentRole);
     }
     
-    return userRole === role;
+    return currentRole === role;
+  };
+
+  // Get the current user's role
+  const getUserRole = (): UserRole => {
+    return userRole;
+  };
+
+  // Check if user has backend verification
+  const hasBackendVerification = (): boolean => {
+    return !!user?.backendProfile?.is_verified;
+  };
+
+  // Get the backend profile
+  const getBackendProfile = () => {
+    return user?.backendProfile;
   };
 
   return {
@@ -235,5 +342,8 @@ export const useAuth = () => {
     signUp,
     signOut,
     hasRole,
+    getUserRole,
+    hasBackendVerification,
+    getBackendProfile,
   };
 };

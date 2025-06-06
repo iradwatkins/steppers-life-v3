@@ -2,6 +2,10 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { initBrowserEnv } from './lib/env'
+
+// Initialize environment variables
+initBrowserEnv();
 
 // Enhanced PWA install detection with better timing
 // Initialize global variables first to avoid temporal dead zone errors

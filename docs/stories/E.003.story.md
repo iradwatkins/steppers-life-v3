@@ -1,12 +1,49 @@
-# Story E.003: Attendee Information Report (View & Export)
+# Story E.003: Automated Report Delivery via Email
 
-## Status: Done
+## Description
+Implement an automated report delivery system that sends scheduled reports to event organizers, administrators, and other stakeholders via email. Reports will contain analytics data, performance metrics, and insights to help stakeholders make data-driven decisions.
 
-## Story
+## Status
+**COMPLETED**
 
-- As an **event organizer**
-- I want **a comprehensive attendee information report that allows me to view and export attendee lists with registration details, ticket types, purchase dates, and check-in status**
-- so that **I can manage my event attendees effectively, analyze participant demographics, track attendance patterns, and maintain records for future event planning and customer relationship management**
+## Features
+- Scheduled report generation (daily, weekly, monthly)
+- Multiple report types (sales, attendance, performance)
+- Customizable report content and metrics
+- Email delivery with proper formatting
+- PDF report attachments
+- Recipient management
+- Report delivery tracking
+- Custom scheduling for different stakeholders
+
+## Technical Implementation
+- Automated report generation service
+- Report template system with data visualization
+- Scheduled job system for report generation
+- Email delivery integration with SendGrid
+- Database models for report configurations
+- API endpoints for report management
+- PDF generation for attachments
+
+## User Stories
+- As an event organizer, I want to receive regular reports on my event's performance
+- As an administrator, I want to schedule automated reports to be sent to stakeholders
+- As a business owner, I want to receive sales reports on a regular basis
+- As a marketing manager, I want to receive attendance and engagement metrics
+- As a user, I want to customize which reports I receive and how frequently
+- As a director, I want to receive comprehensive performance reports with visualizations
+
+## Dependencies
+- Email System Integration (M.001)
+- Analytics system for data collection
+- User role system for permission management
+
+## Notes
+- Reports should be generated during off-peak hours to minimize system load
+- Large reports should be sent as attachments rather than inline content
+- All reports should include appropriate data visualizations
+- System should handle report delivery failures with retries
+- Reports should be stored for historical access in the admin panel
 
 ## Acceptance Criteria (ACs)
 

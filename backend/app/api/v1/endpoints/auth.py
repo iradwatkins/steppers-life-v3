@@ -13,6 +13,7 @@ from app.core.auth import AuthService
 from app.core.database import get_db
 from app.services.user_service import UserService
 from app.services.email_service import EmailService
+from app.core.supabase import get_current_active_user
 
 router = APIRouter()
 security = HTTPBearer()
@@ -192,4 +193,11 @@ async def get_current_user(
         is_active=user.is_active,
         created_at=user.created_at,
         last_login=user.last_login
-    ) 
+    )
+
+@router.get("/supabase/me", response_model=UserResponse)
+async def get_supabase_user(
+    user: UserResponse = Depends(get_current_active_user)
+):
+    """Get the current authenticated Supabase user."""
+    return user 

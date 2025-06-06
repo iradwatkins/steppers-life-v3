@@ -32,6 +32,7 @@ async def lifespan(app: FastAPI):
     print(f"🌍 Environment: {settings.ENVIRONMENT}")
     print(f"🔑 JWT Algorithm: {settings.ALGORITHM}")
     print(f"📧 Email Service: {'Configured' if settings.SMTP_SERVER else 'Mock Mode'}")
+    print(f"🔐 Supabase Integration: {'Configured' if settings.SUPABASE_URL else 'Not Configured'}")
     print("🎉 SteppersLife API is ready!")
     
     yield
@@ -54,7 +55,13 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # React frontend
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8082",  # Frontend URL from settings
+        settings.FRONTEND_URL,     # Dynamic frontend URL
+        "https://revmdncwzztxxinjlzoc.supabase.co",  # Supabase URL
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -103,7 +110,8 @@ async def info():
         "environment": settings.ENVIRONMENT,
         "debug": settings.DEBUG,
         "email_configured": bool(settings.SMTP_SERVER),
-        "api_prefix": settings.API_V1_PREFIX
+        "api_prefix": settings.API_V1_PREFIX,
+        "supabase_configured": bool(settings.SUPABASE_URL)
     }
 
 if __name__ == "__main__":
