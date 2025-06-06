@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import admin_categories, auth, events, tickets, payments, uploads, magazine_categories, magazine_articles, payment_info, disbursements
+from app.api.v1.endpoints import admin_categories, auth, events, tickets, payments, uploads, magazine_categories, magazine_articles, payment_info, disbursements, admin_users, accounts, payment_config
 # Import other endpoint routers here as your project grows, for example:
 # from app.api.v1.endpoints import users
 
@@ -18,6 +18,20 @@ api_router_v1.include_router(
     admin_categories.router, 
     prefix="/admin/event-categories", 
     tags=["Admin - Event Categories"]
+)
+
+# Include the admin user management router
+api_router_v1.include_router(
+    admin_users.router, 
+    prefix="/admin/users", 
+    tags=["Admin - User Management"]
+)
+
+# Include the payment configuration router
+api_router_v1.include_router(
+    payment_config.router, 
+    prefix="/admin/payment-config", 
+    tags=["Admin - Payment Configuration"]
 )
 
 # Include the events router
@@ -53,6 +67,13 @@ api_router_v1.include_router(
     disbursements.router, 
     prefix="/disbursements", 
     tags=["Payment Disbursements"]
+)
+
+# Include the accounts router (for account balance and transfers)
+api_router_v1.include_router(
+    accounts.router, 
+    prefix="/accounts", 
+    tags=["Account Management"]
 )
 
 # Include the uploads router

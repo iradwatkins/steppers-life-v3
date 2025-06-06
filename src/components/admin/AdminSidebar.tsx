@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { 
@@ -18,8 +18,12 @@ import {
   Bell,
   Palette,
   Download,
-  UserPlus
+  UserPlus,
+  UserCog
 } from 'lucide-react';
+import { Button } from "@/components/ui/button";
+import UserImpersonationDialog from './UserImpersonationDialog';
+import { useUserImpersonation } from '@/hooks/useUserImpersonation';
 
 interface AdminSidebarProps {
   className?: string;
@@ -39,6 +43,8 @@ interface NavSection {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
   const location = useLocation();
+  const { canImpersonate, impersonationState } = useUserImpersonation();
+  const [impersonationDialogOpen, setImpersonationDialogOpen] = useState(false);
 
   const navSections: NavSection[] = [
     {
@@ -167,6 +173,21 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
             Admin Panel
           </h2>
+          
+          {/* Act As User Button */}
+          {canImpersonate && (
+            <div className="mb-4 px-4">
+              <Button 
+                onClick={() => setImpersonationDialogOpen(true)}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                size="sm"
+              >
+                <UserCog className="h-4 w-4 mr-2" />
+                {impersonationState.isImpersonating ? 'Switch User' : 'Act As User'}
+              </Button>
+            </div>
+          )}
+          
           <div className="space-y-6">
             {navSections.map((section) => (
               <div key={section.title}>
@@ -200,6 +221,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ className }) => {
           </div>
         </div>
       </div>
+      
+      {/* User Impersonation Dialog */}
+      <UserImpersonationDialog 
+        open={impersonationDialogOpen}
+        onOpenChange={setImpersonationDialogOpen}
+      />
     </div>
   );
 };

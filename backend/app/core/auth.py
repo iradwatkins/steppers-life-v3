@@ -114,4 +114,124 @@ class AuthService:
             return None
 
 
-# Authentication dependency functions will be imported dynamically to avoid circular imports 
+# Authentication dependency functions
+def get_current_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Extract and verify user from JWT token."""
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        token = credentials.credentials
+        payload = AuthService.verify_token(token)
+        if payload is None:
+            raise credentials_exception
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+            
+        return {"user_id": int(user_id), "email": payload.get("email")}
+    except (JWTError, ValueError):
+        raise credentials_exception
+
+
+def get_current_user(
+    token_data: dict = Depends(get_current_user_from_token),
+    db: Session = Depends(lambda: None)  # Will be replaced with actual db dependency
+) -> 'User':
+    """Get current user from database."""
+    # Import here to avoid circular imports
+    from app.core.database import get_db
+    from app.models.user import User
+    
+    # Get actual database session
+    if db is None:
+        db = next(get_db())
+    
+    user = db.query(User).filter(User.id == token_data["user_id"]).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+    return user
+
+
+def get_current_active_user(current_user: 'User' = Depends(get_current_user)) -> 'User':
+    """Get current active user."""
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+    return current_user
+
+
+# Updated get_current_user function that properly handles database dependency
+def get_current_user_with_db(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(lambda: None)
+) -> 'User':
+    """Get current user with proper database handling."""
+    # Import here to avoid circular imports
+    from app.core.database import get_db
+    from app.models.user import User
+    
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    
+    try:
+        token = credentials.credentials
+        payload = AuthService.verify_token(token)
+        if payload is None:
+            raise credentials_exception
+        
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+        
+        # Get actual database session if not provided
+        if db is None:
+            db = next(get_db())
+            
+        user = db.query(User).filter(User.id == int(user_id)).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+        return user
+        
+    except (JWTError, ValueError):
+        raise credentials_exception
+
+
+# Override the functions to use the proper database handling
+get_current_user = get_current_user_with_db
+
+def get_current_active_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: Session = Depends(lambda: None)
+) -> 'User':
+    """Get current active user with proper database handling."""
+    # Import here to avoid circular imports  
+    from app.core.database import get_db
+    
+    # Get actual database session if not provided
+    if db is None:
+        db = next(get_db())
+    
+    current_user = get_current_user_with_db(credentials, db)
+    
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Inactive user"
+        )
+    return current_user 

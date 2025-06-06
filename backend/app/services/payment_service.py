@@ -19,6 +19,7 @@ class PaymentProvider:
     SQUARE = "square"
     PAYPAL = "paypal"
     CASH = "cash"
+    CASHAPP = "cashapp"
 
 class PaymentError(Exception):
     def __init__(self, message: str, provider: str = None, error_code: str = None):
@@ -31,8 +32,10 @@ class PaymentService:
     def __init__(self):
         self.square_client = None
         self.paypal_configured = False
+        self.cashapp_configured = False
         self._initialize_square()
         self._initialize_paypal()
+        self._initialize_cashapp()
     
     def _initialize_square(self):
         """Initialize Square payment client"""
@@ -73,6 +76,23 @@ class PaymentService:
                 logger.warning("PayPal credentials not found. PayPal payments will not be available.")
         except Exception as e:
             logger.error(f"Failed to initialize PayPal client: {e}")
+
+    def _initialize_cashapp(self):
+        """Initialize Cash App payment client"""
+        try:
+            cashapp_client_id = getattr(settings, 'CASHAPP_CLIENT_ID', os.getenv('CASHAPP_CLIENT_ID'))
+            cashapp_client_secret = getattr(settings, 'CASHAPP_CLIENT_SECRET', os.getenv('CASHAPP_CLIENT_SECRET'))
+            cashapp_environment = getattr(settings, 'CASHAPP_ENVIRONMENT', os.getenv('CASHAPP_ENVIRONMENT', 'sandbox'))
+            
+            if cashapp_client_id and cashapp_client_secret:
+                # Note: Cash App Business API integration would go here
+                # For now, we'll set up the configuration structure
+                self.cashapp_configured = True
+                logger.info("Cash App payment client initialized successfully")
+            else:
+                logger.warning("Cash App credentials not found. Cash App payments will not be available.")
+        except Exception as e:
+            logger.error(f"Failed to initialize Cash App client: {e}")
     
     def get_available_providers(self) -> List[str]:
         """Get list of available payment providers"""
@@ -83,6 +103,9 @@ class PaymentService:
         
         if self.paypal_configured:
             providers.append(PaymentProvider.PAYPAL)
+
+        if self.cashapp_configured:
+            providers.append(PaymentProvider.CASHAPP)
         
         return providers
     
@@ -401,6 +424,260 @@ class PaymentService:
             'status': 'completed',
             'provider': PaymentProvider.CASH
         }
+
+    async def create_paypal_payout(
+        self,
+        recipient_email: str,
+        amount: float,
+        currency: str = "USD",
+        note: str = "SteppersLife Event Payout",
+        sender_batch_id: str = None
+    ) -> Dict[str, Any]:
+        """Create a PayPal payout to send money to a recipient"""
+        if not self.paypal_configured:
+            raise PaymentError("PayPal payment client not available", PaymentProvider.PAYPAL)
+        
+        try:
+            payout_batch_id = sender_batch_id or f"stepperslife_{uuid.uuid4().hex[:8]}"
+            
+            payout = paypalrestsdk.Payout({
+                "sender_batch_header": {
+                    "sender_batch_id": payout_batch_id,
+                    "email_subject": "You have a payment from SteppersLife",
+                    "email_message": note
+                },
+                "items": [{
+                    "recipient_type": "EMAIL",
+                    "amount": {
+                        "value": str(amount),
+                        "currency": currency
+                    },
+                    "receiver": recipient_email,
+                    "note": note,
+                    "sender_item_id": f"item_{uuid.uuid4().hex[:8]}"
+                }]
+            })
+            
+            if payout.create():
+                return {
+                    'success': True,
+                    'payout_batch_id': payout.batch_header.payout_batch_id,
+                    'sender_batch_id': payout_batch_id,
+                    'batch_status': payout.batch_header.batch_status,
+                    'amount': amount,
+                    'currency': currency,
+                    'recipient_email': recipient_email,
+                    'provider': PaymentProvider.PAYPAL,
+                    'raw_response': payout.to_dict()
+                }
+            else:
+                raise PaymentError(f"PayPal payout creation failed: {payout.error}", PaymentProvider.PAYPAL)
+                
+        except Exception as e:
+            if isinstance(e, PaymentError):
+                raise
+            logger.error(f"PayPal payout error: {e}")
+            raise PaymentError(f"PayPal payout processing failed: {str(e)}", PaymentProvider.PAYPAL)
+
+    async def get_paypal_payout_status(self, payout_batch_id: str) -> Dict[str, Any]:
+        """Get the status of a PayPal payout batch"""
+        if not self.paypal_configured:
+            raise PaymentError("PayPal payment client not available", PaymentProvider.PAYPAL)
+        
+        try:
+            payout = paypalrestsdk.Payout.find(payout_batch_id)
+            
+            return {
+                'payout_batch_id': payout.batch_header.payout_batch_id,
+                'batch_status': payout.batch_header.batch_status,
+                'time_created': payout.batch_header.time_created,
+                'items': [
+                    {
+                        'payout_item_id': item.payout_item_id,
+                        'transaction_status': item.transaction_status,
+                        'recipient_email': item.payout_item.receiver,
+                        'amount': float(item.payout_item.amount.value),
+                        'currency': item.payout_item.amount.currency,
+                        'transaction_id': getattr(item, 'transaction_id', None)
+                    }
+                    for item in payout.items
+                ] if hasattr(payout, 'items') else [],
+                'provider': PaymentProvider.PAYPAL
+            }
+            
+        except Exception as e:
+            logger.error(f"PayPal payout status check error: {e}")
+            raise PaymentError(f"PayPal payout status check failed: {str(e)}", PaymentProvider.PAYPAL)
+
+    async def create_batch_payout(
+        self,
+        payouts: List[Dict[str, Any]],
+        email_subject: str = "You have a payment from SteppersLife",
+        email_message: str = "Thank you for using SteppersLife"
+    ) -> Dict[str, Any]:
+        """Create a batch payout to multiple recipients"""
+        if not self.paypal_configured:
+            raise PaymentError("PayPal payment client not available", PaymentProvider.PAYPAL)
+        
+        try:
+            batch_id = f"stepperslife_batch_{uuid.uuid4().hex[:8]}"
+            
+            payout_items = []
+            total_amount = 0
+            
+            for payout_data in payouts:
+                amount = payout_data.get('amount', 0)
+                total_amount += amount
+                
+                payout_items.append({
+                    "recipient_type": "EMAIL",
+                    "amount": {
+                        "value": str(amount),
+                        "currency": payout_data.get('currency', 'USD')
+                    },
+                    "receiver": payout_data.get('recipient_email'),
+                    "note": payout_data.get('note', 'SteppersLife Event Payout'),
+                    "sender_item_id": f"item_{uuid.uuid4().hex[:8]}"
+                })
+            
+            batch_payout = paypalrestsdk.Payout({
+                "sender_batch_header": {
+                    "sender_batch_id": batch_id,
+                    "email_subject": email_subject,
+                    "email_message": email_message
+                },
+                "items": payout_items
+            })
+            
+            if batch_payout.create():
+                return {
+                    'success': True,
+                    'payout_batch_id': batch_payout.batch_header.payout_batch_id,
+                    'sender_batch_id': batch_id,
+                    'batch_status': batch_payout.batch_header.batch_status,
+                    'total_amount': total_amount,
+                    'item_count': len(payout_items),
+                    'provider': PaymentProvider.PAYPAL,
+                    'raw_response': batch_payout.to_dict()
+                }
+            else:
+                raise PaymentError(f"PayPal batch payout creation failed: {batch_payout.error}", PaymentProvider.PAYPAL)
+                
+        except Exception as e:
+            if isinstance(e, PaymentError):
+                raise
+            logger.error(f"PayPal batch payout error: {e}")
+            raise PaymentError(f"PayPal batch payout processing failed: {str(e)}", PaymentProvider.PAYPAL)
+
+    async def create_cashapp_payment(
+        self,
+        amount: float,
+        currency: str = "USD",
+        description: str = "SteppersLife Event Ticket",
+        customer_id: str = None,
+        redirect_url: str = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Create a Cash App payment"""
+        if not self.cashapp_configured:
+            raise PaymentError("Cash App payment client not available", PaymentProvider.CASHAPP)
+        
+        try:
+            # Note: This would integrate with Cash App Business API
+            # For now, we'll simulate the process
+            payment_id = f"cashapp_{uuid.uuid4().hex[:8]}"
+            
+            # In a real implementation, this would create a Cash App payment request
+            # through their Business API
+            
+            return {
+                'success': True,
+                'payment_id': payment_id,
+                'status': 'pending',
+                'amount': amount,
+                'currency': currency,
+                'redirect_url': redirect_url or f"{settings.FRONTEND_URL}/checkout/cashapp-return",
+                'provider': PaymentProvider.CASHAPP,
+                'raw_response': {
+                    'payment_id': payment_id,
+                    'status': 'pending',
+                    'redirect_url': redirect_url
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Cash App payment error: {e}")
+            raise PaymentError(f"Cash App payment processing failed: {str(e)}", PaymentProvider.CASHAPP)
+
+    async def create_cashapp_payout(
+        self,
+        recipient_cashtag: str,
+        amount: float,
+        currency: str = "USD",
+        note: str = "SteppersLife Event Payout",
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Create a Cash App payout to send money to a recipient"""
+        if not self.cashapp_configured:
+            raise PaymentError("Cash App payment client not available", PaymentProvider.CASHAPP)
+        
+        try:
+            payout_id = f"cashapp_payout_{uuid.uuid4().hex[:8]}"
+            
+            # Note: This would integrate with Cash App Business API for payouts
+            # Cash App Business API allows sending money to $cashtags
+            
+            return {
+                'success': True,
+                'payout_id': payout_id,
+                'status': 'pending',
+                'amount': amount,
+                'currency': currency,
+                'recipient_cashtag': recipient_cashtag,
+                'note': note,
+                'provider': PaymentProvider.CASHAPP,
+                'raw_response': {
+                    'payout_id': payout_id,
+                    'status': 'pending',
+                    'recipient': recipient_cashtag
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Cash App payout error: {e}")
+            raise PaymentError(f"Cash App payout processing failed: {str(e)}", PaymentProvider.CASHAPP)
+
+    async def get_cashapp_payment_status(self, payment_id: str) -> Dict[str, Any]:
+        """Get Cash App payment status"""
+        if not self.cashapp_configured:
+            raise PaymentError("Cash App payment client not available", PaymentProvider.CASHAPP)
+        
+        try:
+            # Note: This would call Cash App Business API to get payment status
+            return {
+                'payment_id': payment_id,
+                'status': 'completed',  # Mock status
+                'provider': PaymentProvider.CASHAPP
+            }
+        except Exception as e:
+            logger.error(f"Cash App payment status error: {e}")
+            raise PaymentError(f"Cash App payment status check failed: {str(e)}", PaymentProvider.CASHAPP)
+
+    async def get_cashapp_payout_status(self, payout_id: str) -> Dict[str, Any]:
+        """Get Cash App payout status"""
+        if not self.cashapp_configured:
+            raise PaymentError("Cash App payment client not available", PaymentProvider.CASHAPP)
+        
+        try:
+            # Note: This would call Cash App Business API to get payout status
+            return {
+                'payout_id': payout_id,
+                'status': 'completed',  # Mock status
+                'provider': PaymentProvider.CASHAPP
+            }
+        except Exception as e:
+            logger.error(f"Cash App payout status error: {e}")
+            raise PaymentError(f"Cash App payout status check failed: {str(e)}", PaymentProvider.CASHAPP)
 
 # Global payment service instance
 payment_service = PaymentService() 

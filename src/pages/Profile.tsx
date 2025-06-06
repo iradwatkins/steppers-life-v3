@@ -3,10 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, MapPin, Star, Calendar, Users, Award, Edit, Settings, Briefcase, BookOpen, Handshake, Ticket as TicketIcon, Bell } from 'lucide-react';
+import { User, MapPin, Star, Calendar, Users, Award, Edit, Settings, Briefcase, BookOpen, Handshake, Ticket as TicketIcon, Bell, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { Link } from 'react-router-dom';
 import NotificationPreferencesComponent from '@/components/notifications/NotificationPreferences';
+import PaymentSettingsComponent from '@/components/PaymentSettings';
 
 interface MockPurchasedTicket {
   id: string;
@@ -34,7 +35,7 @@ const Profile = () => {
     verified: true,
     joinDate: 'January 2023',
     specialties: ['Beginner Classes', 'Social Dancing', 'Line Step'],
-    role: 'instructor'
+    role: 'organizer'
   };
 
   let profileTitle = 'Stepping Enthusiast';
@@ -42,6 +43,8 @@ const Profile = () => {
     profileTitle = 'Event Promoter';
   } else if (userProfile.role === 'instructor') {
     profileTitle = 'Dance Instructor';
+  } else if (userProfile.role === 'organizer') {
+    profileTitle = 'Event Organizer';
   }
 
   const mockPurchasedTickets: MockPurchasedTicket[] = [
@@ -91,6 +94,21 @@ const Profile = () => {
       date: 'Jan 8, 2024'
     }
   ];
+
+  // Determine if user can receive payouts
+  const canReceivePayouts = ['organizer', 'sales_agent', 'instructor'].includes(userProfile.role);
+  
+  // Calculate tab grid columns based on role
+  const getTabsGridCols = () => {
+    const baseTabsCount = 5; // activity, tickets, classes, achievements, notifications
+    let extraTabs = 0;
+    
+    if (userProfile.role === 'promoter') extraTabs += 1;
+    if (userProfile.role === 'instructor') extraTabs += 1;
+    if (canReceivePayouts) extraTabs += 1; // payment settings
+    
+    return `grid-cols-${baseTabsCount + extraTabs}`;
+  };
 
   return (
     <div className="min-h-screen bg-background-main pb-20">
@@ -171,12 +189,18 @@ const Profile = () => {
       <section className="py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <Tabs defaultValue="activity" className="w-full">
-            <TabsList className={`grid w-full ${userProfile.role === 'attendee' || !userProfile.role ? 'grid-cols-5' : 'grid-cols-6'}`}>
+            <TabsList className={`grid w-full ${getTabsGridCols()}`}>
               <TabsTrigger value="activity">Recent Activity</TabsTrigger>
               <TabsTrigger value="tickets">My Tickets</TabsTrigger>
               <TabsTrigger value="classes">My Classes</TabsTrigger>
               <TabsTrigger value="achievements">Achievements</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
+              {canReceivePayouts && (
+                <TabsTrigger value="payment-settings">
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Payment Settings
+                </TabsTrigger>
+              )}
               {userProfile.role === 'promoter' && (
                 <TabsTrigger value="promoter-dashboard">Promoter Tools</TabsTrigger>
               )}
@@ -301,6 +325,18 @@ const Profile = () => {
               <NotificationPreferencesComponent />
             </TabsContent>
 
+            {/* Payment Settings Tab - Only for roles that can receive payouts */}
+            {canReceivePayouts && (
+              <TabsContent value="payment-settings" className="mt-8">
+                <PaymentSettingsComponent 
+                  userRole={userProfile.role}
+                  onSettingsChange={(settings) => {
+                    console.log('Payment settings updated:', settings);
+                  }}
+                />
+              </TabsContent>
+            )}
+
             {userProfile.role === 'promoter' && (
               <TabsContent value="promoter-dashboard" className="mt-8">
                 <div className="text-center py-12">
@@ -319,6 +355,19 @@ const Profile = () => {
                       </Button>
                     </Link>
                   </div>
+                  
+                  {/* Show earnings info for promoters with payout access */}
+                  {canReceivePayouts && (
+                    <div className="mt-8 p-6 bg-green-50 rounded-lg max-w-md mx-auto">
+                      <h4 className="font-semibold text-green-900 mb-2">💰 Earnings Overview</h4>
+                      <div className="text-2xl font-bold text-green-700 mb-1">$347.50</div>
+                      <p className="text-sm text-green-600 mb-3">Total earned this month</p>
+                      <Button size="sm" variant="outline" className="border-green-500 text-green-700">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Manage Payouts
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             )}
@@ -334,6 +383,25 @@ const Profile = () => {
                       Go to Instructor Tools
                     </Link>
                   </Button>
+                  
+                  {/* Show earnings info for instructors */}
+                  <div className="mt-8 p-6 bg-blue-50 rounded-lg max-w-md mx-auto">
+                    <h4 className="font-semibold text-blue-900 mb-2">📚 Teaching Stats</h4>
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                      <div>
+                        <div className="text-xl font-bold text-blue-700">12</div>
+                        <p className="text-xs text-blue-600">Active Students</p>
+                      </div>
+                      <div>
+                        <div className="text-xl font-bold text-blue-700">$275.00</div>
+                        <p className="text-xs text-blue-600">This Month</p>
+                      </div>
+                    </div>
+                    <Button size="sm" variant="outline" className="border-blue-500 text-blue-700 mt-3">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      View Earnings
+                    </Button>
+                  </div>
                 </div>
               </TabsContent>
             )}
