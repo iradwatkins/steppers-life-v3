@@ -9,6 +9,7 @@ import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from '@/components/ui/spinner';
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +21,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const message = location.state?.message;
+  const { theme } = useTheme();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -87,15 +89,15 @@ const Login = () => {
             <span className="font-serif font-semibold text-2xl text-text-primary">SteppersLife</span>
           </Link>
           <h2 className="font-serif text-3xl font-bold text-text-primary">
-            Welcome Back
+            Welcome to SteppersLife!
           </h2>
-          <p className="mt-2 text-text-secondary">
+          <p className="mt-2 text-lg text-text-secondary">
             Sign in to your stepping community account
           </p>
         </div>
 
         {message && (
-          <Alert className="bg-blue-50 border-blue-200 text-blue-800 mb-4">
+          <Alert className="bg-info-light border-info-border text-info-foreground mb-4">
             <Mail className="h-4 w-4 mr-2" />
             <AlertDescription>
               {message}
@@ -110,7 +112,7 @@ const Login = () => {
           <CardContent className="space-y-6">
             <Button 
               onClick={handleGoogleSignIn} 
-              className="w-full bg-white text-gray-800 border border-gray-300 hover:bg-gray-100 flex items-center justify-center gap-2"
+              className="w-full bg-white text-gray-800 border border-border-default hover:bg-gray-100 flex items-center justify-center gap-2"
               disabled={isGoogleLoading}
             >
               {isGoogleLoading ? (
@@ -134,7 +136,7 @@ const Login = () => {
             <Link to="/auth/magic-link" className="block w-full">
               <Button 
                 type="button"
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center gap-2"
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary flex items-center justify-center gap-2"
               >
                 <Mail className="h-4 w-4" />
                 <span>Continue with Magic Link</span>
@@ -196,7 +198,7 @@ const Login = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-brand-primary hover:bg-brand-primary-hover"
+                className="w-full bg-brand-primary hover:bg-brand-primary-hover text-text-on-primary"
                 disabled={isLoading}
               >
                 {isLoading ? <Spinner className="mr-2" size="sm" /> : null}
