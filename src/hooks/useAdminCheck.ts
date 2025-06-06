@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,6 +10,7 @@ export const useAdminCheck = () => {
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) {
+        console.log('useAdminCheck: No user authenticated');
         setIsAdmin(false);
         setLoading(false);
         return;
@@ -18,9 +18,9 @@ export const useAdminCheck = () => {
 
       try {
         // For development: Grant admin access to authenticated users
-        // TODO: Replace with proper role-based authentication when backend is ready
-        console.log('Development mode: Granting admin access to authenticated user');
+        console.log(`useAdminCheck: Development mode - Granting admin access to authenticated user ${user.email}`);
         setIsAdmin(true);
+        setLoading(false);
         
         // Commented out database check until backend is properly configured
         /*
@@ -41,6 +41,7 @@ export const useAdminCheck = () => {
       } catch (error) {
         console.error('Error checking admin status:', error);
         // For development: Still grant admin access even if error occurs
+        console.log('useAdminCheck: Error occurred but still granting admin access for development');
         setIsAdmin(true);
       } finally {
         setLoading(false);

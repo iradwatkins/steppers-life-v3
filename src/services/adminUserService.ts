@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface User {
   id: string;
   name: string;
@@ -12,6 +14,7 @@ export interface User {
   bio?: string;
 }
 
+// Temporary mock data until we fix the database permissions
 const mockUsers: User[] = [
   {
     id: 'user-001',
@@ -102,15 +105,14 @@ const mockUsers: User[] = [
     name: 'Jack Newbie',
     email: 'jack.n@example.com',
     role: 'buyer',
-    status: 'pending_approval', // Example of a new buyer pending verification
+    status: 'pending_approval',
     registrationDate: '2024-07-22',
     lastLogin: '2024-07-22',
   },
 ];
 
 class AdminUserService {
-  private users: User[] = [...mockUsers];
-
+  // TEMPORARY: Using mock data until database issues are resolved
   async getUsers(
     query: string = '',
     role: User['role'] | '' = '',
@@ -119,65 +121,77 @@ class AdminUserService {
     limit: number = 10,
     sortBy: keyof User = 'registrationDate',
     sortOrder: 'asc' | 'desc' = 'desc'
-  ): Promise<{ users: User[]; total: number; }> {
-    console.log(`AdminUserService: Fetching users with query: "${query}", role: "${role}", status: "${status}", page: ${page}, limit: ${limit}, sortBy: "${sortBy}", sortOrder: "${sortOrder}"`);
-
-    let filteredUsers = this.users.filter(user => {
-      const matchesQuery = query
-        ? user.name.toLowerCase().includes(query.toLowerCase()) ||
-          user.email.toLowerCase().includes(query.toLowerCase()) ||
-          user.id.toLowerCase().includes(query.toLowerCase())
-        : true;
-      const matchesRole = role ? user.role === role : true;
-      const matchesStatus = status ? user.status === status : true;
-      return matchesQuery && matchesRole && matchesStatus;
-    });
-
-    // Sort users
+  ): Promise<{ users: User[]; total: number }> {
+    console.log(`AdminUserService: Using mock data with query: "${query}", role: "${role}", status: "${status}"`);
+    
+    // Filter the mock data based on search criteria
+    let filteredUsers = [...mockUsers];
+    
+    if (query) {
+      const lowercaseQuery = query.toLowerCase();
+      filteredUsers = filteredUsers.filter(user => 
+        user.name.toLowerCase().includes(lowercaseQuery) ||
+        user.email.toLowerCase().includes(lowercaseQuery) ||
+        user.id.toLowerCase().includes(lowercaseQuery)
+      );
+    }
+    
+    if (role && role !== 'all') {
+      filteredUsers = filteredUsers.filter(user => user.role === role);
+    }
+    
+    if (status && status !== 'all') {
+      filteredUsers = filteredUsers.filter(user => user.status === status);
+    }
+    
+    // Sort the data
     filteredUsers.sort((a, b) => {
       const aVal = a[sortBy];
       const bVal = b[sortBy];
-
+      
       if (typeof aVal === 'string' && typeof bVal === 'string') {
-        return sortOrder === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        return sortOrder === 'asc' 
+          ? aVal.localeCompare(bVal) 
+          : bVal.localeCompare(aVal);
       }
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-      }
-      // Fallback for other types or if values are not comparable as strings/numbers
+      
       return 0;
     });
-
-    const total = filteredUsers.length;
+    
+    // Apply pagination
     const startIndex = (page - 1) * limit;
     const paginatedUsers = filteredUsers.slice(startIndex, startIndex + limit);
-
-    return new Promise((resolve) =>
-      setTimeout(() => resolve({ users: paginatedUsers, total }), 500)
-    );
+    
+    return {
+      users: paginatedUsers,
+      total: filteredUsers.length
+    };
   }
 
   async getUserById(userId: string): Promise<User | null> {
-    console.log(`AdminUserService: Fetching user by ID: ${userId}`);
-    return new Promise((resolve) =>
-      setTimeout(() => resolve(this.users.find(user => user.id === userId) || null), 300)
-    );
+    // Find user in mock data
+    const user = mockUsers.find(u => u.id === userId);
+    return user || null;
   }
 
   async updateUserStatus(userId: string, newStatus: User['status'], auditReason: string): Promise<User> {
-    console.log(`AdminUserService: Updating status for user ${userId} to ${newStatus}. Reason: ${auditReason}`);
-    const userIndex = this.users.findIndex(user => user.id === userId);
+    const userIndex = mockUsers.findIndex(u => u.id === userId);
+    
     if (userIndex === -1) {
       throw new Error('User not found');
     }
-
-    const updatedUser = { ...this.users[userIndex], status: newStatus };
-    this.users[userIndex] = updatedUser;
-
-    // In a real app, this would log to an audit trail service
-    console.log(`AUDIT: User ${userId} status changed to ${newStatus} by admin. Reason: ${auditReason}`);
-
-    return new Promise((resolve) => setTimeout(() => resolve(updatedUser), 300));
+    
+    // Update the user in our mock data
+    const updatedUser = { 
+      ...mockUsers[userIndex], 
+      status: newStatus 
+    };
+    
+    mockUsers[userIndex] = updatedUser;
+    
+    console.log(`AUDIT: User ${userId} status changed to ${newStatus}. Reason: ${auditReason}`);
+    
+    return updatedUser;
   }
 
   async approveOrganizerAccount(organizerId: string): Promise<User> {
@@ -190,13 +204,13 @@ class AdminUserService {
     status: User['vodSubscriptionStatus']
   ): Promise<User> {
     console.log(`AdminUserService: Managing VOD subscription for instructor ${instructorId}, setting to ${status}`);
-    const userIndex = this.users.findIndex(user => user.id === instructorId && user.role === 'instructor');
+    const userIndex = mockUsers.findIndex(user => user.id === instructorId && user.role === 'instructor');
     if (userIndex === -1) {
       throw new Error('Instructor not found');
     }
 
-    const updatedUser = { ...this.users[userIndex], vodSubscriptionStatus: status };
-    this.users[userIndex] = updatedUser;
+    const updatedUser = { ...mockUsers[userIndex], vodSubscriptionStatus: status };
+    mockUsers[userIndex] = updatedUser;
 
     console.log(`AUDIT: Instructor ${instructorId} VOD subscription changed to ${status} by admin.`);
 
@@ -205,7 +219,7 @@ class AdminUserService {
 
   async resetUserPassword(userId: string): Promise<{ message: string }> {
     console.log(`AdminUserService: Initiating password reset for user ${userId}`);
-    const user = this.users.find(u => u.id === userId);
+    const user = mockUsers.find(u => u.id === userId);
     if (!user) {
       throw new Error('User not found');
     }
@@ -214,6 +228,10 @@ class AdminUserService {
     return new Promise((resolve) =>
       setTimeout(() => resolve({ message: `Password reset link sent to ${user.email}` }), 300)
     );
+  }
+
+  private convertToSnakeCase(str: string): string {
+    return str.replace(/([A-Z])/g, "_$1").toLowerCase();
   }
 }
 

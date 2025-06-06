@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { FaviconManager } from "@/components/ui/FaviconManager";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import AppLayout from "./components/layout/AppLayout";
 import PWALayout from "./components/layout/PWALayout";
@@ -129,6 +129,9 @@ const App = () => (
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
           <Route path="/download" element={<AppInstallPage />} />
+          
+          {/* Redirect from /users to /admin/users */}
+          <Route path="/users" element={<Navigate replace to="/admin/users" />} />
           
           {/* PWA-specific routes (standalone, no layout) */}
           <Route path="/pwa/login" element={<PWALoginPage />} />

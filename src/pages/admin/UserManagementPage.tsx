@@ -36,17 +36,12 @@ import { toast } from 'sonner';
 import UserDetailDialog from '@/components/admin/UserDetailDialog';
 import { useAdminCheck } from '@/hooks/useAdminCheck';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const UserManagementPage: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: adminLoading } = useAdminCheck();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!adminLoading && !isAdmin) {
-      toast.error("You are not authorized to view this page.");
-      navigate('/');
-    }
-  }, [isAdmin, adminLoading, navigate]);
 
   const { 
     users, 
@@ -91,8 +86,8 @@ const UserManagementPage: React.FC = () => {
     return null;
   };
 
-  const roleOptions: { value: User['role'] | ''; label: string }[] = [
-    { value: '', label: 'All Roles' },
+  const roleOptions: { value: User['role'] | 'all'; label: string }[] = [
+    { value: 'all', label: 'All Roles' },
     { value: 'admin', label: 'Admin' },
     { value: 'organizer', label: 'Organizer' },
     { value: 'instructor', label: 'Instructor' },
@@ -101,8 +96,8 @@ const UserManagementPage: React.FC = () => {
     { value: 'sales_agent', label: 'Sales Agent' },
   ];
 
-  const statusOptions: { value: User['status'] | ''; label: string }[] = [
-    { value: '', label: 'All Statuses' },
+  const statusOptions: { value: User['status'] | 'all'; label: string }[] = [
+    { value: 'all', label: 'All Statuses' },
     { value: 'active', label: 'Active' },
     { value: 'pending_approval', label: 'Pending Approval' },
     { value: 'suspended', label: 'Suspended' },
@@ -123,16 +118,16 @@ const UserManagementPage: React.FC = () => {
     setIsDetailDialogOpen(true);
   };
 
-  if (adminLoading) {
+  if (authLoading || adminLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-primary text-xl">Checking authorization...</p>
+        <p className="ml-4 text-primary text-xl">Loading...</p>
       </div>
     );
   }
 
-  if (!isAdmin) {
+  if (!user || !isAdmin) {
     return null;
   }
 
@@ -165,7 +160,7 @@ const UserManagementPage: React.FC = () => {
                 />
               </div>
               <div>
-                <Select onValueChange={(value) => setRoleFilter(value as User['role'] | '')} value={currentRoleFilter} disabled={loading}>
+                <Select onValueChange={(value) => setRoleFilter(value === 'all' ? '' : value as User['role'])} value={currentRoleFilter || 'all'} disabled={loading}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Filter by Role" />
                   </SelectTrigger>
@@ -179,7 +174,7 @@ const UserManagementPage: React.FC = () => {
                 </Select>
               </div>
               <div>
-                <Select onValueChange={(value) => setStatusFilter(value as User['status'] | '')} value={currentStatusFilter} disabled={loading}>
+                <Select onValueChange={(value) => setStatusFilter(value === 'all' ? '' : value as User['status'])} value={currentStatusFilter || 'all'} disabled={loading}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Filter by Status" />
                   </SelectTrigger>
@@ -324,7 +319,7 @@ const UserManagementPage: React.FC = () => {
 
             <div className="flex items-center justify-end space-x-2 py-4">
               <span className="text-sm text-muted-foreground">Rows per page:</span>
-              <Select onValueChange={(value) => setLimit(Number(value))} value={String(currentLimit)} disabled={loading}>
+              <Select onValueChange={(value) => setLimit(Number(value))} value={String(currentLimit || 10)} disabled={loading}>
                 <SelectTrigger className="w-[80px]">
                   <SelectValue />
                 </SelectTrigger>
