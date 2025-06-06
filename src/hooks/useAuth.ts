@@ -3,6 +3,12 @@ import { User, Session, Provider } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/components/ui/sonner';
 
+// Define a variable for the Google OAuth redirect
+// In a real production app, this would be set based on environment
+const GOOGLE_OAUTH_REDIRECT = `${window.location.origin}/auth/callback`;
+// Log redirect URL for debugging
+console.log('Google OAuth Redirect URL:', GOOGLE_OAUTH_REDIRECT);
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -64,10 +70,14 @@ export const useAuth = () => {
 
   const signInWithGoogle = async () => {
     try {
+      // Log the current URL for debugging
+      console.log('Current origin:', window.location.origin);
+      console.log('Using redirect URL:', GOOGLE_OAUTH_REDIRECT);
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: GOOGLE_OAUTH_REDIRECT,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -78,6 +88,9 @@ export const useAuth = () => {
       if (error) {
         throw error;
       }
+      
+      // Log the actual URL used for redirection
+      console.log('OAuth URL generated:', data?.url);
       
       return { success: true, url: data?.url };
     } catch (error: any) {

@@ -33,11 +33,29 @@ const Register = () => {
     setIsLoading(true);
     
     try {
-      // Store email in localStorage to use in the next step
-      localStorage.setItem('registration_email', email);
+      // Check if email already exists
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/login`,
+        }
+      });
       
-      // Navigate to email verification or registration form
-      navigate('/auth/register/details', { state: { email } });
+      if (error) {
+        console.error('Error sending login email:', error);
+        toast.error(error.message);
+      } else {
+        // Store email in localStorage to use in the next step
+        localStorage.setItem('registration_email', email);
+        
+        // Show success message and navigate to login page
+        toast.success('Email sent! Please check your inbox to continue registration.');
+        navigate('/auth/login', { 
+          state: { 
+            message: 'Please check your email for the login link.' 
+          } 
+        });
+      }
     } catch (error: any) {
       console.error('Error:', error);
       toast.error('An unexpected error occurred');

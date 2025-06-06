@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mail } from 'lucide-react';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,6 +18,8 @@ const Login = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const { signIn, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const message = location.state?.message;
 
   // Redirect if already logged in
   useEffect(() => {
@@ -91,6 +95,15 @@ const Login = () => {
             Sign in to your stepping community account
           </p>
         </div>
+
+        {message && (
+          <Alert className="bg-blue-50 border-blue-200 text-blue-800 mb-4">
+            <Mail className="h-4 w-4 mr-2" />
+            <AlertDescription>
+              {message}
+            </AlertDescription>
+          </Alert>
+        )}
 
         <Card className="bg-surface-card border-border-default">
           <CardHeader>
