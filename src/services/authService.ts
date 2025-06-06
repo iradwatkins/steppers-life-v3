@@ -186,27 +186,37 @@ class AuthService {
     this.updateAuthState({ isLoading: true });
 
     try {
-      const response = await apiClient.login(credentials.email, credentials.password);
+      const response = await fetch('http://localhost:8085/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+      });
       
-      if (response.error) {
+      const data = await response.json();
+      
+      if (!response.ok) {
         this.updateAuthState({ isLoading: false });
-        return { success: false, error: response.error };
+        return { success: false, error: data.error || 'Login failed' };
       }
 
-      if (response.data) {
-        this.storeAuthData(response.data);
-        this.updateAuthState({
-          user: response.data.user,
-          token: response.data.access_token,
-          isAuthenticated: true,
-          isLoading: false
-        });
+      // Store auth data and update state
+      this.storeAuthData({
+        access_token: data.access_token,
+        token_type: data.token_type || 'Bearer',
+        expires_in: data.expires_in || 3600,
+        user: data.user
+      });
+      
+      this.updateAuthState({
+        user: data.user,
+        token: data.access_token,
+        isAuthenticated: true,
+        isLoading: false
+      });
 
-        return { success: true, user: response.data.user };
-      }
-
-      this.updateAuthState({ isLoading: false });
-      return { success: false, error: 'Invalid response from server' };
+      return { success: true, user: data.user };
     } catch (error) {
       this.updateAuthState({ isLoading: false });
       return { 
@@ -226,24 +236,27 @@ class AuthService {
     this.updateAuthState({ isLoading: true });
 
     try {
-      const response = await apiClient.register(registrationData);
+      const response = await fetch('http://localhost:8085/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(registrationData),
+      });
       
-      if (response.error) {
+      const data = await response.json();
+      
+      if (!response.ok) {
         this.updateAuthState({ isLoading: false });
-        return { success: false, error: response.error };
-      }
-
-      if (response.data) {
-        this.updateAuthState({ isLoading: false });
-        return { 
-          success: true, 
-          user: response.data,
-          message: 'Registration successful! Please check your email to verify your account.'
-        };
+        return { success: false, error: data.error || 'Registration failed' };
       }
 
       this.updateAuthState({ isLoading: false });
-      return { success: false, error: 'Invalid response from server' };
+      return { 
+        success: true, 
+        user: data.user,
+        message: 'Registration successful! Please check your email to verify your account.'
+      };
     } catch (error) {
       this.updateAuthState({ isLoading: false });
       return { 
@@ -260,10 +273,18 @@ class AuthService {
     message?: string;
   }> {
     try {
-      const response = await apiClient.verifyEmail(token);
+      const response = await fetch('http://localhost:8085/auth/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
       
-      if (response.error) {
-        return { success: false, error: response.error };
+      const data = await response.json();
+      
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Email verification failed' };
       }
 
       return { 
@@ -285,10 +306,18 @@ class AuthService {
     message?: string;
   }> {
     try {
-      const response = await apiClient.requestPasswordReset(email);
+      const response = await fetch('http://localhost:8085/auth/password-reset-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
       
-      if (response.error) {
-        return { success: false, error: response.error };
+      const data = await response.json();
+      
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Password reset request failed' };
       }
 
       return { 
@@ -310,10 +339,18 @@ class AuthService {
     message?: string;
   }> {
     try {
-      const response = await apiClient.confirmPasswordReset(token, newPassword);
+      const response = await fetch('http://localhost:8085/auth/password-reset-confirm', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, new_password: newPassword }),
+      });
       
-      if (response.error) {
-        return { success: false, error: response.error };
+      const data = await response.json();
+      
+      if (!response.ok) {
+        return { success: false, error: data.error || 'Password reset failed' };
       }
 
       return { 
@@ -335,16 +372,24 @@ class AuthService {
     }
 
     try {
-      const response = await apiClient.getCurrentUser();
+      const response = await fetch('http://localhost:8085/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.authState.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
-      if (response.error) {
+      if (!response.ok) {
         this.clearAuth();
         return false;
       }
-
-      if (response.data) {
+      
+      const data = await response.json();
+      
+      if (data && data.user) {
         this.updateAuthState({
-          user: response.data,
+          user: data.user,
           isAuthenticated: true
         });
         return true;
@@ -370,14 +415,22 @@ class AuthService {
     }
 
     try {
-      const response = await apiClient.getCurrentUser();
+      const response = await fetch('http://localhost:8085/auth/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${this.authState.token}`,
+          'Content-Type': 'application/json',
+        },
+      });
       
-      if (response.error) {
-        return { success: false, error: response.error };
+      if (!response.ok) {
+        return { success: false, error: 'Failed to refresh user data' };
       }
-
-      if (response.data) {
-        const user = response.data;
+      
+      const data = await response.json();
+      
+      if (data && data.user) {
+        const user = data.user;
         localStorage.setItem(this.userKey, JSON.stringify(user));
         this.updateAuthState({ user });
         return { success: true, user };
