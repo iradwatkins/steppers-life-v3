@@ -9,6 +9,7 @@ import AppLayout from "./components/layout/AppLayout";
 import PWALayout from "./components/layout/PWALayout";
 import AdminLayout from "./components/layout/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
+import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import Index from "./pages/Index";
 import UserDashboard from "./pages/UserDashboard";
 import Events from "./pages/Events";
@@ -184,9 +185,9 @@ const App = () => (
             } />
             {/* Admin Routes with AdminLayout */}
             <Route path="/admin" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['admin']}>
                 <AdminLayout />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             }>
               <Route index element={<AdminDashboardOverview />} />
               <Route path="analytics" element={<AdminAnalyticsHub />} />
@@ -213,9 +214,9 @@ const App = () => (
             
             {/* Legacy admin route for backwards compatibility */}
             <Route path="/admin/legacy" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['admin']}>
                 <Admin />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/ads/portal" element={
               <ProtectedRoute>
@@ -225,9 +226,9 @@ const App = () => (
             
             {/* Instructor routes */}
             <Route path="/instructor/dashboard" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['instructor']}>
                 <InstructorDashboardPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             
             {/* Epic M - Vanity URL management */}
@@ -243,139 +244,139 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/organizer/events/create" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <CreateEventPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/ticketing" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventTicketingPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/seating" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventSeatingPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/seating/advanced" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <AdvancedSeatingEditorPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/custom-questions" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventCustomQuestionsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/manage" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <ManageEventPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/promo-codes" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventPromoCodesPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/refunds" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventRefundsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/cash-payments" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventCashPaymentPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/email-campaigns" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventEmailCampaignsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/performance" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventPerformancePage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/financial-reports" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <FinancialReportsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/attendees" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <AttendeeReportPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/customer-analytics" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <CustomerAnalyticsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/comparative-analytics" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <ComparativeAnalyticsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/automated-reports" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <AutomatedReportsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/collections" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <EventCollectionsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/analytics" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <MultiEventAnalyticsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/team" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <FollowerManagementPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/roles" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <RoleManagementPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/sales-agents" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <SalesAgentManagementPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/team" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <FollowerManagementPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/sales-agents" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <SalesAgentManagementPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/event/:eventId/commission-payments" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <CommissionPaymentPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/organizer/commission-payments" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['organizer']}>
                 <CommissionPaymentPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/agent/dashboard" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['agent']}>
                 <SalesAgentDashboardPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
             <Route path="/promoter/events/claim" element={
-              <ProtectedRoute>
+              <RoleProtectedRoute allowedRoles={['promoter']}>
                 <ClaimableEventsPage />
-              </ProtectedRoute>
+              </RoleProtectedRoute>
             } />
 
             

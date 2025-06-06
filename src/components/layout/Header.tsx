@@ -14,12 +14,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAdminCheck } from '@/hooks/useAdminCheck';
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, hasRole } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isAdmin } = useAdminCheck();
   const location = useLocation();
 
   const handleSignOut = async () => {
@@ -48,6 +46,10 @@ const Header = () => {
     }
     return location.pathname.startsWith(href);
   };
+
+  const isAdmin = hasRole('admin');
+  const isOrganizer = hasRole('organizer');
+  const isInstructor = hasRole('instructor');
 
   return (
     <header className="bg-header-bg border-b border-border-default sticky top-0 z-50">
@@ -88,40 +90,46 @@ const Header = () => {
                 {/* Notification Center */}
                 <NotificationCenter />
                 
-                {/* Post Content Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full text-header-text hover:text-header-link-active">
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem asChild>
-                      <Link to="/organizer/events/create" className="flex items-center">
-                        <CalendarPlus className="mr-2 h-4 w-4" />
-                        <span>Post Event</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/instructor/dashboard" className="flex items-center">
-                        <ListPlus className="mr-2 h-4 w-4" />
-                        <span>List Class</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/community" className="flex items-center">
-                        <Store className="mr-2 h-4 w-4" />
-                        <span>Add Store/Service</span>
-                      </Link>
-                    </DropdownMenuItem>
-                     <DropdownMenuItem asChild>
-                      <Link to="#" className="flex items-center">
-                        <Users2 className="mr-2 h-4 w-4" />
-                        <span>Create Community</span>
-                      </Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                {/* Post Content Dropdown - Only show if user has appropriate roles */}
+                {(isOrganizer || isInstructor) && (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="rounded-full text-header-text hover:text-header-link-active">
+                        <Plus className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      {isOrganizer && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/organizer/events/create" className="flex items-center">
+                            <CalendarPlus className="mr-2 h-4 w-4" />
+                            <span>Post Event</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {isInstructor && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/instructor/dashboard" className="flex items-center">
+                            <ListPlus className="mr-2 h-4 w-4" />
+                            <span>List Class</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      <DropdownMenuItem asChild>
+                        <Link to="/community" className="flex items-center">
+                          <Store className="mr-2 h-4 w-4" />
+                          <span>Add Store/Service</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="#" className="flex items-center">
+                          <Users2 className="mr-2 h-4 w-4" />
+                          <span>Create Community</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                )}
 
                 {/* User Profile Dropdown */}
                 <DropdownMenu>
@@ -138,12 +146,14 @@ const Header = () => {
                         <span>Profile</span>
                       </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/organizer/analytics" className="flex items-center">
-                        <BarChart3 className="mr-2 h-4 w-4" />
-                        <span>Event Analytics</span>
-                      </Link>
-                    </DropdownMenuItem>
+                    {isOrganizer && (
+                      <DropdownMenuItem asChild>
+                        <Link to="/organizer/analytics" className="flex items-center">
+                          <BarChart3 className="mr-2 h-4 w-4" />
+                          <span>Event Analytics</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem asChild>
                       <Link to="/download" className="flex items-center">
                         <Smartphone className="mr-2 h-4 w-4" />
@@ -226,14 +236,16 @@ const Header = () => {
                   >
                     Profile
                   </Link>
-                  <Link
-                    to="/organizer/analytics"
-                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Event Analytics
-                  </Link>
+                  {isOrganizer && (
+                    <Link
+                      to="/organizer/analytics"
+                      className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <BarChart3 className="mr-2 h-4 w-4" />
+                      Event Analytics
+                    </Link>
+                  )}
                   <Link
                     to="/download"
                     className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
@@ -259,24 +271,30 @@ const Header = () => {
                       Admin Dashboard
                     </Link>
                   )}
-                  {/* Mobile Post Content Options */}
-                  <div className="pt-2 border-t border-border-default mt-2">
-                     <Link
-                        to="/organizer/events/create"
-                        className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <CalendarPlus className="mr-2 h-4 w-4" />
-                        <span>Post Event</span>
-                      </Link>
-                      <Link
-                        to="/instructor/dashboard"
-                        className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        <ListPlus className="mr-2 h-4 w-4" />
-                        <span>List Class</span>
-                      </Link>
+                  
+                  {/* Mobile Post Content Options - Only show if user has appropriate roles */}
+                  {(isOrganizer || isInstructor) && (
+                    <div className="pt-2 border-t border-border-default mt-2">
+                      {isOrganizer && (
+                        <Link
+                          to="/organizer/events/create"
+                          className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <CalendarPlus className="mr-2 h-4 w-4" />
+                          <span>Post Event</span>
+                        </Link>
+                      )}
+                      {isInstructor && (
+                        <Link
+                          to="/instructor/dashboard"
+                          className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <ListPlus className="mr-2 h-4 w-4" />
+                          <span>List Class</span>
+                        </Link>
+                      )}
                       <Link
                         to="/community"
                         className="flex items-center px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
@@ -293,7 +311,8 @@ const Header = () => {
                         <Users2 className="mr-2 h-4 w-4" />
                         <span>Create Community</span>
                       </Link>
-                  </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => {
