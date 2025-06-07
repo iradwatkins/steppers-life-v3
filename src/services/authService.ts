@@ -1,45 +1,23 @@
-import { apiClient } from './apiClient';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 // User types matching backend models
 export type UserRole = 'admin' | 'organizer' | 'attendee' | 'staff';
 export type UserStatus = 'active' | 'inactive' | 'suspended' | 'pending_verification';
 
-export interface User {
-  id: number;
-  email: string;
-  username: string;
-  first_name: string;
-  last_name: string;
+export interface User extends SupabaseUser {
+  role?: UserRole;
+  status?: UserStatus;
+  first_name?: string;
+  last_name?: string;
   phone_number?: string;
-  role: UserRole;
-  status: UserStatus;
-  is_verified: boolean;
-  is_active: boolean;
-  created_at: string;
-  last_login?: string;
-}
-
-export interface AuthTokens {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  user: User;
 }
 
 export interface AuthState {
   user: User | null;
-  token: string | null;
+  session: Session | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-}
-
-export interface RegistrationData {
-  email: string;
-  password: string;
-  username: string;
-  first_name: string;
-  last_name: string;
-  phone_number?: string;
 }
 
 export interface LoginCredentials {
@@ -51,17 +29,16 @@ class AuthService {
   private static instance: AuthService;
   private authState: AuthState = {
     user: null,
-    token: null,
+    session: null,
     isAuthenticated: false,
     isLoading: false
   };
   
   private listeners: Array<(state: AuthState) => void> = [];
-  private tokenKey = 'auth_token';
-  private userKey = 'auth_user';
 
   constructor() {
     this.initializeAuth();
+    this.setupAuthListener();
   }
 
   static getInstance(): AuthService {
@@ -71,40 +48,37 @@ class AuthService {
     return AuthService.instance;
   }
 
-  // Initialize authentication state from localStorage
-  private initializeAuth(): void {
-    const token = localStorage.getItem(this.tokenKey);
-    const userJson = localStorage.getItem(this.userKey);
-    
-    if (token && userJson) {
-      try {
-        const user = JSON.parse(userJson);
-        this.authState = {
-          user,
-          token,
+  private async initializeAuth(): Promise<void> {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    if (session) {
+      this.updateAuthState({
+        user: session.user as User,
+        session,
+        isAuthenticated: true,
+        isLoading: false
+      });
+    }
+  }
+
+  private setupAuthListener(): void {
+    supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        this.updateAuthState({
+          user: session.user as User,
+          session,
           isAuthenticated: true,
           isLoading: false
-        };
-        
-        // Verify token is still valid
-        this.verifyToken().catch(() => {
-          this.clearAuth();
         });
-      } catch (error) {
-        console.error('Failed to parse stored user data:', error);
+      } else {
         this.clearAuth();
       }
-    }
+    });
   }
 
   // Subscribe to auth state changes
   subscribe(listener: (state: AuthState) => void): () => void {
     this.listeners.push(listener);
-    
-    // Call immediately with current state
     listener(this.authState);
-    
-    // Return unsubscribe function
     return () => {
       const index = this.listeners.indexOf(listener);
       if (index > -1) {
@@ -124,24 +98,11 @@ class AuthService {
     this.notifyListeners();
   }
 
-  // Store auth data in localStorage
-  private storeAuthData(tokens: AuthTokens): void {
-    localStorage.setItem(this.tokenKey, tokens.access_token);
-    localStorage.setItem(this.userKey, JSON.stringify(tokens.user));
-  }
-
-  // Clear auth data from localStorage
-  private clearAuthData(): void {
-    localStorage.removeItem(this.tokenKey);
-    localStorage.removeItem(this.userKey);
-  }
-
   // Clear authentication state
   private clearAuth(): void {
-    this.clearAuthData();
     this.updateAuthState({
       user: null,
-      token: null,
+      session: null,
       isAuthenticated: false,
       isLoading: false
     });
@@ -157,14 +118,194 @@ class AuthService {
     return this.authState.user;
   }
 
-  // Get current token
-  getToken(): string | null {
-    return this.authState.token;
+  // Get current session
+  getSession(): Session | null {
+    return this.authState.session;
   }
 
   // Check if user is authenticated
   isAuthenticated(): boolean {
-    return this.authState.isAuthenticated && !!this.authState.token && !!this.authState.user;
+    return this.authState.isAuthenticated && !!this.authState.session;
+  }
+
+  // Login with email/password
+  async login(credentials: LoginCredentials): Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+  }> {
+    this.updateAuthState({ isLoading: true });
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
+      });
+
+      if (error) throw error;
+
+      if (data.user && data.session) {
+        return { success: true, user: data.user as User };
+      }
+
+      throw new Error('Login failed');
+    } catch (error) {
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Login failed' 
+      };
+    }
+  }
+
+  // Login with Google
+  async loginWithGoogle(): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    this.updateAuthState({ isLoading: true });
+
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      return { success: true };
+    } catch (error) {
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Google login failed' 
+      };
+    }
+  }
+
+  // Send magic link
+  async sendMagicLink(email: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    this.updateAuthState({ isLoading: true });
+
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      this.updateAuthState({ isLoading: false });
+      return { success: true };
+    } catch (error) {
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Failed to send magic link' 
+      };
+    }
+  }
+
+  // Register new user
+  async register(email: string, password: string): Promise<{
+    success: boolean;
+    user?: User;
+    error?: string;
+    message?: string;
+  }> {
+    this.updateAuthState({ isLoading: true });
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: true, 
+        user: data.user as User,
+        message: 'Registration successful! Please check your email to verify your account.' 
+      };
+    } catch (error) {
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Registration failed' 
+      };
+    }
+  }
+
+  // Request password reset
+  async requestPasswordReset(email: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    this.updateAuthState({ isLoading: true });
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      });
+
+      if (error) throw error;
+
+      this.updateAuthState({ isLoading: false });
+      return { success: true };
+    } catch (error) {
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Password reset request failed' 
+      };
+    }
+  }
+
+  // Update password
+  async updatePassword(newPassword: string): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    this.updateAuthState({ isLoading: true });
+
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (error) throw error;
+
+      this.updateAuthState({ isLoading: false });
+      return { success: true };
+    } catch (error) {
+      this.updateAuthState({ isLoading: false });
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Password update failed' 
+      };
+    }
+  }
+
+  // Logout
+  async logout(): Promise<void> {
+    try {
+      await supabase.auth.signOut();
+      this.clearAuth();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   }
 
   // Check if user has specific role
@@ -176,355 +317,6 @@ class AuthService {
   hasAnyRole(roles: UserRole[]): boolean {
     return !!this.authState.user?.role && roles.includes(this.authState.user.role);
   }
-
-  // Login user
-  async login(credentials: LoginCredentials): Promise<{
-    success: boolean;
-    user?: User;
-    error?: string;
-  }> {
-    this.updateAuthState({ isLoading: true });
-
-    try {
-      const response = await fetch('http://localhost:8085/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        this.updateAuthState({ isLoading: false });
-        return { success: false, error: data.error || 'Login failed' };
-      }
-
-      // Store auth data and update state
-      this.storeAuthData({
-        access_token: data.access_token,
-        token_type: data.token_type || 'Bearer',
-        expires_in: data.expires_in || 3600,
-        user: data.user
-      });
-      
-      this.updateAuthState({
-        user: data.user,
-        token: data.access_token,
-        isAuthenticated: true,
-        isLoading: false
-      });
-
-      return { success: true, user: data.user };
-    } catch (error) {
-      this.updateAuthState({ isLoading: false });
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Login failed' 
-      };
-    }
-  }
-
-  // Register user
-  async register(registrationData: RegistrationData): Promise<{
-    success: boolean;
-    user?: User;
-    error?: string;
-    message?: string;
-  }> {
-    this.updateAuthState({ isLoading: true });
-
-    try {
-      const response = await fetch('http://localhost:8085/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(registrationData),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        this.updateAuthState({ isLoading: false });
-        return { success: false, error: data.error || 'Registration failed' };
-      }
-
-      this.updateAuthState({ isLoading: false });
-      return { 
-        success: true, 
-        user: data.user,
-        message: 'Registration successful! Please check your email to verify your account.'
-      };
-    } catch (error) {
-      this.updateAuthState({ isLoading: false });
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Registration failed' 
-      };
-    }
-  }
-
-  // Verify email
-  async verifyEmail(token: string): Promise<{
-    success: boolean;
-    error?: string;
-    message?: string;
-  }> {
-    try {
-      const response = await fetch('http://localhost:8085/auth/verify-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Email verification failed' };
-      }
-
-      return { 
-        success: true, 
-        message: 'Email verified successfully! You can now login.' 
-      };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Email verification failed' 
-      };
-    }
-  }
-
-  // Request password reset
-  async requestPasswordReset(email: string): Promise<{
-    success: boolean;
-    error?: string;
-    message?: string;
-  }> {
-    try {
-      const response = await fetch('http://localhost:8085/auth/password-reset-request', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Password reset request failed' };
-      }
-
-      return { 
-        success: true, 
-        message: 'If email exists, password reset instructions have been sent.' 
-      };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Password reset request failed' 
-      };
-    }
-  }
-
-  // Confirm password reset
-  async confirmPasswordReset(token: string, newPassword: string): Promise<{
-    success: boolean;
-    error?: string;
-    message?: string;
-  }> {
-    try {
-      const response = await fetch('http://localhost:8085/auth/password-reset-confirm', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, new_password: newPassword }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        return { success: false, error: data.error || 'Password reset failed' };
-      }
-
-      return { 
-        success: true, 
-        message: 'Password reset successfully! You can now login with your new password.' 
-      };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Password reset failed' 
-      };
-    }
-  }
-
-  // Verify current token
-  async verifyToken(): Promise<boolean> {
-    if (!this.authState.token) {
-      return false;
-    }
-
-    try {
-      const response = await fetch('http://localhost:8085/auth/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.authState.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        this.clearAuth();
-        return false;
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.user) {
-        this.updateAuthState({
-          user: data.user,
-          isAuthenticated: true
-        });
-        return true;
-      }
-
-      this.clearAuth();
-      return false;
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      this.clearAuth();
-      return false;
-    }
-  }
-
-  // Refresh user data
-  async refreshUser(): Promise<{
-    success: boolean;
-    user?: User;
-    error?: string;
-  }> {
-    if (!this.authState.token) {
-      return { success: false, error: 'No authentication token' };
-    }
-
-    try {
-      const response = await fetch('http://localhost:8085/auth/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${this.authState.token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      
-      if (!response.ok) {
-        return { success: false, error: 'Failed to refresh user data' };
-      }
-      
-      const data = await response.json();
-      
-      if (data && data.user) {
-        const user = data.user;
-        localStorage.setItem(this.userKey, JSON.stringify(user));
-        this.updateAuthState({ user });
-        return { success: true, user };
-      }
-
-      return { success: false, error: 'Invalid response from server' };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Failed to refresh user data' 
-      };
-    }
-  }
-
-  // Logout user
-  async logout(): Promise<void> {
-    this.clearAuth();
-  }
-
-  // Check if user can perform specific actions
-  canCreateEvents(): boolean {
-    return this.hasAnyRole(['admin', 'organizer']);
-  }
-
-  canManageEvents(): boolean {
-    return this.hasAnyRole(['admin', 'organizer', 'staff']);
-  }
-
-  canAccessAdminPanel(): boolean {
-    return this.hasAnyRole(['admin', 'organizer']);
-  }
-
-  canModerateContent(): boolean {
-    return this.hasAnyRole(['admin', 'organizer']);
-  }
-
-  canViewAnalytics(): boolean {
-    return this.hasAnyRole(['admin', 'organizer']);
-  }
-
-  // Biometric authentication simulation (for PWA)
-  async isBiometricAvailable(): Promise<{ available: boolean; types: string[] }> {
-    try {
-      if (!('navigator' in window) || !('credentials' in navigator)) {
-        return { available: false, types: [] };
-      }
-
-      if ('PublicKeyCredential' in window) {
-        const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        if (available) {
-          return { 
-            available: true, 
-            types: ['fingerprint', 'face-id', 'touch-id'] 
-          };
-        }
-      }
-
-      return { available: false, types: [] };
-    } catch (error) {
-      console.error('Error checking biometric availability:', error);
-      return { available: false, types: [] };
-    }
-  }
-
-  // Offline authentication using cached credentials
-  async authenticateOffline(): Promise<{
-    success: boolean;
-    user?: User;
-    error?: string;
-  }> {
-    const token = localStorage.getItem(this.tokenKey);
-    const userJson = localStorage.getItem(this.userKey);
-    
-    if (!token || !userJson) {
-      return { success: false, error: 'No cached authentication data' };
-    }
-
-    try {
-      const user = JSON.parse(userJson);
-      this.updateAuthState({
-        user,
-        token,
-        isAuthenticated: true,
-        isLoading: false
-      });
-
-      return { success: true, user };
-    } catch (error) {
-      this.clearAuth();
-      return { success: false, error: 'Invalid cached authentication data' };
-    }
-  }
 }
 
-// Export singleton instance
-export const authService = AuthService.getInstance();
-export default authService; 
+export const authService = AuthService.getInstance(); 
