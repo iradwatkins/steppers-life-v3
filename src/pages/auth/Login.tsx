@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { User, Lock, Eye, EyeOff, Mail } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Mail, UserPlus, AlertCircle, Wrench } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Spinner } from '@/components/ui/spinner';
 import { useTheme } from "@/contexts/ThemeContext";
+import AuthDiagnostic from '@/components/auth/AuthDiagnostic';
+import AuthDiagnosticComponent from '@/lib/env-check';
+import { activateUser } from '@/utils/activateUser';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -17,6 +20,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [notRegisteredError, setNotRegisteredError] = useState<string | null>(null);
+  const [showDiagnostic, setShowDiagnostic] = useState(false);
   const { signIn, signInWithGoogle, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,29 +42,81 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      toast.error('Please enter a valid email address');
-      return;
-    }
-
     setIsLoading(true);
-    
+    setNotRegisteredError('');
+
     try {
+      if (!email) {
+        toast.error('Please enter your email');
+        setIsLoading(false);
+        return;
+      }
+
+      if (!password) {
+        toast.error('Please enter your password');
+        setIsLoading(false);
+        return;
+      }
+
+      console.log(`Attempting to sign in: ${email}`);
+      
+      // First verify if Supabase is reachable
+      try {
+        const { error: pingError } = await supabase.from('user_roles').select('id', { head: true });
+        if (pingError) {
+          console.error('Supabase connection error:', pingError);
+          toast.error('Connection to authentication service failed. Please try again later.');
+          setIsLoading(false);
+          return;
+        }
+      } catch (pingError) {
+        console.error('Failed to connect to Supabase:', pingError);
+        toast.error('Authentication service is unavailable. Please try again later.');
+        setIsLoading(false);
+        return;
+      }
+      
+      // Attempt to sign in
       const result = await signIn(email, password);
       
-      if (result.success) {
-        navigate('/', { replace: true });
-      } else {
-        toast.error(result.error || 'Failed to sign in');
+      if (!result.success) {
+        // Special handling for common errors
+        if (result.error?.includes('Invalid email or password')) {
+          toast.error('Invalid email or password. Please try again.');
+        } else if (result.error?.includes('Email not confirmed')) {
+          toast.error('Please check your email and confirm your account before signing in.');
+        } else if (result.error?.includes('User already registered')) {
+          setNotRegisteredError('You already have an account. Sign in with your credentials.');
+        } else if (result.error?.toLowerCase().includes('not found') || result.error?.toLowerCase().includes('no account')) {
+          setNotRegisteredError('No account found with this email. Would you like to create one?');
+        } else {
+          toast.error(result.error || 'Authentication failed. Please try again.');
+        }
+        
+        setIsLoading(false);
+        return;
       }
+      
+      // Check if the user account needs activation
+      try {
+        // Get the current user
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          // Try to activate the user if needed
+          await activateUser(user.id);
+        }
+      } catch (activationError) {
+        console.error('Error during user activation check:', activationError);
+        // Continue with login anyway
+      }
+      
+      // Successful login
+      toast.success('Login successful!');
+      navigate(location.state?.from || '/');
     } catch (error) {
-      toast.error('An unexpected error occurred');
+      console.error('Unexpected login error:', error);
+      toast.error('An unexpected error occurred during login. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -76,6 +133,10 @@ const Login = () => {
       setIsGoogleLoading(false);
     }
     // Note: We don't set isGoogleLoading to false here as the page will redirect
+  };
+
+  const handleRegisterRedirect = () => {
+    navigate('/auth/register', { state: { prefillEmail: email } });
   };
 
   return (
@@ -101,6 +162,22 @@ const Login = () => {
             <Mail className="h-4 w-4 mr-2" />
             <AlertDescription>
               {message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {notRegisteredError && (
+          <Alert className="bg-warning-light border-warning-border text-warning-foreground mb-4">
+            <UserPlus className="h-4 w-4 mr-2" />
+            <AlertDescription className="flex flex-col">
+              <span>{notRegisteredError}</span>
+              <Button 
+                variant="outline" 
+                className="mt-2 border-warning-border text-warning-foreground hover:bg-warning-light/50"
+                onClick={handleRegisterRedirect}
+              >
+                Create a new account
+              </Button>
             </AlertDescription>
           </Alert>
         )}
@@ -165,6 +242,7 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={isLoading}
+                    autoComplete="username"
                   />
                 </div>
               </div>
@@ -184,6 +262,7 @@ const Login = () => {
                     required
                     minLength={6}
                     disabled={isLoading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
@@ -211,6 +290,28 @@ const Login = () => {
               <Link to="/auth/register" className="text-brand-primary hover:text-brand-primary-hover font-medium">
                 Sign up here
               </Link>
+            </div>
+            
+            <div className="mt-4 pt-4 border-t border-border-default">
+              <button 
+                onClick={() => setShowDiagnostic(!showDiagnostic)} 
+                className="text-sm text-text-secondary flex items-center hover:text-brand-primary"
+              >
+                <Wrench className="h-3 w-3 mr-1" />
+                {showDiagnostic ? 'Hide Troubleshooting' : 'Having trouble signing in?'}
+              </button>
+              
+              {showDiagnostic && (
+                <div className="mt-4">
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4 mr-2" />
+                    <AlertDescription>
+                      If you're experiencing login issues, the diagnostic tool below can help identify the problem.
+                    </AlertDescription>
+                  </Alert>
+                  <AuthDiagnosticComponent />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
