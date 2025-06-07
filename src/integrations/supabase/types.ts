@@ -11,172 +11,49 @@ export type Database = {
     Tables: {
       events: {
         Row: {
-          id: string
-          title: string
-          description: string
-          start_date: string
-          end_date: string
-          location: string
-          venue_id: string | null
-          created_at: string
-          updated_at: string
-          organizer_id: string
-          status: Database["public"]["Enums"]["event_status"]
-          category: string
-          max_attendees: number | null
-          price: number | null
-          currency: string
-          featured_image: string | null
-          is_featured: boolean
-          timezone: string
-          refund_policy: string | null
-          tags: string[] | null
-          private_notes: string | null
-          public_notes: string | null
-          website_url: string | null
-          sales_start_date: string | null
-          sales_end_date: string | null
-        }
-        Insert: {
-          id?: string
-          title: string
-          description: string
-          start_date: string
-          end_date: string
-          location: string
-          venue_id?: string | null
-          created_at?: string
-          updated_at?: string
-          organizer_id: string
-          status?: Database["public"]["Enums"]["event_status"]
-          category?: string
-          max_attendees?: number | null
-          price?: number | null
-          currency?: string
-          featured_image?: string | null
-          is_featured?: boolean
-          timezone?: string
-          refund_policy?: string | null
-          tags?: string[] | null
-          private_notes?: string | null
-          public_notes?: string | null
-          website_url?: string | null
-          sales_start_date?: string | null
-          sales_end_date?: string | null
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string
-          start_date?: string
-          end_date?: string
-          location?: string
-          venue_id?: string | null
-          created_at?: string
-          updated_at?: string
-          organizer_id?: string
-          status?: Database["public"]["Enums"]["event_status"]
-          category?: string
-          max_attendees?: number | null
-          price?: number | null
-          currency?: string
-          featured_image?: string | null
-          is_featured?: boolean
-          timezone?: string
-          refund_policy?: string | null
-          tags?: string[] | null
-          private_notes?: string | null
-          public_notes?: string | null
-          website_url?: string | null
-          sales_start_date?: string | null
-          sales_end_date?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "events_organizer_id_fkey"
-            columns: ["organizer_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "events_venue_id_fkey"
-            columns: ["venue_id"]
-            isOneToOne: false
-            referencedRelation: "venues"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      venues: {
-        Row: {
-          id: string
-          name: string
-          address: string
-          city: string
-          state: string
-          country: string
-          postal_code: string
-          capacity: number | null
+          created_at: string | null
+          current_attendees: number | null
           description: string | null
-          contact_email: string | null
-          contact_phone: string | null
-          website: string | null
-          created_at: string
-          updated_at: string
-          is_active: boolean
-          latitude: number | null
-          longitude: number | null
-          amenities: string[] | null
-          images: string[] | null
-          accessibility_features: string[] | null
-          parking_info: string | null
+          end_date: string
+          id: string
+          location: string | null
+          max_attendees: number | null
+          organizer_id: string | null
+          price: number | null
+          start_date: string
+          status: string | null
+          title: string
+          updated_at: string | null
         }
         Insert: {
-          id?: string
-          name: string
-          address: string
-          city: string
-          state: string
-          country: string
-          postal_code: string
-          capacity?: number | null
+          created_at?: string | null
+          current_attendees?: number | null
           description?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          website?: string | null
-          created_at?: string
-          updated_at?: string
-          is_active?: boolean
-          latitude?: number | null
-          longitude?: number | null
-          amenities?: string[] | null
-          images?: string[] | null
-          accessibility_features?: string[] | null
-          parking_info?: string | null
+          end_date: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          organizer_id?: string | null
+          price?: number | null
+          start_date: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
         }
         Update: {
-          id?: string
-          name?: string
-          address?: string
-          city?: string
-          state?: string
-          country?: string
-          postal_code?: string
-          capacity?: number | null
+          created_at?: string | null
+          current_attendees?: number | null
           description?: string | null
-          contact_email?: string | null
-          contact_phone?: string | null
-          website?: string | null
-          created_at?: string
-          updated_at?: string
-          is_active?: boolean
-          latitude?: number | null
-          longitude?: number | null
-          amenities?: string[] | null
-          images?: string[] | null
-          accessibility_features?: string[] | null
-          parking_info?: string | null
+          end_date?: string
+          id?: string
+          location?: string | null
+          max_attendees?: number | null
+          organizer_id?: string | null
+          price?: number | null
+          start_date?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -213,26 +90,88 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          address: string | null
+          bio: string | null
+          contact_phone: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          last_login: string | null
+          name: string | null
+          registration_date: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+          vod_subscription_status: string | null
+        }
+        Insert: {
+          address?: string | null
+          bio?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_login?: string | null
+          name?: string | null
+          registration_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vod_subscription_status?: string | null
+        }
+        Update: {
+          address?: string | null
+          bio?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          last_login?: string | null
+          name?: string | null
+          registration_date?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          vod_subscription_status?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
           id: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          profile_id: string | null
+          role: string
+          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
-          user_id: string
+          profile_id?: string | null
+          role: string
+          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
-          user_id?: string
+          profile_id?: string | null
+          role?: string
+          updated_at?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -248,8 +187,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "buyer" | "organizer" | "instructor" | "admin" | "event_staff" | "sales_agent"
-      event_status: "draft" | "published" | "cancelled" | "completed" | "postponed"
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -365,8 +303,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["buyer", "organizer", "instructor", "admin", "event_staff", "sales_agent"],
-      event_status: ["draft", "published", "cancelled", "completed", "postponed"],
+      app_role: ["admin", "moderator", "user"],
     },
   },
 } as const

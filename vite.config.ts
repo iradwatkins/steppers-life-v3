@@ -9,6 +9,13 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api': {
+        target: mode === 'development' ? 'http://localhost:8080' : 'https://api.stepperslife.com',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   build: {
     outDir: 'dist',
@@ -49,7 +56,9 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.stepperslife\.com\/.*$/,
+            urlPattern: mode === 'development' 
+              ? /^http:\/\/localhost:8080\/.*$/ 
+              : /^https:\/\/api\.stepperslife\.com\/.*$/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -139,51 +148,51 @@ export default defineConfig(({ mode }) => ({
         dir: 'ltr',
         icons: [
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-72x72.png',
             sizes: '72x72',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-96x96.png',
             sizes: '96x96',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-128x128.png',
             sizes: '128x128',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-144x144.png',
             sizes: '144x144',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-152x152.png',
             sizes: '152x152',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-384x384.png',
             sizes: '384x384',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           },
           {
-            src: '/steppers-icon.svg',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'maskable any'
           }
         ],
@@ -196,7 +205,8 @@ export default defineConfig(({ mode }) => ({
             icons: [
               {
                 src: '/icons/checkin-icon-96x96.png',
-                sizes: '96x96'
+                sizes: '96x96',
+                type: 'image/png'
               }
             ]
           },
@@ -208,7 +218,8 @@ export default defineConfig(({ mode }) => ({
             icons: [
               {
                 src: '/icons/dashboard-icon-96x96.png',
-                sizes: '96x96'
+                sizes: '96x96',
+                type: 'image/png'
               }
             ]
           },
@@ -220,7 +231,8 @@ export default defineConfig(({ mode }) => ({
             icons: [
               {
                 src: '/icons/icon-96x96.png',
-                sizes: '96x96'
+                sizes: '96x96',
+                type: 'image/png'
               }
             ]
           }
@@ -261,9 +273,10 @@ export default defineConfig(({ mode }) => ({
       devOptions: {
         enabled: mode === 'development',
         type: 'module',
-        navigateFallback: 'index.html'
+        navigateFallback: 'index.html',
+        suppressWarnings: true
       },
-      injectRegister: 'auto'
+      injectRegister: mode === 'development' ? 'script' : 'auto'
     })
   ].filter(Boolean),
   resolve: {
