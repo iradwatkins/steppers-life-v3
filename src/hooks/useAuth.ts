@@ -309,25 +309,51 @@ export const useAuth = () => {
 
   // Helper function to check if user has a specific role
   const hasRole = (role: UserRole | UserRole[]): boolean => {
-    if (!user) return false;
+    console.log('hasRole called with:', role);
+    
+    if (!user) {
+      console.log('hasRole: No user authenticated');
+      return false;
+    }
     
     // Check both user metadata and database role
     const metadataRole = user.user_metadata?.role;
     const currentRole = userRole || metadataRole || 'buyer';
     
+    console.log('hasRole debug:', {
+      userEmail: user.email,
+      userId: user.id,
+      requestedRole: role,
+      metadataRole,
+      currentRole,
+      userRole,
+      backendProfileRole: user.backendProfile?.role,
+      hasBackendProfile: !!user.backendProfile
+    });
+    
     // Special case for admin: check both metadata and database
     if (role === 'admin' || (Array.isArray(role) && role.includes('admin'))) {
       // For admin role, we need to check both the current role and the database role
       const isAdmin = currentRole === 'admin' || user.backendProfile?.role === 'admin';
-      console.log('Admin check:', { currentRole, backendRole: user.backendProfile?.role, isAdmin });
+      console.log('Admin check result:', { 
+        currentRole, 
+        backendRole: user.backendProfile?.role, 
+        isAdmin,
+        metadataRole,
+        userRole
+      });
       return isAdmin;
     }
     
     if (Array.isArray(role)) {
-      return role.includes(currentRole);
+      const hasAnyRole = role.includes(currentRole);
+      console.log('Array role check:', { role, currentRole, hasAnyRole });
+      return hasAnyRole;
     }
     
-    return currentRole === role;
+    const hasExactRole = currentRole === role;
+    console.log('Exact role check:', { role, currentRole, hasExactRole });
+    return hasExactRole;
   };
 
   // Get the current user's role

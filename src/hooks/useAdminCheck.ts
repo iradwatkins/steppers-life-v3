@@ -8,6 +8,14 @@ export const useAdminCheck = () => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      console.log('useAdminCheck: Starting admin status check');
+      console.log('useAdminCheck: User state:', user ? {
+        email: user.email,
+        id: user.id,
+        metadata: user.user_metadata,
+        backendProfile: user.backendProfile
+      } : 'No user');
+      
       if (!user) {
         console.log('useAdminCheck: No user authenticated');
         setIsAdmin(false);
@@ -17,6 +25,7 @@ export const useAdminCheck = () => {
 
       try {
         // Check if user has admin role using the hasRole function
+        console.log('useAdminCheck: Calling hasRole("admin")');
         const adminStatus = hasRole('admin');
         console.log(`useAdminCheck: Admin status for ${user.email}: ${adminStatus}`);
         setIsAdmin(adminStatus);

@@ -3,9 +3,13 @@ import App from './App.tsx'
 import './index.css'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { initBrowserEnv } from './lib/env'
+import { ensureIradIsAdmin } from './utils/ensureAdminUser'
 
 // Initialize environment variables
 initBrowserEnv();
+
+// Ensure admin user is properly set up
+ensureIradIsAdmin().catch(console.error);
 
 // Enhanced PWA install detection with better timing
 // Initialize global variables first to avoid temporal dead zone errors
@@ -77,6 +81,12 @@ const handleAppInstalled = (evt: any) => {
 
 // Simplified service worker registration
 const registerServiceWorker = async () => {
+  // Skip service worker registration in development to avoid errors
+  if (import.meta.env.DEV) {
+    console.log('Service worker registration skipped in development mode');
+    return null;
+  }
+  
   if ('serviceWorker' in navigator) {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js', {
@@ -90,9 +100,7 @@ const registerServiceWorker = async () => {
       
       return registration;
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.log('Service worker registration failed (expected in development)');
-      }
+      console.error('Service worker registration failed:', error);
       return null;
     }
   }

@@ -8,10 +8,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
     proxy: {
       '/api': {
-        target: mode === 'development' ? 'http://localhost:8080' : 'https://api.stepperslife.com',
+        target: mode === 'development' ? 'http://localhost:8081' : 'https://api.stepperslife.com',
         changeOrigin: true,
         secure: false,
       }
@@ -36,7 +36,8 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' &&
     componentTagger(),
-    VitePWA({
+    // Only enable PWA in production mode
+    mode === 'production' && VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'icons/*.png'],
       workbox: {
@@ -49,16 +50,14 @@ export default defineConfig(({ mode }) => ({
           /\/sw\.js$/,
           /\/manifest\.json$/,
           /\/manifest\.webmanifest$/,
-          /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot|webp|avif|map)$/
+          /\.(js|css|woff|woff2|ttf|eot|map)$/
         ],
         cleanupOutdatedCaches: true,
         skipWaiting: true,
         clientsClaim: true,
         runtimeCaching: [
           {
-            urlPattern: mode === 'development' 
-              ? /^http:\/\/localhost:8080\/.*$/ 
-              : /^https:\/\/api\.stepperslife\.com\/.*$/,
+            urlPattern: /^https:\/\/api\.stepperslife\.com\/.*$/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
@@ -127,6 +126,14 @@ export default defineConfig(({ mode }) => ({
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pwa-pages-cache',
+              networkTimeoutSeconds: 3
+            }
+          },
+          {
+            urlPattern: ({ url }) => url.pathname.startsWith('/admin/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'admin-pages-cache',
               networkTimeoutSeconds: 3
             }
           }
@@ -269,14 +276,7 @@ export default defineConfig(({ mode }) => ({
         launch_handler: {
           client_mode: ['navigate-existing', 'auto']
         }
-      },
-      devOptions: {
-        enabled: mode === 'development',
-        type: 'module',
-        navigateFallback: 'index.html',
-        suppressWarnings: true
-      },
-      injectRegister: mode === 'development' ? 'script' : 'auto'
+      }
     })
   ].filter(Boolean),
   resolve: {
