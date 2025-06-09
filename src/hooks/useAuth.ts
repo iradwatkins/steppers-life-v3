@@ -308,7 +308,17 @@ export const useAuth = () => {
   const hasRole = (role: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     
-    const currentRole = userRole || user.user_metadata?.role || 'buyer';
+    // Check both user metadata and database role
+    const metadataRole = user.user_metadata?.role;
+    const currentRole = userRole || metadataRole || 'buyer';
+    
+    // Special case for admin: check both metadata and database
+    if (role === 'admin' || (Array.isArray(role) && role.includes('admin'))) {
+      // For admin role, we need to check both the current role and the database role
+      const isAdmin = currentRole === 'admin' || user.backendProfile?.role === 'admin';
+      console.log('Admin check:', { currentRole, backendRole: user.backendProfile?.role, isAdmin });
+      return isAdmin;
+    }
     
     if (Array.isArray(role)) {
       return role.includes(currentRole);

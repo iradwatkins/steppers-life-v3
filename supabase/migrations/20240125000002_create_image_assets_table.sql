@@ -170,34 +170,34 @@ GRANT EXECUTE ON FUNCTION get_images_with_usage() TO authenticated;
 
 -- Insert some sample data for demonstration (optional)
 -- This would be removed in production
-INSERT INTO image_assets (
-    filename, original_name, url, category, tags, description, 
-    size, width, height, format, theme, is_active, created_by
-) VALUES 
-(
-    'logo/steppers-logo-light.svg',
-    'SteppersLife Logo Light.svg',
-    '/steppers-icon.svg',
-    'logo',
-    ARRAY['light-theme', 'header', 'navigation'],
-    'Main logo for light theme',
-    12500,
-    200,
-    60,
-    'SVG',
-    'light',
-    TRUE,
-    (SELECT id FROM auth.users LIMIT 1)
-) ON CONFLICT (filename) DO NOTHING;
+-- INSERT INTO image_assets (
+--     filename, original_name, url, category, tags, description, 
+--     size, width, height, format, theme, is_active, created_by
+-- ) VALUES 
+-- (
+--     'logo/steppers-logo-light.svg',
+--     'SteppersLife Logo Light.svg',
+--     '/steppers-icon.svg',
+--     'logo',
+--     ARRAY['light-theme', 'header', 'navigation'],
+--     'Main logo for light theme',
+--     12500,
+--     200,
+--     60,
+--     'SVG',
+--     'light',
+--     TRUE,
+--     (SELECT id FROM auth.users LIMIT 1)
+-- ) ON CONFLICT (filename) DO NOTHING;
 
 -- Insert corresponding usage record
-INSERT INTO image_asset_usage (
-    image_asset_id, location, description, is_active
-) SELECT 
-    id, 
-    'Header Navigation', 
-    'Primary header logo', 
-    TRUE
-FROM image_assets 
-WHERE filename = 'logo/steppers-logo-light.svg'
-ON CONFLICT (image_asset_id, location) DO NOTHING; 
+-- INSERT INTO image_asset_usage (
+--     image_asset_id, location, description, is_active
+-- ) SELECT 
+--     id, 
+--     'Header Navigation', 
+--     'Primary header logo', 
+--     TRUE
+-- FROM image_assets 
+-- WHERE filename = 'logo/steppers-logo-light.svg'
+-- ON CONFLICT (image_asset_id, location) DO NOTHING; 

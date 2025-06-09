@@ -14,7 +14,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   allowedRoles,
   redirectTo = '/dashboard'
 }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, hasRole } = useAuth();
 
   // First check if the user is authenticated
   if (loading) {
@@ -29,11 +29,8 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Check if user has metadata with role
-  const userRole = user.user_metadata?.role || 'buyer'; // Default to buyer if no role specified
-
-  // Check if the user has the required role
-  const hasRequiredRole = allowedRoles.includes(userRole);
+  // Check if the user has any of the required roles
+  const hasRequiredRole = hasRole(allowedRoles);
 
   if (!hasRequiredRole) {
     toast.error(`Access restricted. You need ${allowedRoles.join(' or ')} permissions.`);

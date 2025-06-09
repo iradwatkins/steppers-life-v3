@@ -5,6 +5,18 @@ import { getEnv } from '@/lib/env';
 const API_BASE_URL = getEnv('VITE_API_URL', 'http://localhost:8000/api/v1');
 
 /**
+ * Check if backend API is available
+ */
+async function isBackendAvailable(): Promise<boolean> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/health`, { method: 'HEAD' });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Fetch API wrapper that includes authentication header and error handling
  */
 async function fetchWithAuth(url: string, options: RequestInit = {}) {
@@ -108,7 +120,32 @@ const apiService = {
    */
   getUserProfile: async () => {
     try {
-      return await fetchWithAuth(`${API_BASE_URL}/auth/supabase/me`);
+      // Try backend API first
+      if (await isBackendAvailable()) {
+        return await fetchWithAuth(`${API_BASE_URL}/auth/supabase/me`);
+      }
+      
+      // Fallback to Supabase directly
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+      
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+        
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('is_primary', true)
+        .single();
+        
+      return {
+        ...profile,
+        role: roles?.role || 'buyer'
+      };
     } catch (error) {
       console.error('Failed to get user profile:', error);
       throw error;

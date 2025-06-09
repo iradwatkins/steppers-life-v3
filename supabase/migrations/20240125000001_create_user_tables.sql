@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     name VARCHAR(255),
     email VARCHAR(255),
-    status VARCHAR(50) DEFAULT 'pending_approval' CHECK (status IN ('active', 'pending_approval', 'suspended', 'deactivated')),
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'pending_approval', 'suspended', 'deactivated')),
     registration_date TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     last_login TIMESTAMP WITH TIME ZONE,
     vod_subscription_status VARCHAR(50) CHECK (vod_subscription_status IN ('active', 'inactive', 'trialing')),
@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     profile_id UUID REFERENCES user_profiles(id) ON DELETE CASCADE,
     role VARCHAR(50) NOT NULL CHECK (role IN ('buyer', 'organizer', 'instructor', 'admin', 'event_staff', 'sales_agent')),
+    is_primary BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
 );
@@ -45,34 +46,46 @@ DROP POLICY IF EXISTS "Allow user to update their own profile" ON public.user_pr
 DROP POLICY IF EXISTS "Allow admins to delete profiles" ON public.user_profiles;
 
 -- Create a helper function to safely check for admin role and avoid recursion.
--- This function runs with the privileges of the user who defined it (the superuser), bypassing RLS for the check itself.
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.user_roles
-    WHERE user_id = auth.uid() AND role = 'admin'
+    WHERE user_id = auth.uid() 
+    AND role = 'admin'
+    AND is_primary = true
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-
 -- POLICIES FOR user_roles
--- SELECT: Allow any authenticated user to read roles. This is needed for other policies to check admin status without recursion.
+-- SELECT: Allow any authenticated user to read roles
 CREATE POLICY "Allow authenticated users to read roles"
 ON public.user_roles
 FOR SELECT
 TO authenticated
 USING (true);
 
--- ALL (INSERT, UPDATE, DELETE): Only allow admins to change roles.
+-- INSERT: Allow users to insert their own roles
+CREATE POLICY "Allow users to insert their own roles"
+ON public.user_roles
+FOR INSERT
+TO authenticated
+WITH CHECK (user_id = auth.uid());
+
+-- UPDATE/DELETE: Only allow admins to modify roles
 CREATE POLICY "Allow admins to modify user_roles"
 ON public.user_roles
-FOR ALL
+FOR UPDATE
 TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
 
+CREATE POLICY "Allow admins to delete user_roles"
+ON public.user_roles
+FOR DELETE
+TO authenticated
+USING (public.is_admin());
 
 -- POLICIES FOR user_profiles
 -- SELECT: Users can view their own profile. Admins can view all profiles.
@@ -116,14 +129,14 @@ RETURNS TRIGGER AS $$
 DECLARE
     new_profile_id UUID;
 BEGIN
-    -- Create user profile
-    INSERT INTO public.user_profiles (user_id, email, name)
-    VALUES (new.id, new.email, COALESCE(new.raw_user_meta_data->>'name', new.email))
+    -- Create user profile with active status
+    INSERT INTO public.user_profiles (user_id, email, name, status)
+    VALUES (new.id, new.email, COALESCE(new.raw_user_meta_data->>'name', new.email), 'active')
     RETURNING id INTO new_profile_id;
 
-    -- Set as buyer by default
-    INSERT INTO public.user_roles (user_id, profile_id, role)
-    VALUES (new.id, new_profile_id, 'buyer');
+    -- Set as buyer by default with is_primary=true
+    INSERT INTO public.user_roles (user_id, profile_id, role, is_primary)
+    VALUES (new.id, new_profile_id, 'buyer', true);
 
     RETURN new;
 END;
