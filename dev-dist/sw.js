@@ -78,22 +78,18 @@ define(['./workbox-a0789725'], (function (workbox) { 'use strict';
    * See https://goo.gl/S9QRab
    */
   workbox.precacheAndRoute([{
-    "url": "registerSW.js",
-    "revision": "3ca0b8505b4bec776b69afdba2768812"
+    "url": "suppress-warnings.js",
+    "revision": "d41d8cd98f00b204e9800998ecf8427e"
   }, {
     "url": "/index.html",
-<<<<<<< HEAD
-    "revision": "0.vn36knfeeg"
-=======
-    "revision": "0.fetkmec4si8"
->>>>>>> 4675d4e753eff43f33f4bd7c41d21400d103e074
+    "revision": "0.mtkvpj9quko"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/],
     denylist: [/^\/api\//, /\/__/, /\/sw\.js$/, /\/manifest\.json$/, /\/manifest\.webmanifest$/, /\.(js|css|png|jpg|jpeg|svg|gif|ico|woff|woff2|ttf|eot|webp|avif|map)$/]
   }));
-  workbox.registerRoute(/^https:\/\/api\.stepperslife\.com\/.*$/, new workbox.NetworkFirst({
+  workbox.registerRoute(/^http:\/\/localhost:8080\/.*$/, new workbox.NetworkFirst({
     "cacheName": "api-cache",
     "networkTimeoutSeconds": 3,
     plugins: [new workbox.CacheableResponsePlugin({
