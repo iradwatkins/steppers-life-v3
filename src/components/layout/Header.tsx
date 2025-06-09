@@ -154,17 +154,6 @@ const Header = () => {
                         </Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem asChild>
-                      <Link to="/download" className="flex items-center">
-                        <Smartphone className="mr-2 h-4 w-4" />
-                        <span>Download App</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/docs" className="flex items-center">
-                        <span>Docs</span>
-                      </Link>
-                    </DropdownMenuItem>
                     {isAdmin && (
                       <DropdownMenuItem asChild>
                         <Link to="/admin" className="flex items-center">
@@ -173,6 +162,12 @@ const Header = () => {
                         </Link>
                       </DropdownMenuItem>
                     )}
+                    <DropdownMenuItem asChild>
+                      <Link to="/download" className="flex items-center">
+                        <Smartphone className="mr-2 h-4 w-4" />
+                        <span>Download App</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
@@ -246,21 +241,6 @@ const Header = () => {
                       Event Analytics
                     </Link>
                   )}
-                  <Link
-                    to="/download"
-                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <Smartphone className="mr-2 h-4 w-4" />
-                    Download App
-                  </Link>
-                  <Link
-                    to="/docs"
-                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Docs
-                  </Link>
                   {isAdmin && (
                     <Link
                       to="/admin"
@@ -271,6 +251,14 @@ const Header = () => {
                       Admin Dashboard
                     </Link>
                   )}
+                  <Link
+                    to="/download"
+                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Download App
+                  </Link>
                   
                   {/* Mobile Post Content Options - Only show if user has appropriate roles */}
                   {(isOrganizer || isInstructor) && (

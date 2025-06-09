@@ -32,6 +32,7 @@ export const useAuth = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', userId)
+        .eq('is_primary', true)
         .single();
 
       if (error) {
@@ -67,11 +68,12 @@ export const useAuth = () => {
   // Function to create a user role if it doesn't exist
   const ensureUserRole = async (userId: string, role: UserRole = 'buyer'): Promise<void> => {
     try {
-      // First check if the user already has a role
+      // First check if the user already has a primary role
       const { data, error } = await supabase
         .from('user_roles')
-        .select('role')
+        .select('role, profile_id')
         .eq('user_id', userId)
+        .eq('is_primary', true)
         .single();
       
       if (error && error.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
@@ -79,15 +81,38 @@ export const useAuth = () => {
         return;
       }
       
-      // If user doesn't have a role yet, create one
+      // If user doesn't have a primary role yet, they should have been created by the trigger
+      // But let's double-check and create if needed
       if (!data) {
-        console.log('Creating new user role:', role);
-        const { error: insertError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: userId, role });
+        console.log('No primary role found, checking if user profile exists...');
         
-        if (insertError) {
-          console.error('Error creating user role:', insertError);
+        // Get user profile
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('id')
+          .eq('user_id', userId)
+          .single();
+          
+        if (profileError) {
+          console.error('Error fetching user profile:', profileError);
+          return;
+        }
+        
+        if (profile) {
+          console.log('Creating new user role:', role);
+          const { error: insertError } = await supabase
+            .from('user_roles')
+            .insert({ 
+              user_id: userId, 
+              profile_id: profile.id,
+              role: role,
+              is_primary: true,
+              granted_by: userId
+            });
+          
+          if (insertError) {
+            console.error('Error creating user role:', insertError);
+          }
         }
       }
     } catch (error) {
@@ -316,6 +341,14 @@ export const useAuth = () => {
       return false;
     }
     
+    // Special hardcoded check for iradwatkins@gmail.com to always be admin
+    if (user.email === 'iradwatkins@gmail.com') {
+      if (role === 'admin' || (Array.isArray(role) && role.includes('admin'))) {
+        console.log('Admin access granted for iradwatkins@gmail.com');
+        return true;
+      }
+    }
+    
     // Check both user metadata and database role
     const metadataRole = user.user_metadata?.role;
     const currentRole = userRole || metadataRole || 'buyer';
@@ -358,6 +391,10 @@ export const useAuth = () => {
 
   // Get the current user's role
   const getUserRole = (): UserRole => {
+    // Special case for iradwatkins@gmail.com
+    if (user?.email === 'iradwatkins@gmail.com') {
+      return 'admin';
+    }
     return userRole;
   };
 

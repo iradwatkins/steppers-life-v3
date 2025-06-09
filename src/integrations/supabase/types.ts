@@ -92,76 +92,106 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          id: string
+          user_id: string
+          email: string
+          name: string | null
+          first_name: string | null
+          last_name: string | null
+          status: Database["public"]["Enums"]["user_status"]
+          phone: string | null
           address: string | null
           bio: string | null
-          contact_phone: string | null
-          created_at: string | null
-          email: string | null
-          id: string
-          last_login: string | null
-          name: string | null
+          avatar_url: string | null
+          timezone: string | null
+          language: string | null
           registration_date: string | null
-          status: string | null
+          last_login: string | null
+          email_verified: boolean | null
+          phone_verified: boolean | null
+          created_at: string | null
           updated_at: string | null
-          user_id: string | null
-          vod_subscription_status: string | null
         }
         Insert: {
+          id?: string
+          user_id: string
+          email: string
+          name?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          status?: Database["public"]["Enums"]["user_status"]
+          phone?: string | null
           address?: string | null
           bio?: string | null
-          contact_phone?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          last_login?: string | null
-          name?: string | null
+          avatar_url?: string | null
+          timezone?: string | null
+          language?: string | null
           registration_date?: string | null
-          status?: string | null
+          last_login?: string | null
+          email_verified?: boolean | null
+          phone_verified?: boolean | null
+          created_at?: string | null
           updated_at?: string | null
-          user_id?: string | null
-          vod_subscription_status?: string | null
         }
         Update: {
+          id?: string
+          user_id?: string
+          email?: string
+          name?: string | null
+          first_name?: string | null
+          last_name?: string | null
+          status?: Database["public"]["Enums"]["user_status"]
+          phone?: string | null
           address?: string | null
           bio?: string | null
-          contact_phone?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          last_login?: string | null
-          name?: string | null
+          avatar_url?: string | null
+          timezone?: string | null
+          language?: string | null
           registration_date?: string | null
-          status?: string | null
+          last_login?: string | null
+          email_verified?: boolean | null
+          phone_verified?: boolean | null
+          created_at?: string | null
           updated_at?: string | null
-          user_id?: string | null
-          vod_subscription_status?: string | null
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          created_at: string | null
           id: string
-          profile_id: string | null
-          role: string
+          user_id: string
+          profile_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          is_primary: boolean | null
+          granted_by: string | null
+          granted_at: string | null
+          expires_at: string | null
+          created_at: string | null
           updated_at: string | null
-          user_id: string | null
         }
         Insert: {
-          created_at?: string | null
           id?: string
-          profile_id?: string | null
-          role: string
+          user_id: string
+          profile_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          is_primary?: boolean | null
+          granted_by?: string | null
+          granted_at?: string | null
+          expires_at?: string | null
+          created_at?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Update: {
-          created_at?: string | null
           id?: string
-          profile_id?: string | null
-          role?: string
+          user_id?: string
+          profile_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          is_primary?: boolean | null
+          granted_by?: string | null
+          granted_at?: string | null
+          expires_at?: string | null
+          created_at?: string | null
           updated_at?: string | null
-          user_id?: string | null
         }
         Relationships: [
           {
@@ -171,6 +201,20 @@ export type Database = {
             referencedRelation: "user_profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
         ]
       }
     }
@@ -178,16 +222,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      get_user_role: {
+        Args: {
+          target_user_id?: string
+        }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
       has_role: {
         Args: {
-          _user_id: string
-          _role: Database["public"]["Enums"]["app_role"]
+          target_role: Database["public"]["Enums"]["app_role"]
+          target_user_id?: string
         }
         Returns: boolean
       }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "buyer" | "organizer" | "instructor" | "admin" | "event_staff" | "sales_agent"
+      user_status: "active" | "pending_approval" | "suspended" | "deactivated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -303,7 +358,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["buyer", "organizer", "instructor", "admin", "event_staff", "sales_agent"],
+      user_status: ["active", "pending_approval", "suspended", "deactivated"],
     },
   },
 } as const

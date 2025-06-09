@@ -55,11 +55,11 @@ export interface ContentCreationOption {
   featured?: boolean;
 }
 
-// Mock user roles data
-const mockUserRoles: UserRole[] = [
-  {
-    id: 'attendee',
-    name: 'attendee',
+// Map auth roles to dashboard roles
+const roleMappings: Record<string, UserRole> = {
+  'buyer': {
+    id: 'buyer',
+    name: 'buyer',
     displayName: 'Community Member',
     description: 'Basic community member who attends events and classes',
     icon: 'Users',
@@ -68,54 +68,79 @@ const mockUserRoles: UserRole[] = [
     benefits: ['Browse events', 'Purchase tickets', 'Join community discussions', 'Rate and review events'],
     permissions: ['view_events', 'purchase_tickets', 'write_reviews']
   },
-  {
+  'organizer': {
     id: 'organizer',
     name: 'organizer', 
     displayName: 'Event Organizer',
     description: 'Create and manage events, track sales and analytics',
     icon: 'Calendar',
-    isActive: false,
+    isActive: true,
     requirements: ['Create your first event'],
     benefits: ['Create unlimited events', 'Access sales analytics', 'Manage attendees', 'Email marketing tools'],
     permissions: ['create_events', 'manage_events', 'view_analytics', 'send_campaigns']
   },
-  {
+  'instructor': {
     id: 'instructor',
     name: 'instructor',
     displayName: 'Dance Instructor', 
     description: 'Teach classes and workshops, build your following',
     icon: 'GraduationCap',
-    isActive: false,
+    isActive: true,
     requirements: ['List your first class or workshop'],
     benefits: ['Create class listings', 'Build instructor profile', 'Manage students', 'Offer VOD classes'],
     permissions: ['create_classes', 'manage_students', 'create_vod', 'instructor_analytics']
   },
-  {
-    id: 'service_provider',
-    name: 'service_provider',
-    displayName: 'Service Provider',
-    description: 'List your services in the community directory',
-    icon: 'Briefcase',
-    isActive: false,
-    requirements: ['List your first service'],
-    benefits: ['Service directory listing', 'Customer reviews', 'Business analytics', 'Direct bookings'],
-    permissions: ['create_services', 'manage_bookings', 'view_reviews']
+  'admin': {
+    id: 'admin',
+    name: 'admin',
+    displayName: 'Platform Administrator',
+    description: 'Full platform access and management capabilities',
+    icon: 'Shield',
+    isActive: true,
+    activatedAt: '2024-01-01T00:00:00Z',
+    benefits: ['Full platform access', 'User management', 'System configuration', 'Analytics dashboard'],
+    permissions: ['admin_dashboard', 'manage_users', 'system_config', 'full_analytics']
   },
-  {
-    id: 'store_owner',
-    name: 'store_owner',
-    displayName: 'Store Owner',
-    description: 'List your store in the community marketplace',
+  'event_staff': {
+    id: 'event_staff',
+    name: 'event_staff',
+    displayName: 'Event Staff',
+    description: 'Help organize and manage events',
+    icon: 'Briefcase',
+    isActive: true,
+    requirements: ['Be assigned to an event'],
+    benefits: ['Event management tools', 'Check-in capabilities', 'Attendee management'],
+    permissions: ['manage_checkins', 'view_attendees', 'event_support']
+  },
+  'sales_agent': {
+    id: 'sales_agent',
+    name: 'sales_agent',
+    displayName: 'Sales Agent',
+    description: 'Help promote and sell event tickets',
     icon: 'Store',
-    isActive: false,
-    requirements: ['List your store'],
-    benefits: ['Store directory listing', 'Product showcase', 'Customer reviews', 'Sales tracking'],
-    permissions: ['create_store', 'manage_products', 'view_sales']
+    isActive: true,
+    requirements: ['Be approved as sales agent'],
+    benefits: ['Sales tracking', 'Commission reports', 'Promotional tools'],
+    permissions: ['track_sales', 'view_commissions', 'promotional_access']
   }
-];
+};
 
-// Mock content creation options
-const mockContentOptions: ContentCreationOption[] = [
+// Get all available roles
+const getAllRoles = (): UserRole[] => {
+  return Object.values(roleMappings);
+};
+
+// Content creation options for all roles
+const allContentOptions: ContentCreationOption[] = [
+  {
+    id: 'admin_dashboard',
+    title: 'Admin Dashboard',
+    description: 'Access platform administration and management tools',
+    icon: 'Shield',
+    roleRequired: 'admin',
+    route: '/admin',
+    featured: true
+  },
   {
     id: 'create_event',
     title: 'Post an Event',
@@ -123,6 +148,24 @@ const mockContentOptions: ContentCreationOption[] = [
     icon: 'Calendar',
     roleRequired: 'organizer',
     route: '/organizer/events/create',
+    featured: true
+  },
+  {
+    id: 'instructor_dashboard',
+    title: 'Instructor Dashboard',
+    description: 'Manage your classes and students',
+    icon: 'GraduationCap',
+    roleRequired: 'instructor',
+    route: '/instructor/dashboard',
+    featured: true
+  },
+  {
+    id: 'sales_agent_dashboard',
+    title: 'Sales Dashboard',
+    description: 'Track your sales and commissions',
+    icon: 'Store',
+    roleRequired: 'sales_agent',
+    route: '/agent/dashboard',
     featured: true
   },
   {
@@ -144,20 +187,11 @@ const mockContentOptions: ContentCreationOption[] = [
     comingSoon: true
   },
   {
-    id: 'list_service',
-    title: 'List Your Service',
-    description: 'Add your business to the service directory',
-    icon: 'Briefcase',
-    roleRequired: 'service_provider',
-    route: '/services/create',
-    comingSoon: true
-  },
-  {
     id: 'list_store',
     title: 'Submit Your Store', 
     description: 'Add your store to the community directory',
     icon: 'Store',
-    roleRequired: 'store_owner',
+    roleRequired: 'buyer',
     route: '/stores/submit',
     featured: true
   }
@@ -166,29 +200,110 @@ const mockContentOptions: ContentCreationOption[] = [
 class UserDashboardService {
   // Get user roles and their activation status
   async getUserRoles(userId: string): Promise<UserRole[]> {
-    // In real implementation, fetch from API
-    return Promise.resolve(mockUserRoles);
+    // Import supabase and auth hooks dynamically to avoid circular imports
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    try {
+      // Get user's roles from database
+      const { data: userRoles, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error fetching user roles:', error);
+        // Fallback to buyer role
+        return [roleMappings['buyer']];
+      }
+
+      // Convert database roles to dashboard roles
+      const dashboardRoles: UserRole[] = [];
+      
+      if (userRoles && userRoles.length > 0) {
+        userRoles.forEach(userRole => {
+          const mappedRole = roleMappings[userRole.role];
+          if (mappedRole) {
+            dashboardRoles.push(mappedRole);
+          }
+        });
+      } else {
+        // No roles found, default to buyer
+        dashboardRoles.push(roleMappings['buyer']);
+      }
+
+      // Always show all available roles for discovery, but mark active/inactive
+      const allRoles = getAllRoles().map(role => ({
+        ...role,
+        isActive: dashboardRoles.some(dr => dr.id === role.id)
+      }));
+
+      return allRoles;
+    } catch (error) {
+      console.error('Error in getUserRoles:', error);
+      // Fallback to all roles with buyer active
+      return getAllRoles().map(role => ({
+        ...role,
+        isActive: role.id === 'buyer'
+      }));
+    }
   }
 
   // Activate a new role for the user
   async activateRole(userId: string, roleId: string): Promise<UserRole> {
-    const role = mockUserRoles.find(r => r.id === roleId);
+    const role = roleMappings[roleId];
     if (!role) {
       throw new Error('Role not found');
     }
 
-    // Mark role as active
-    role.isActive = true;
-    role.activatedAt = new Date().toISOString();
+    try {
+      // Import supabase dynamically
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Get user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', userId)
+        .single();
 
-    return Promise.resolve(role);
+      if (profileError || !profile) {
+        throw new Error('User profile not found');
+      }
+
+      // Add role to database
+      const { error: insertError } = await supabase
+        .from('user_roles')
+        .insert({
+          user_id: userId,
+          profile_id: profile.id,
+          role: roleId,
+          is_primary: false, // Don't override primary role
+          granted_by: userId
+        });
+
+      if (insertError) {
+        throw new Error('Failed to activate role');
+      }
+
+      // Mark role as active and return
+      const activatedRole = {
+        ...role,
+        isActive: true,
+        activatedAt: new Date().toISOString()
+      };
+
+      return activatedRole;
+    } catch (error) {
+      console.error('Error activating role:', error);
+      throw error;
+    }
   }
 
   // Get content creation options based on user roles
   async getContentCreationOptions(userRoles: string[]): Promise<ContentCreationOption[]> {
     // Filter options based on user's active roles
-    const availableOptions = mockContentOptions.filter(option => 
-      userRoles.includes(option.roleRequired) || option.roleRequired === 'attendee'
+    const availableOptions = allContentOptions.filter(option => 
+      userRoles.includes(option.roleRequired) || option.roleRequired === 'buyer'
     );
 
     return Promise.resolve(availableOptions);
@@ -196,7 +311,7 @@ class UserDashboardService {
 
   // Get all content creation options (for discovery)
   async getAllContentCreationOptions(): Promise<ContentCreationOption[]> {
-    return Promise.resolve(mockContentOptions);
+    return Promise.resolve(allContentOptions);
   }
 
   // Get dashboard widgets based on user roles
@@ -250,6 +365,23 @@ class UserDashboardService {
     ];
 
     // Add role-specific widgets
+    if (userRoles.includes('admin')) {
+      widgets.push({
+        id: 'admin_stats',
+        title: 'Platform Overview',
+        type: 'stats',
+        roleRestriction: ['admin'],
+        data: {
+          total_users: 1247,
+          active_events: 34,
+          total_revenue: 156789,
+          pending_approvals: 8
+        },
+        priority: 1,
+        isVisible: true
+      });
+    }
+
     if (userRoles.includes('organizer')) {
       widgets.push({
         id: 'organizer_stats',
@@ -278,6 +410,23 @@ class UserDashboardService {
           active_classes: 3,
           total_students: 45,
           average_rating: 4.8
+        },
+        priority: 1,
+        isVisible: true
+      });
+    }
+
+    if (userRoles.includes('sales_agent')) {
+      widgets.push({
+        id: 'sales_agent_stats',
+        title: 'Your Sales',
+        type: 'stats', 
+        roleRestriction: ['sales_agent'],
+        data: {
+          tickets_sold: 45,
+          total_commission: 890,
+          active_campaigns: 3,
+          conversion_rate: 12.5
         },
         priority: 1,
         isVisible: true
@@ -325,9 +474,13 @@ class UserDashboardService {
 
   // Get role activation suggestions
   async getRoleActivationSuggestions(userId: string, currentRoles: string[]): Promise<UserRole[]> {
-    // Return roles that haven't been activated yet
-    const inactiveRoles = mockUserRoles.filter(role => 
-      !currentRoles.includes(role.id) && role.id !== 'attendee'
+    // Return roles that haven't been activated yet (exclude admin and event_staff as they need special approval)
+    const allRoles = getAllRoles();
+    const inactiveRoles = allRoles.filter(role => 
+      !currentRoles.includes(role.id) && 
+      role.id !== 'buyer' && 
+      role.id !== 'admin' && 
+      role.id !== 'event_staff'
     );
 
     return Promise.resolve(inactiveRoles);
