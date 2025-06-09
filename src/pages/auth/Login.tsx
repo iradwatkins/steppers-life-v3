@@ -13,6 +13,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import AuthDiagnostic from '@/components/auth/AuthDiagnostic';
 import AuthDiagnosticComponent from '@/lib/env-check';
 import { activateUser } from '@/utils/activateUser';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
