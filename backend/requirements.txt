@@ -20,7 +20,7 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 
 # API Documentation
-fastapi-swagger-ui==2.0.0
+# fastapi-swagger-ui==2.0.0  # Not available - using FastAPI's built-in swagger
 
 # Development & Testing
 pytest==7.4.3
@@ -36,7 +36,7 @@ pytz==2024.1
 
 # Payment Processing
 stripe==7.9.0
-square==35.1.0.20240206
+squareup  # Updated square package name
 paypalrestsdk==1.13.1
 qrcode==7.4.2
 

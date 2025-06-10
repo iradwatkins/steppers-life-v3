@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 import uuid
 from datetime import datetime
 
-from app.models.base import Base
+from app.core.database import Base
 
 
 def generate_uuid():
@@ -86,7 +86,7 @@ class EmailLog(Base):
     opened_at = Column(DateTime, nullable=True)
     clicked_at = Column(DateTime, nullable=True)
     error_message = Column(Text, nullable=True)
-    metadata = Column(JSON, nullable=True)
+    email_metadata = Column(JSON, nullable=True)
     
     # Relationships
     template = relationship("EmailTemplate", back_populates="logs")

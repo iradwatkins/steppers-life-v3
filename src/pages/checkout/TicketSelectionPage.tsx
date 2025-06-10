@@ -5,12 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Ticket, ShoppingCart, CalendarDays, MapPin, MinusCircle, PlusCircle, Percent, Tag, DollarSign, AlertTriangle } from 'lucide-react';
+import { Ticket, ShoppingCart, CalendarDays, MapPin, MinusCircle, PlusCircle, Percent, Tag, DollarSign, AlertTriangle, Loader2 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import { HoldTimer, HoldTimerSummary } from '@/components/HoldTimer';
 import { TicketAvailabilityStatus, InventoryHold } from '@/types/inventory';
+import { useBackendEvent } from '@/hooks/useBackendEvents';
+import { useTicketManagement } from '@/hooks/useBackendTickets';
+import { toast } from '@/components/ui/sonner';
 
-// Mock event data including ticket types
+// Ticket type interface for compatibility with existing logic
 interface TicketType {
   id: string;
   name: string;
@@ -18,27 +21,6 @@ interface TicketType {
   description?: string;
   availableQuantity?: number; // This will be overridden by real-time inventory
 }
-
-interface MockEventWithTickets {
-  id: string;
-  name: string;
-  date: string;
-  location: string;
-  ticketTypes: TicketType[];
-}
-
-const mockEventData: MockEventWithTickets = {
-  id: 'evt987',
-  name: 'Grand Steppers Ball 2025',
-  date: 'Saturday, October 25, 2025',
-  location: 'The Elegant Ballroom, Downtown',
-  ticketTypes: [
-    { id: 'tt001', name: 'General Admission', price: 50, description: 'Access to main event area.' },
-    { id: 'tt002', name: 'VIP Ticket', price: 120, description: 'Includes priority entry, VIP lounge access, and a complimentary drink.' },
-    { id: 'tt003', name: 'Early Bird Special', price: 40, description: 'Limited time offer for general admission.' },
-    { id: 'tt004', name: 'Table Reservation (Party of 8)', price: 450, description: 'Reserve a dedicated table for your group.' },
-  ],
-};
 
 interface CartItem {
   ticketTypeId: string;
@@ -50,12 +32,45 @@ interface CartItem {
 const TicketSelectionPage = () => {
   const { eventId: routeEventId } = useParams<{ eventId: string }>();
   const navigate = useNavigate();
-  const eventId = routeEventId || mockEventData.id;
-  const eventDetails = mockEventData;
+  const eventId = routeEventId || '1'; // Default fallback ID
+  
+  // Backend integration for event data
+  const { event, loading: eventLoading, error: eventError } = useBackendEvent(eventId);
+  const { createTicket } = useTicketManagement();
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromoDetails, setAppliedPromoDetails] = useState<{ code: string; discountAmount: number; message: string } | null>(null);
+
+  // Transform backend event data to frontend format
+  const eventDetails = event ? {
+    id: event.id.toString(),
+    name: event.title,
+    date: new Date(event.start_datetime).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    }),
+    location: event.venue?.name || 'TBA',
+    ticketTypes: [
+      {
+        id: 'general',
+        name: 'General Admission',
+        price: event.price || 0,
+        description: 'Access to the event',
+        availableQuantity: event.max_attendees ? event.max_attendees - event.current_attendees : 100,
+      }
+    ] as TicketType[]
+  } : null;
+
+  // Handle loading and error states
+  useEffect(() => {
+    if (eventError) {
+      toast.error('Failed to load event details. Please try again.');
+      console.error('Event loading error:', eventError);
+    }
+  }, [eventError]);
 
   // Use the inventory hook for real-time inventory management
   const {
@@ -184,22 +199,52 @@ const TicketSelectionPage = () => {
     }
   };
 
-  const handleProceedToCheckout = () => {
+  const handleProceedToCheckout = async () => {
     if (cart.length === 0) {
-      alert("Please select at least one ticket to proceed.");
+      toast.error("Please select at least one ticket to proceed.");
       return;
     }
-    
-    navigate(`/checkout/${eventId}/details`, { 
-      state: { 
-        cart, 
-        appliedPromoDetails, 
-        subtotal: calculateSubtotal(), 
-        total: calculateTotal(),
-        sessionId: 'current-session', // Pass session ID to maintain holds through checkout
-        activeHolds: userHolds
-      } 
-    });
+
+    if (!eventDetails) {
+      toast.error("Event details not available.");
+      return;
+    }
+
+    try {
+      // Create tickets in the backend
+      const ticketPromises = cart.map(async (item) => {
+        return createTicket({
+          event_id: eventDetails.id,
+          quantity: item.quantity,
+          price: item.pricePerTicket,
+          currency: 'USD',
+          ticket_type: item.ticketTypeName,
+        });
+      });
+
+      const createdTickets = await Promise.all(ticketPromises);
+      
+      if (createdTickets.every(ticket => ticket !== null)) {
+        // All tickets created successfully, proceed to payment
+        navigate(`/checkout/${eventId}/payment`, { 
+          state: { 
+            tickets: createdTickets,
+            cart, 
+            appliedPromoDetails, 
+            subtotal: calculateSubtotal(), 
+            total: calculateTotal(),
+            sessionId: 'current-session',
+            activeHolds: userHolds,
+            event: eventDetails
+          } 
+        });
+      } else {
+        toast.error("Failed to create some tickets. Please try again.");
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error("Failed to proceed to checkout. Please try again.");
+    }
   };
 
   // Get real-time availability for display
@@ -247,6 +292,48 @@ const TicketSelectionPage = () => {
       releaseAllHolds();
     };
   }, [releaseAllHolds]);
+
+  // Show loading state
+  if (eventLoading) {
+    return (
+      <div className="min-h-screen bg-background-main py-8 px-4 md:px-8">
+        <div className="max-w-4xl mx-auto">
+          <Card className="bg-surface-card">
+            <CardContent className="p-8 text-center">
+              <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-brand-primary" />
+              <h3 className="text-xl font-semibold text-text-primary mb-2">Loading Event Details</h3>
+              <p className="text-text-secondary">Please wait while we fetch the event information...</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (eventError || !eventDetails) {
+    return (
+      <div className="min-h-screen bg-background-main py-8 px-4 md:px-8">
+        <div className="max-w-4xl mx-auto">
+          <Card className="bg-surface-card">
+            <CardContent className="p-8 text-center">
+              <AlertTriangle className="w-16 h-16 mx-auto mb-4 text-red-500" />
+              <h3 className="text-xl font-semibold text-text-primary mb-2">Event Not Found</h3>
+              <p className="text-text-secondary mb-4">
+                {eventError || 'The event you are looking for could not be found.'}
+              </p>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/events')}
+              >
+                Browse Events
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background-main py-8 px-4 md:px-8">

@@ -13,10 +13,17 @@ import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { UserPlus } from 'lucide-react';
 
+interface CustomerData {
+  name: string;
+  email: string;
+  phone: string;
+  notes?: string;
+}
+
 interface AddCustomerDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (customerData: any) => void;
+  onSubmit: (customerData: CustomerData) => void;
 }
 
 export const AddCustomerDialog: React.FC<AddCustomerDialogProps> = ({

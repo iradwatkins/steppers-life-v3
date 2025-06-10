@@ -44,10 +44,10 @@ const mockStaticPages: StaticPage[] = [
     id: 'page-faq',
     slug: 'faq',
     title: 'Frequently Asked Questions',
-    content: '<p><h3>General Questions</h3><p>Q: How do I create an account?<br/>A: Click on 'Sign Up' and follow the instructions.</p></p>',
+    content: '<p><h3>General Questions</h3><p>Q: How do I create an account?<br/>A: Click on "Sign Up" and follow the instructions.</p></p>',
     lastModified: '2024-03-05',
     version: 1,
-    history: [{ version: 1, timestamp: '2024-03-05', content: '<p><h3>General Questions</h3><p>Q: How do I create an account?<br/>A: Click on 'Sign Up' and follow the instructions.</p></p>' }],
+    history: [{ version: 1, timestamp: '2024-03-05', content: '<p><h3>General Questions</h3><p>Q: How do I create an account?<br/>A: Click on "Sign Up" and follow the instructions.</p></p>' }],
   },
   {
     id: 'page-contact',

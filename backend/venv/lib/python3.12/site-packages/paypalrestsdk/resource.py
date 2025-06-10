@@ -121,7 +121,7 @@ class List(Resource):
 
         Usage::
 
-            >>> payment_history = Payment.all({'count': 2})
+            >>> payment_histroy = Payment.all({'count': 2})
         """
         api = api or default_api()
 

@@ -1,3 +1,5 @@
+import { WidgetConfig, DashboardLayout } from './src/services/custom-dashboard/customDashboardTypes';
+
 // Dashboard Versioning Service
 interface DashboardVersion {
   id: string;
@@ -6,9 +8,9 @@ interface DashboardVersion {
   name: string;
   description: string;
   changes: string[];
-  widgets: any[];
-  layout: any[];
-  settings: any;
+  widgets: WidgetConfig[];
+  layout: DashboardLayout;
+  settings: Record<string, unknown>;
   createdBy: string;
   createdAt: string;
   isActive: boolean;
@@ -60,8 +62,8 @@ interface VersionComparison {
     type: 'added' | 'removed' | 'modified';
     component: 'widget' | 'layout' | 'settings' | 'permissions';
     path: string;
-    oldValue?: any;
-    newValue?: any;
+    oldValue?: unknown;
+    newValue?: unknown;
     description: string;
   }[];
   summary: {
@@ -450,7 +452,7 @@ class DashboardVersioningService {
     return `${major}.${minor}.${patch + 1}`;
   }
 
-  private calculateSize(widgets: any[], layout: any[]): number {
+  private calculateSize(widgets: WidgetConfig[], layout: DashboardLayout): number {
     // Rough calculation in KB
     const widgetSize = widgets.length * 2.5;
     const layoutSize = layout.length * 0.5;

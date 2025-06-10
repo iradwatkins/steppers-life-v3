@@ -272,7 +272,7 @@ export const mockDashboards: DashboardConfig[] = [
   {
     id: 'dash_template_basic_event_3',
     name: 'Basic Event Performance Template',
-    description: 'A starter template for tracking a single event's core metrics.',
+    description: 'A starter template for tracking a single event\'s core metrics.',
     ownerId: 'system', // System template
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

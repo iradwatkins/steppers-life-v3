@@ -5,7 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { CreditCard, Lock, User, Calendar, ArrowLeft, ShieldCheck, Percent } from 'lucide-react';
+import { CreditCard, Lock, User, Calendar, ArrowLeft, ShieldCheck, Percent, Loader2 } from 'lucide-react';
+import { usePaymentProcessing, usePaymentProviders } from '@/hooks/useBackendPayments';
+import { toast } from '@/components/ui/sonner';
+import type { Ticket } from '@/services/backendTicketService';
 
 interface CartItem {
   ticketTypeId: string;
@@ -22,11 +25,13 @@ interface AppliedPromoDetails {
 
 interface OrderDetails {
   cart: CartItem[];
-  attendeeName: string;
-  attendeeEmail: string;
+  tickets?: Ticket[]; // Backend tickets
+  attendeeName?: string;
+  attendeeEmail?: string;
   subtotalAmount: number | null;
   appliedPromoDetails: AppliedPromoDetails | null;
   totalAmount: number | null;
+  event?: any; // Event details
 }
 
 const CheckoutPaymentPage = () => {
@@ -34,56 +39,116 @@ const CheckoutPaymentPage = () => {
   const navigate = useNavigate();
   const { eventId } = useParams<{ eventId: string }>();
 
+  // Backend integration
+  const { processPayment, loading: paymentLoading } = usePaymentProcessing();
+  const { providers, loading: providersLoading } = usePaymentProviders();
+
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
-  // Mock payment form state
+  const [selectedProvider, setSelectedProvider] = useState<string>('square');
+  
+  // Payment form state
   const [cardholderName, setCardholderName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [cvv, setCvv] = useState('');
 
   useEffect(() => {
-    if (location.state && location.state.orderDetails) {
-      const details = location.state.orderDetails;
-      // Ensure subtotal and total are numbers, or default to null if not provided properly
-      setOrderDetails({
-        ...details,
-        subtotalAmount: typeof details.subtotalAmount === 'number' ? details.subtotalAmount : null,
-        totalAmount: typeof details.totalAmount === 'number' ? details.totalAmount : null,
-      });
+    // Handle new state structure from updated ticket selection page
+    if (location.state) {
+      const state = location.state;
+      
+      // Check if it's the new structure with tickets
+      if (state.tickets && state.cart) {
+        setOrderDetails({
+          cart: state.cart,
+          tickets: state.tickets,
+          subtotalAmount: state.subtotal || null,
+          totalAmount: state.total || null,
+          appliedPromoDetails: state.appliedPromoDetails || null,
+          event: state.event,
+        });
+      } 
+      // Handle legacy structure
+      else if (state.orderDetails) {
+        const details = state.orderDetails;
+        setOrderDetails({
+          ...details,
+          subtotalAmount: typeof details.subtotalAmount === 'number' ? details.subtotalAmount : null,
+          totalAmount: typeof details.totalAmount === 'number' ? details.totalAmount : null,
+        });
+      }
     } else {
       console.warn('No order details found. Redirecting...');
-      if (eventId) {
-        navigate(`/checkout/${eventId}/details`); // Go back to details if no order data
-      } else {
-        navigate('/events');
-      }
+      navigate(`/event/${eventId}/tickets`);
     }
   }, [location.state, navigate, eventId]);
 
-  const handlePaymentSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!cardholderName.trim() || !cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
-      alert('Please fill in all payment details.');
+  const handlePayment = async () => {
+    if (!orderDetails || !orderDetails.tickets || orderDetails.tickets.length === 0) {
+      toast.error('No tickets found for payment');
       return;
     }
-    // Basic validation stubs (not comprehensive)
-    if (cardNumber.replace(/\s+/g, '').length !== 16 || !/^[0-9]+$/.test(cardNumber.replace(/\s+/g, ''))) {
-        alert('Please enter a valid 16-digit card number.');
-        return;
-    }
-    if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(expiryDate)) {
-        alert('Please enter a valid expiry date in MM/YY format.');
-        return;
-    }
-    if (cvv.length < 3 || cvv.length > 4 || !/^[0-9]+$/.test(cvv)){
-        alert('Please enter a valid CVV (3 or 4 digits).');
-        return;
+
+    if (!cardholderName || !cardNumber || !expiryDate || !cvv) {
+      toast.error('Please fill in all payment details');
+      return;
     }
 
-    console.log('Mock payment submitted:', { orderDetails, cardholderName, cardNumber: '**** **** **** ' + cardNumber.slice(-4), expiryDate, cvv: '***' });
-    // Navigate to a mock confirmation page
-    const mockOrderId = `order_${Date.now()}`;
-    navigate(`/checkout/${eventId}/confirmation`, { state: { orderDetails, mockOrderId } });
+    try {
+      // Process payment for each ticket
+      const paymentPromises = orderDetails.tickets.map(async (ticket) => {
+        return processPayment(ticket.id, {
+          provider: selectedProvider as any,
+          source_id: `${cardNumber}-${expiryDate}`, // In real implementation, this would be tokenized
+          verification_token: cvv,
+        });
+      });
+
+      const paymentResults = await Promise.all(paymentPromises);
+      
+      if (paymentResults.every(result => result && result.status === 'completed')) {
+        toast.success('Payment successful!');
+        navigate(`/checkout/${eventId}/confirmation`, {
+          state: {
+            tickets: orderDetails.tickets,
+            payments: paymentResults,
+            event: orderDetails.event,
+          }
+        });
+      } else {
+        toast.error('Some payments failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Payment processing failed. Please try again.');
+    }
+  };
+
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!cardholderName.trim() || !cardNumber.trim() || !expiryDate.trim() || !cvv.trim()) {
+      toast.error('Please fill in all payment details.');
+      return;
+    }
+    
+    if (cardNumber.replace(/\s+/g, '').length !== 16 || !/^[0-9]+$/.test(cardNumber.replace(/\s+/g, ''))) {
+      toast.error('Please enter a valid 16-digit card number.');
+      return;
+    }
+    
+    if (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(expiryDate)) {
+      toast.error('Please enter a valid expiry date in MM/YY format.');
+      return;
+    }
+    
+    if (cvv.length < 3 || cvv.length > 4 || !/^[0-9]+$/.test(cvv)) {
+      toast.error('Please enter a valid CVV (3 or 4 digits).');
+      return;
+    }
+
+    await handlePayment();
   };
 
   if (!orderDetails) {

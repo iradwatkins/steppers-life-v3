@@ -54,11 +54,20 @@ def init_db() -> None:
     Call this on application startup.
     """
     # Import all models here to ensure they are registered
-    from app.models.user import User
+    from app.models import (
+        User, Event, EventCategory, Ticket, 
+        MagazineCategory, MagazineArticle, ArticleContentBlock,
+        UserPaymentInfo, PaymentDisbursement, UserAccount
+    )
     
     # Create all tables
     Base.metadata.create_all(bind=engine)
     print("Database tables created successfully!")
+    
+    # Print table information for debugging
+    print("Created tables:")
+    for table_name in Base.metadata.tables.keys():
+        print(f"  - {table_name}")
 
 def get_db_connection_info() -> dict:
     """

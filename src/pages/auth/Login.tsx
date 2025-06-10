@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Mail, UserPlus, AlertCircle, Wrench } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useHybridAuth } from '@/hooks/useHybridAuth';
 import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,7 +23,7 @@ const Login = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [notRegisteredError, setNotRegisteredError] = useState<string | null>(null);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
-  const { signIn, signInWithGoogle, user } = useAuth();
+  const { signIn, user, loading } = useHybridAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const message = location.state?.message;
@@ -80,18 +80,18 @@ const Login = () => {
       // Attempt to sign in
       const result = await signIn(email, password);
       
-      if (!result.success) {
+      if (result.error) {
         // Special handling for common errors
-        if (result.error?.includes('Invalid email or password')) {
+        if (result.error.message?.includes('Invalid email or password')) {
           toast.error('Invalid email or password. Please try again.');
-        } else if (result.error?.includes('Email not confirmed')) {
+        } else if (result.error.message?.includes('Email not confirmed')) {
           toast.error('Please check your email and confirm your account before signing in.');
-        } else if (result.error?.includes('User already registered')) {
+        } else if (result.error.message?.includes('User already registered')) {
           setNotRegisteredError('You already have an account. Sign in with your credentials.');
-        } else if (result.error?.toLowerCase().includes('not found') || result.error?.toLowerCase().includes('no account')) {
+        } else if (result.error.message?.toLowerCase().includes('not found') || result.error.message?.toLowerCase().includes('no account')) {
           setNotRegisteredError('No account found with this email. Would you like to create one?');
         } else {
-          toast.error(result.error || 'Authentication failed. Please try again.');
+          toast.error(result.error.message || 'Authentication failed. Please try again.');
         }
         
         setIsLoading(false);
@@ -113,6 +113,10 @@ const Login = () => {
       }
       
       // Successful login
+      console.log('Login successful, user profile:', {
+        supabaseUser: result.data?.user?.email,
+        backendProfile: user?.backendProfile
+      });
       toast.success('Login successful!');
       navigate(location.state?.from || '/');
     } catch (error) {
@@ -124,16 +128,7 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
-    try {
-      await signInWithGoogle();
-      // No need to check result - Supabase will handle the redirect
-    } catch (error: any) {
-      console.error('Google sign in error:', error);
-      toast.error('Failed to sign in with Google');
-      setIsGoogleLoading(false);
-    }
-    // Note: We don't set isGoogleLoading to false here as the page will redirect
+    toast.info('Google sign-in will be available after backend integration is complete.');
   };
 
   const handleRegisterRedirect = () => {
@@ -230,12 +225,13 @@ const Login = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
+                <label htmlFor="email-input" className="block text-sm font-medium text-text-primary mb-2">
                   Email Address
                 </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-secondary" />
                   <Input 
+                    id="email-input"
                     type="email" 
                     placeholder="Enter your email"
                     className="pl-10"
@@ -249,12 +245,13 @@ const Login = () => {
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
+                <label htmlFor="password-input" className="block text-sm font-medium text-text-primary mb-2">
                   Password
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-text-secondary" />
                   <Input 
+                    id="password-input"
                     type={showPassword ? "text" : "password"} 
                     placeholder="Enter your password"
                     className="pl-10 pr-10"

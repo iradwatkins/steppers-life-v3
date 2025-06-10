@@ -1,11 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Calendar, MapPin, Users, Clock, DollarSign, Filter, Plus, Star, Search, Grid, List, Map, Bookmark, SlidersHorizontal, ChevronDown, Heart, Share2, Navigation } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, DollarSign, Filter, Plus, Star, Search, Grid, List, Map, Bookmark, SlidersHorizontal, ChevronDown, Heart, Share2, Navigation, Loader2 } from 'lucide-react';
 import { DatePicker } from "@/components/ui/date-picker";
 import {
   DropdownMenu,
@@ -25,6 +25,9 @@ import {
 import { Link } from 'react-router-dom';
 import EventCard from '@/components/EventCard';
 import EventMapView from '@/components/EventMapView';
+import { useBackendEvents, useEventCategories } from '@/hooks/useBackendEvents';
+import { toast } from '@/components/ui/sonner';
+import type { EventPublic } from '@/services/backendEventService';
 
 const Events = () => {
   // View and layout state
@@ -47,8 +50,63 @@ const Events = () => {
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [gpsLoading, setGpsLoading] = useState(false);
 
-  // Enhanced mock events data with more properties for search/discovery
-  const mockEvents = [
+  // Backend API integration for events
+  const { events, loading: eventsLoading, error: eventsError, refreshEvents } = useBackendEvents({
+    status: 'published',
+    limit: 100,
+  });
+  const { categories: backendCategories, loading: categoriesLoading } = useEventCategories();
+
+  // Handle API errors
+  useEffect(() => {
+    if (eventsError) {
+      toast.error('Failed to load events. Please try again.');
+      console.error('Events loading error:', eventsError);
+    }
+  }, [eventsError]);
+
+  // Transform backend events to match frontend expectations
+  const transformedEvents = useMemo(() => {
+    if (!events) return [];
+    
+    return events.map(event => ({
+      id: event.id,
+      title: event.title,
+      date: new Date(event.start_datetime).toISOString().split('T')[0],
+      time: new Date(event.start_datetime).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }),
+      location: event.venue?.name || 'TBA',
+      city: event.venue?.city || 'TBA',
+      state: event.venue?.state || 'TBA',
+      price: event.price || 0,
+      image: event.image_url || `https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?w=600&h=400&fit=crop&auto=format`,
+      category: event.category?.name || 'Event',
+      attendees: event.current_attendees,
+      capacity: event.max_attendees || 0,
+      instructor: 'TBA', // This would come from event organizer/instructor field
+      skillLevel: 'All Levels', // This would be in event metadata or tags
+      tags: event.tags || [],
+      rating: 4.5, // This would come from reviews/ratings
+      description: event.description || '',
+      organizer: 'SteppersLife', // This would come from user who created event
+      coordinates: { lat: 41.8836, lng: -87.6270 }, // This would come from venue coordinates
+      featured: false, // This would be a backend field
+      soldOut: event.max_attendees ? event.current_attendees >= event.max_attendees : false,
+      // Backend-specific fields
+      start_datetime: event.start_datetime,
+      end_datetime: event.end_datetime,
+      is_online: event.is_online,
+      is_free: event.is_free,
+      status: event.status,
+      venue: event.venue,
+    }));
+  }, [events]);
+
+  // Fallback mock events for development/demo (when backend is not available)
+  const fallbackMockEvents = [
     {
       id: 1,
       title: "Chicago Step Championship 2024",
@@ -465,9 +523,19 @@ const Events = () => {
     }
   ];
 
-  const categories = ['Competition', 'Workshop', 'Social', 'Class', 'Performance', 'Convention'];
+  // Use backend data if available, fallback to mock data for development
+  const displayEvents = transformedEvents.length > 0 ? transformedEvents : fallbackMockEvents;
+  
+  // Dynamic categories from backend or fallback
+  const categories = useMemo(() => {
+    if (backendCategories && backendCategories.length > 0) {
+      return backendCategories.map(cat => cat.name);
+    }
+    return ['Competition', 'Workshop', 'Social', 'Class', 'Performance', 'Convention'];
+  }, [backendCategories]);
+
   const skillLevels = ['Beginner', 'Intermediate', 'Advanced', 'All Levels', 'Youth'];
-  const cities = [...new Set(mockEvents.map(event => `${event.city}, ${event.state}`))];
+  const cities = [...new Set(displayEvents.map(event => `${event.city}, ${event.state}`))];
   const sortOptions = [
     { value: 'date', label: 'Date (Earliest First)' },
     { value: 'price-low', label: 'Price (Low to High)' },
@@ -479,7 +547,7 @@ const Events = () => {
 
   // Filter and search logic
   const filteredAndSortedEvents = useMemo(() => {
-    let filtered = mockEvents.filter(event => {
+    let filtered = displayEvents.filter(event => {
       // Text search
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch = !searchQuery || 
@@ -551,7 +619,7 @@ const Events = () => {
     return filtered;
   }, [searchQuery, selectedCategory, selectedCity, selectedSkillLevel, priceRange, dateFrom, dateTo, sortBy, locationEnabled, userLocation, distance]);
 
-  const featuredEvents = mockEvents.filter(event => event.featured);
+  const featuredEvents = displayEvents.filter(event => event.featured);
   const upcomingEvents = filteredAndSortedEvents.filter(event => new Date(event.date) >= new Date());
 
   // Get user's location
@@ -846,7 +914,7 @@ const Events = () => {
             🔥 Popular This Week
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {mockEvents
+            {displayEvents
               .filter(event => event.attendees > 80)
               .slice(0, 4)
               .map((event) => (

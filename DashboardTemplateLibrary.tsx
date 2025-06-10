@@ -9,8 +9,8 @@ interface DashboardTemplate {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   previewImage: string;
   tags: string[];
-  widgets: any[]; // Widget configuration
-  layout: any[]; // Layout configuration
+  widgets: import('./src/services/custom-dashboard/customDashboardTypes').WidgetConfig[];
+  layout: import('./src/services/custom-dashboard/customDashboardTypes').DashboardLayout;
   author: string;
   downloads: number;
   rating: number;
