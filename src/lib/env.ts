@@ -15,9 +15,9 @@ export interface EnvVariables {
 
 // Default values for environment variables
 const defaultEnv: EnvVariables = {
-  VITE_API_URL: 'http://localhost:8000/api/v1',
-  VITE_SUPABASE_URL: 'https://revmdncwzztxxinjlzoc.supabase.co',
-  VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldm1kbmN3enp0eHhpbmpsem9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4NzY4NjEsImV4cCI6MjA2NDQ1Mjg2MX0.J7Wj8t8gYsErt29TsFXyPGAR7YbUEKdlbCeUTJwK7ic',
+  VITE_API_URL: 'https://intcywjfnyjvvsypsetr.supabase.co/functions/v1',
+  VITE_SUPABASE_URL: 'https://intcywjfnyjvvsypsetr.supabase.co',
+  VITE_SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImludGN5d2pmbnlqdnZzeXBzZXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NjY3MTIsImV4cCI6MjA2NTE0MjcxMn0.DI67uUEpAKFwDgTpBxWZXu2mINdOtTEO1PhjK8fYPPI',
 };
 
 /**
