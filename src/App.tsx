@@ -22,7 +22,6 @@ import Register from "./pages/auth/Register";
 import RegisterDetails from "./pages/auth/RegisterDetails";
 import AuthCallback from "./pages/auth/Callback";
 import MagicLinkLogin from "./pages/auth/MagicLinkLogin";
-import Docs from "./pages/Docs";
 import NotFound from "./pages/NotFound";
 import AppInstallPage from "./pages/AppInstallPage";
 import CreateEventPage from "./pages/organizer/CreateEventPage";
@@ -238,11 +237,6 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            <Route path="/docs" element={
-              <ProtectedRoute>
-                <Docs />
-              </ProtectedRoute>
-            } />
             <Route path="/organizer/events/create" element={
               <RoleProtectedRoute allowedRoles={['organizer', 'admin']}>
                 <CreateEventPage />

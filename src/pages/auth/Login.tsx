@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { User, Lock, Eye, EyeOff, Mail, UserPlus, AlertCircle, Wrench } from 'lucide-react';
-import { useHybridAuth } from '@/hooks/useHybridAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/sonner';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -23,7 +23,7 @@ const Login = () => {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [notRegisteredError, setNotRegisteredError] = useState<string | null>(null);
   const [showDiagnostic, setShowDiagnostic] = useState(false);
-  const { signIn, user, loading } = useHybridAuth();
+  const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const message = location.state?.message;
@@ -80,18 +80,18 @@ const Login = () => {
       // Attempt to sign in
       const result = await signIn(email, password);
       
-      if (result.error) {
+      if (!result.success) {
         // Special handling for common errors
-        if (result.error.message?.includes('Invalid email or password')) {
+        if (result.error?.includes('Invalid email or password')) {
           toast.error('Invalid email or password. Please try again.');
-        } else if (result.error.message?.includes('Email not confirmed')) {
+        } else if (result.error?.includes('Email not confirmed')) {
           toast.error('Please check your email and confirm your account before signing in.');
-        } else if (result.error.message?.includes('User already registered')) {
+        } else if (result.error?.includes('User already registered')) {
           setNotRegisteredError('You already have an account. Sign in with your credentials.');
-        } else if (result.error.message?.toLowerCase().includes('not found') || result.error.message?.toLowerCase().includes('no account')) {
+        } else if (result.error?.toLowerCase().includes('not found') || result.error?.toLowerCase().includes('no account')) {
           setNotRegisteredError('No account found with this email. Would you like to create one?');
         } else {
-          toast.error(result.error.message || 'Authentication failed. Please try again.');
+          toast.error(result.error || 'Authentication failed. Please try again.');
         }
         
         setIsLoading(false);
@@ -113,10 +113,7 @@ const Login = () => {
       }
       
       // Successful login
-      console.log('Login successful, user profile:', {
-        supabaseUser: result.data?.user?.email,
-        backendProfile: user?.backendProfile
-      });
+      console.log('Login successful');
       toast.success('Login successful!');
       navigate(location.state?.from || '/');
     } catch (error) {
@@ -128,7 +125,17 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    toast.info('Google sign-in will be available after backend integration is complete.');
+    setIsGoogleLoading(true);
+    try {
+      const result = await signInWithGoogle();
+      if (!result.success) {
+        toast.error(result.error || 'Failed to sign in with Google');
+      }
+    } catch (error: any) {
+      toast.error('Failed to sign in with Google');
+    } finally {
+      setIsGoogleLoading(false);
+    }
   };
 
   const handleRegisterRedirect = () => {

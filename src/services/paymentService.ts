@@ -1,4 +1,4 @@
-import { apiClient as api } from './apiClient';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PaymentProvider {
   name: string;
@@ -24,12 +24,12 @@ export interface PaymentConfig {
 }
 
 export interface PaymentRequest {
-  provider: string;
-  source_id?: string;
-  verification_token?: string;
-  verification_code?: string;
+  ticket_id: string;
+  amount: number;
+  currency: string;
+  provider: 'square' | 'paypal' | 'cashapp' | 'cash';
+  payment_method_data?: any;
   return_url?: string;
-  cancel_url?: string;
 }
 
 export interface PaymentResult {
@@ -70,41 +70,132 @@ export class PaymentService {
     return this.config;
   }
 
-  // Get payment configuration from backend
+  // Get payment configuration from environment variables
   async getPaymentConfig(): Promise<PaymentConfig> {
-    const response = await api.get('/payments/config');
-    this.config = response.data;
+    // For 100% Supabase, we'll get config from environment or database
+    this.config = {
+      available_providers: ['square', 'paypal', 'cashapp', 'cash'],
+      supported_currencies: ['USD'],
+      test_mode: false, // Using production credentials
+      provider_config: {
+        square: {
+          app_id: 'sq0idp-wGVapF8sNt9PLDj0iPiBlg', // Your production Square app ID
+          environment: 'production'
+        },
+        paypal: {
+          client_id: 'AWcmEjsKDeNUzvVQJyvc3lq5n4NXsh7-sHPgGT4ZiPFo8X6csYZcElZg2wsu_xsZE22DUoXOtF3MolVK',
+          environment: 'production'
+        }
+      }
+    };
     
-    // Store Square app ID for Web Payments SDK
-    if (this.config?.provider_config?.square?.app_id) {
-      this.squareApplicationId = this.config.provider_config.square.app_id;
-    }
-    
+    this.squareApplicationId = this.config.provider_config.square?.app_id;
     return this.config;
   }
 
   // Get available payment providers with details
   async getPaymentProviders(): Promise<Record<string, PaymentProvider>> {
-    const response = await api.get('/payments/providers');
-    return response.data.details;
+    return {
+      square: {
+        name: 'Square / Cash App',
+        description: 'Credit/debit cards and Cash App Pay',
+        supports_cards: true,
+        supports_digital_wallets: true
+      },
+      paypal: {
+        name: 'PayPal',
+        description: 'PayPal account or credit/debit card',
+        supports_cards: true,
+        supports_digital_wallets: true
+      },
+      cashapp: {
+        name: 'Cash App',
+        description: 'Cash App Pay',
+        supports_cards: false,
+        supports_digital_wallets: true
+      },
+      cash: {
+        name: 'Cash Payment',
+        description: 'Pay with cash at event',
+        supports_cards: false,
+        supports_digital_wallets: false
+      }
+    };
   }
 
-  // Create a payment
+  // Create a payment using Supabase Edge Function
   async createPayment(ticketId: string, paymentRequest: PaymentRequest): Promise<PaymentResult> {
-    const response = await api.post(`/payments/create-payment/${ticketId}`, paymentRequest);
-    return response.data;
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error('Authentication required');
+    }
+
+    const functionsUrl = import.meta.env.VITE_FUNCTIONS_URL || 'https://intcywjfnyjvvsypsetr.supabase.co/functions/v1';
+    
+    const response = await fetch(`${functionsUrl}/create-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`
+      },
+      body: JSON.stringify({
+        ticket_id: ticketId,
+        amount: paymentRequest.amount,
+        currency: paymentRequest.currency || 'USD',
+        provider: paymentRequest.provider,
+        payment_method_data: paymentRequest.payment_method_data,
+        return_url: paymentRequest.return_url
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Payment processing failed');
+    }
+
+    const result = await response.json();
+    
+    return {
+      success: result.status === 'completed' || result.status === 'pending',
+      payment_id: result.payment_id,
+      provider: paymentRequest.provider,
+      status: result.status,
+      amount: paymentRequest.amount,
+      currency: paymentRequest.currency || 'USD',
+      approval_url: result.approval_url,
+      receipt_number: result.provider_payment_id
+    };
   }
 
   // Confirm payment (mainly for PayPal)
   async confirmPayment(ticketId: string, confirmation: PaymentConfirmation): Promise<any> {
-    const response = await api.post(`/payments/confirm-payment/${ticketId}`, confirmation);
-    return response.data;
+    // For Supabase implementation, payment confirmation is handled in the Edge Function
+    // This method is kept for backward compatibility
+    return { status: 'confirmed', payment_id: confirmation.payment_id };
   }
 
   // Get payment status
   async getPaymentStatus(ticketId: string): Promise<any> {
-    const response = await api.get(`/payments/status/${ticketId}`);
-    return response.data;
+    const { data, error } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('ticket_id', ticketId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) {
+      throw new Error('Failed to get payment status');
+    }
+
+    return {
+      status: data.status,
+      amount: data.amount,
+      currency: data.currency,
+      provider: data.provider,
+      created_at: data.created_at
+    };
   }
 
   // Square Web Payments SDK integration
@@ -129,7 +220,8 @@ export class PaymentService {
       }
 
       const script = document.createElement('script');
-      script.src = 'https://sandbox.web.squarecdn.com/v1/square.js'; // Use production URL for production
+      // Use production Square SDK since we're using live credentials
+      script.src = 'https://web.squarecdn.com/v1/square.js';
       script.async = true;
       script.onload = () => resolve();
       script.onerror = () => reject(new Error('Failed to load Square SDK'));
@@ -152,21 +244,38 @@ export class PaymentService {
   }
 
   // PayPal integration
-  async createPayPalPayment(ticketId: string, returnUrl?: string, cancelUrl?: string): Promise<PaymentResult> {
+  async createPayPalPayment(ticketId: string, amount: number, returnUrl?: string): Promise<PaymentResult> {
     const paymentRequest: PaymentRequest = {
+      ticket_id: ticketId,
+      amount,
+      currency: 'USD',
       provider: 'paypal',
-      return_url: returnUrl || `${window.location.origin}/checkout/paypal-return`,
-      cancel_url: cancelUrl || `${window.location.origin}/checkout/paypal-cancel`
+      return_url: returnUrl || `${window.location.origin}/checkout/paypal-return`
     };
 
     return this.createPayment(ticketId, paymentRequest);
   }
 
   // Cash payment
-  async createCashPayment(ticketId: string, verificationCode: string): Promise<PaymentResult> {
+  async createCashPayment(ticketId: string, amount: number): Promise<PaymentResult> {
     const paymentRequest: PaymentRequest = {
-      provider: 'cash',
-      verification_code: verificationCode
+      ticket_id: ticketId,
+      amount,
+      currency: 'USD',
+      provider: 'cash'
+    };
+
+    return this.createPayment(ticketId, paymentRequest);
+  }
+
+  // Square card payment
+  async createSquareCardPayment(ticketId: string, amount: number, sourceId: string): Promise<PaymentResult> {
+    const paymentRequest: PaymentRequest = {
+      ticket_id: ticketId,
+      amount,
+      currency: 'USD',
+      provider: 'square',
+      payment_method_data: { source_id: sourceId }
     };
 
     return this.createPayment(ticketId, paymentRequest);
@@ -174,11 +283,27 @@ export class PaymentService {
 
   // Refund payment (admin/organizer only)
   async refundPayment(ticketId: string, amount?: number, reason?: string): Promise<any> {
-    const response = await api.post(`/payments/refund/${ticketId}`, {
-      refund_amount: amount,
-      reason: reason || 'Customer refund request'
-    });
-    return response.data;
+    // This would typically require a separate Edge Function for refunds
+    // For now, we'll create a refund record in the database
+    const { data, error } = await supabase
+      .from('payments')
+      .update({
+        status: 'refunded',
+        metadata: { 
+          refund_amount: amount,
+          refund_reason: reason || 'Customer refund request',
+          refunded_at: new Date().toISOString()
+        }
+      })
+      .eq('ticket_id', ticketId)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error('Failed to process refund');
+    }
+
+    return data;
   }
 
   // Helper to format currency

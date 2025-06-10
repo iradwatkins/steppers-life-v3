@@ -4,10 +4,19 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
-// Clean development configuration - NO PWA, NO service workers
+// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
-    port: 3000
+    host: "0.0.0.0",
+    port: 8080,
+    strictPort: true,
+    proxy: {
+      '/api': {
+        target: mode === 'development' ? 'http://localhost:8080' : 'https://api.stepperslife.com',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
   build: {
     outDir: 'dist',
@@ -39,8 +48,4 @@ export default defineConfig(({ mode }) => ({
     setupFiles: ['./src/test/setup.ts'],
     css: true,
   },
-  define: {
-    // Ensure environment variables are properly defined
-    'process.env.NODE_ENV': JSON.stringify(mode)
-  }
 }));

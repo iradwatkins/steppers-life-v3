@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export interface EmailTemplate {
   id: string;
   name: string;
@@ -344,7 +346,7 @@ class EmailService {
     });
   }
 
-  // Email Sending
+  // Email Sending using Supabase Edge Function
   async sendEmail(params: {
     to: string | string[];
     templateId?: string;
@@ -355,34 +357,91 @@ class EmailService {
     category?: 'transactional' | 'notification' | 'marketing';
     attachments?: Array<{ filename: string; content: string; type: string }>;
   }): Promise<{ success: boolean; messageId?: string; error?: string }> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Simulate email sending
-        const recipients = Array.isArray(params.to) ? params.to : [params.to];
-        
-        recipients.forEach(email => {
-          const log: EmailLog = {
-            id: Date.now().toString() + Math.random(),
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        throw new Error('Authentication required');
+      }
+
+      const functionsUrl = import.meta.env.VITE_FUNCTIONS_URL || 'https://intcywjfnyjvvsypsetr.supabase.co/functions/v1';
+      const recipients = Array.isArray(params.to) ? params.to : [params.to];
+      
+      // Determine email type based on templateId or category
+      let emailType = 'welcome'; // default
+      if (params.templateId) {
+        const typeMap: Record<string, string> = {
+          '1': 'welcome',
+          '2': 'ticket_confirmation', 
+          '3': 'event_reminder',
+          '4': 'event_update',
+          '5': 'newsletter'
+        };
+        emailType = typeMap[params.templateId] || 'welcome';
+      } else if (params.category === 'transactional') {
+        emailType = 'ticket_confirmation';
+      } else if (params.category === 'notification') {
+        emailType = 'event_reminder';
+      }
+
+      const results = [];
+      
+      // Send email to each recipient
+      for (const email of recipients) {
+        const response = await fetch(`${functionsUrl}/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            type: emailType,
             to: email,
-            from: this.config.fromEmail,
-            subject: params.subject || 'No Subject',
-            templateId: params.templateId,
-            category: params.category || 'transactional',
-            status: this.config.isTestMode ? 'sent' : 'delivered',
-            sentAt: new Date(),
-            deliveredAt: this.config.isTestMode ? undefined : new Date(),
-            metadata: params.variables,
-          };
-          this.emailLogs.push(log);
+            data: {
+              ...params.variables,
+              subject: params.subject,
+              htmlContent: params.htmlContent
+            }
+          })
         });
 
-        if (this.config.isTestMode) {
-          resolve({ success: true, messageId: `test-${Date.now()}` });
-        } else {
-          resolve({ success: true, messageId: `msg-${Date.now()}` });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Email sending failed');
         }
-      }, 1000);
-    });
+
+        const result = await response.json();
+        results.push(result);
+
+        // Log email in database
+        await supabase
+          .from('email_logs')
+          .insert({
+            to_email: email,
+            from_email: 'noreply@stepperslife.com',
+            subject: params.subject || 'No Subject',
+            template_id: params.templateId,
+            category: params.category || 'transactional',
+            status: 'sent',
+            provider_message_id: result.message_id,
+            metadata: params.variables
+          });
+      }
+
+      return {
+        success: true,
+        messageId: results[0]?.message_id,
+        error: undefined
+      };
+
+    } catch (error) {
+      console.error('Email sending error:', error);
+      return {
+        success: false,
+        messageId: undefined,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
   }
 
   async sendBulkEmail(params: {
@@ -507,6 +566,67 @@ class EmailService {
         const job = this.bulkJobs.find(j => j.id === id);
         resolve(job || null);
       }, 300);
+    });
+  }
+
+  // Helper methods for common email types
+  async sendWelcomeEmail(to: string, data: { name?: string; firstName?: string }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return this.sendEmail({
+      to,
+      templateId: '1',
+      category: 'transactional',
+      variables: data
+    });
+  }
+
+  async sendTicketConfirmation(to: string, data: {
+    firstName?: string;
+    eventName: string;
+    eventDate: string;
+    eventTime: string;
+    eventVenue: string;
+    ticketCount: number;
+    ticketType: string;
+    totalAmount: number;
+    ticketUrl: string;
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return this.sendEmail({
+      to,
+      templateId: '2',
+      category: 'transactional',
+      variables: data
+    });
+  }
+
+  async sendEventReminder(to: string, data: {
+    firstName?: string;
+    eventName: string;
+    timeUntil: string;
+    eventDate: string;
+    eventTime: string;
+    eventVenue: string;
+    eventAddress: string;
+    eventUrl: string;
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return this.sendEmail({
+      to,
+      templateId: '3',
+      category: 'notification',
+      variables: data
+    });
+  }
+
+  async sendPaymentSuccess(to: string, data: {
+    firstName?: string;
+    eventName: string;
+    amount: number;
+    paymentId: string;
+  }): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    return this.sendEmail({
+      to,
+      subject: `Payment Confirmation - ${data.eventName}`,
+      category: 'transactional',
+      variables: data
     });
   }
 

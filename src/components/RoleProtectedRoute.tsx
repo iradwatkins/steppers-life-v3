@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useHybridAuth } from '@/hooks/useHybridAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/components/ui/sonner';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -15,7 +15,7 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
   allowedRoles,
   redirectTo = '/dashboard'
 }) => {
-  const { user, loading, isAuthenticated, hasRole } = useHybridAuth();
+  const { user, loading, hasRole } = useAuth();
 
   // First check if the user is authenticated
   if (loading) {
@@ -29,18 +29,12 @@ const RoleProtectedRoute: React.FC<RoleProtectedRouteProps> = ({
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Check if backend profile exists (required for role checking)
-  if (!user?.backendProfile) {
-    toast.error('Profile setup required for this feature.');
-    return <Navigate to="/profile" replace />;
-  }
-
   // Check if the user has any of the required roles
-  const hasRequiredRole = hasRole(allowedRoles);
+  const hasRequiredRole = allowedRoles.some(role => hasRole(role));
 
   if (!hasRequiredRole) {
     toast.error(`Access restricted. You need ${allowedRoles.join(' or ')} permissions.`);

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useHybridAuth } from '@/hooks/useHybridAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { Spinner } from '@/components/ui/spinner';
 
 interface ProtectedRouteProps {
@@ -13,7 +13,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireBackendProfile = false 
 }) => {
-  const { user, loading, isAuthenticated } = useHybridAuth();
+  const { user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -26,23 +26,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (!isAuthenticated) {
+  if (!user) {
     return <Navigate to="/auth/login" replace />;
-  }
-
-  // Check if backend profile is required and available
-  if (requireBackendProfile && (!user?.backendProfile)) {
-    return (
-      <div className="min-h-screen bg-background-main flex items-center justify-center">
-        <div className="max-w-md text-center">
-          <div className="text-lg text-text-primary mb-2">Profile Setup Required</div>
-          <div className="text-text-secondary mb-4">
-            Your account needs to be set up before accessing this feature.
-          </div>
-          <Navigate to="/profile" replace />
-        </div>
-      </div>
-    );
   }
 
   return <>{children}</>;

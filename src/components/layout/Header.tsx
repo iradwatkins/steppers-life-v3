@@ -33,7 +33,6 @@ const Header = () => {
   ];
 
   const userNavigation = [
-    { name: 'Dashboard', href: '/dashboard' },
     { name: 'Events', href: '/events' },
     { name: 'Classes', href: '/classes' },
     { name: 'Community', href: '/community' },
@@ -141,6 +140,12 @@ const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="flex items-center">
+                        <BarChart3 className="mr-2 h-4 w-4" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
                       <Link to="/profile" className="flex items-center">
                         <User className="mr-2 h-4 w-4" />
                         <span>Profile</span>
@@ -224,6 +229,14 @@ const Header = () => {
               
               {user ? (
                 <>
+                  <Link
+                    to="/dashboard"
+                    className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50 flex items-center"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <BarChart3 className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Link>
                   <Link
                     to="/profile"
                     className="px-3 py-2 text-sm font-medium text-header-text hover:text-header-link-active hover:bg-gray-50"
