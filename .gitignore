@@ -22,3 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Production environment files
+.env.production
+backend/.env
+.railway/
+.vercel/
+
+# Local development
+*.local
+.DS_Store

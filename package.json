@@ -12,7 +12,9 @@
     "pwa": "npm run build && npx serve dist -p 8086 -s",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "deploy:vercel": "vercel --prod",
+    "deploy:preview": "vercel"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
