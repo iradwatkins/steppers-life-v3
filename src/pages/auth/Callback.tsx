@@ -13,7 +13,11 @@ const AuthCallback = () => {
   useEffect(() => {
     const processAuthCallback = async () => {
       try {
-        console.log('Processing auth callback...');
+        console.log('Processing auth callback...', { 
+          hasCode: !!searchParams.get('code'),
+          hasAccessToken: !!searchParams.get('access_token'),
+          hasRefreshToken: !!searchParams.get('refresh_token')
+        });
         
         // Check for error in URL parameters
         const errorParam = searchParams.get('error');
@@ -23,33 +27,59 @@ const AuthCallback = () => {
           throw new Error(errorDescription || errorParam);
         }
 
-        // Get the session after OAuth or Magic Link redirect
-        const { data, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Session error:', error);
-          throw error;
+        // Handle magic link authentication (hash-based tokens)
+        if (window.location.hash) {
+          console.log('Processing magic link with hash tokens...');
+          const { data, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.error('Magic link session error:', error);
+            throw error;
+          }
+          
+          if (data.session) {
+            console.log('Magic link session found:', data.session.user.email);
+            await ensureNewUserRole(data.session.user.id);
+            toast.success('Successfully signed in with magic link!');
+            setProcessing(false);
+            
+            // Redirect immediately for magic links
+            navigate('/', { replace: true });
+            return;
+          }
         }
-        
-        if (!data.session) {
-          // If exchanging the code fails
+
+        // Handle OAuth flow with code parameter
+        const code = searchParams.get('code');
+        if (code) {
+          console.log('Processing OAuth code exchange...');
           const exchangeError = await handleAuthCode();
           if (exchangeError) {
             throw new Error(exchangeError);
           }
-        } else {
-          // Ensure the user's role is set for new OAuth users
-          await ensureNewUserRole(data.session.user.id);
+        }
+
+        // Final session check
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Final session error:', error);
+          throw error;
         }
         
-        console.log('Auth successful, redirecting...');
-        toast.success('Successfully signed in!');
-        setProcessing(false);
+        if (data.session) {
+          console.log('Auth successful:', data.session.user.email);
+          await ensureNewUserRole(data.session.user.id);
+          toast.success('Successfully signed in!');
+          setProcessing(false);
+          
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 500);
+        } else {
+          throw new Error('No session found after authentication');
+        }
         
-        // Wait a moment to ensure everything is processed
-        setTimeout(() => {
-          navigate('/', { replace: true });
-        }, 1000);
       } catch (err: any) {
         console.error('Error in auth callback:', err);
         setError(err.message || 'Authentication failed');

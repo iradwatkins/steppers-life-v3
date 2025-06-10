@@ -11,6 +11,7 @@ import AdminLayout from "./components/layout/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import { Spinner } from "@/components/ui/spinner";
+import MagicLinkHandler from "./components/MagicLinkHandler";
 
 // Lazy load components for better performance
 const Index = lazy(() => import("./pages/Index"));
@@ -128,6 +129,7 @@ const App = () => (
       <Sonner />
       <FaviconManager />
       <BrowserRouter>
+        <MagicLinkHandler />
         <Suspense fallback={<PageLoader />}>
           <Routes>
           {/* Public routes */}
