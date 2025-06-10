@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { FaviconManager } from "@/components/ui/FaviconManager";
@@ -10,115 +10,116 @@ import PWALayout from "./components/layout/PWALayout";
 import AdminLayout from "./components/layout/AdminLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 import RoleProtectedRoute from "./components/RoleProtectedRoute";
-import Index from "./pages/Index";
-import UserDashboard from "./pages/UserDashboard";
-import Events from "./pages/Events";
-import Classes from "./pages/Classes";
-import Community from "./pages/Community";
-import Profile from "./pages/Profile";
-import Admin from "./pages/Admin";
-import Login from "./pages/auth/Login";
-import Register from "./pages/auth/Register";
-import RegisterDetails from "./pages/auth/RegisterDetails";
-import AuthCallback from "./pages/auth/Callback";
-import MagicLinkLogin from "./pages/auth/MagicLinkLogin";
-import NotFound from "./pages/NotFound";
-import AppInstallPage from "./pages/AppInstallPage";
-import CreateEventPage from "./pages/organizer/CreateEventPage";
-import EventTicketingPage from "./pages/organizer/EventTicketingPage";
-import EventSeatingPage from "./pages/organizer/EventSeatingPage";
-import EventCustomQuestionsPage from "./pages/organizer/EventCustomQuestionsPage";
-import ManageEventPage from "./pages/organizer/ManageEventPage";
-import EventCollectionsPage from "./pages/organizer/EventCollectionsPage";
-import { MultiEventAnalyticsPage } from "./pages/MultiEventAnalyticsPage";
-import FollowerManagementPage from "./pages/organizer/FollowerManagementPage";
-import SalesAgentManagementPage from "./pages/organizer/SalesAgentManagementPage";
-import RoleManagementPage from "./pages/RoleManagementPage";
-import ClaimableEventsPage from "./pages/promoter/ClaimableEventsPage";
-import EventClaimsPage from "./pages/admin/EventClaimsPage";
-import AdminCreateEventPage from "./pages/admin/AdminCreateEventPage";
-import InventoryDashboardPage from "./pages/admin/InventoryDashboardPage";
-import { CheckinManagementPage } from "./pages/admin/CheckinManagementPage";
-import TicketSelectionPage from "./pages/checkout/TicketSelectionPage";
-import CheckoutDetailsPage from "./pages/checkout/CheckoutDetailsPage";
-import CheckoutPaymentPage from "./pages/checkout/CheckoutPaymentPage";
-import CheckoutConfirmationPage from "./pages/checkout/CheckoutConfirmationPage";
-import EventPromoCodesPage from "./pages/organizer/EventPromoCodesPage";
-import EventRefundsPage from "./pages/organizer/EventRefundsPage";
-import EventCashPaymentPage from "./pages/organizer/EventCashPaymentPage";
-import EventEmailCampaignsPage from "./pages/organizer/EventEmailCampaignsPage";
-import EventPerformancePage from "./pages/organizer/EventPerformancePage";
-import FinancialReportsPage from "./pages/organizer/FinancialReportsPage";
-import AttendeeReportPage from './pages/AttendeeReportPage';
-import { CustomerAnalyticsPage } from "./pages/analytics/CustomerAnalyticsPage";
-import ComparativeAnalyticsPage from "./pages/ComparativeAnalyticsPage";
-import AutomatedReportsPage from "./pages/organizer/AutomatedReportsPage";
-import EventDetailsPage from "./pages/EventDetailsPage";
-import CashPaymentPage from "./pages/buyer/CashPaymentPage";
-import TicketHistoryPage from "./pages/buyer/TicketHistoryPage";
-import AccountDashboard from "./pages/buyer/AccountDashboard";
-import ProfileManagement from "./pages/buyer/ProfileManagement";
-import AccountSettings from "./pages/buyer/AccountSettings";
-import VenueDetailPage from "./components/VenueDetailPage";
+import { Spinner } from "@/components/ui/spinner";
+
+// Lazy load components for better performance
+const Index = lazy(() => import("./pages/Index"));
+const UserDashboard = lazy(() => import("./pages/UserDashboard"));
+const Events = lazy(() => import("./pages/Events"));
+const Classes = lazy(() => import("./pages/Classes"));
+const Community = lazy(() => import("./pages/Community"));
+const Profile = lazy(() => import("./pages/Profile"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Register = lazy(() => import("./pages/auth/Register"));
+const RegisterDetails = lazy(() => import("./pages/auth/RegisterDetails"));
+const AuthCallback = lazy(() => import("./pages/auth/Callback"));
+const MagicLinkLogin = lazy(() => import("./pages/auth/MagicLinkLogin"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Lazy load all other pages
+const AppInstallPage = lazy(() => import("./pages/AppInstallPage"));
+const CreateEventPage = lazy(() => import("./pages/organizer/CreateEventPage"));
+const EventTicketingPage = lazy(() => import("./pages/organizer/EventTicketingPage"));
+const EventSeatingPage = lazy(() => import("./pages/organizer/EventSeatingPage"));
+const EventCustomQuestionsPage = lazy(() => import("./pages/organizer/EventCustomQuestionsPage"));
+const ManageEventPage = lazy(() => import("./pages/organizer/ManageEventPage"));
+const EventCollectionsPage = lazy(() => import("./pages/organizer/EventCollectionsPage"));
+const MultiEventAnalyticsPage = lazy(() => import("./pages/MultiEventAnalyticsPage").then(m => ({ default: m.MultiEventAnalyticsPage })));
+const FollowerManagementPage = lazy(() => import("./pages/organizer/FollowerManagementPage"));
+const SalesAgentManagementPage = lazy(() => import("./pages/organizer/SalesAgentManagementPage"));
+const RoleManagementPage = lazy(() => import("./pages/RoleManagementPage"));
+const ClaimableEventsPage = lazy(() => import("./pages/promoter/ClaimableEventsPage"));
+const EventClaimsPage = lazy(() => import("./pages/admin/EventClaimsPage"));
+const AdminCreateEventPage = lazy(() => import("./pages/admin/AdminCreateEventPage"));
+const InventoryDashboardPage = lazy(() => import("./pages/admin/InventoryDashboardPage"));
+const CheckinManagementPage = lazy(() => import("./pages/admin/CheckinManagementPage").then(m => ({ default: m.CheckinManagementPage })));
+const TicketSelectionPage = lazy(() => import("./pages/checkout/TicketSelectionPage"));
+const CheckoutDetailsPage = lazy(() => import("./pages/checkout/CheckoutDetailsPage"));
+const CheckoutPaymentPage = lazy(() => import("./pages/checkout/CheckoutPaymentPage"));
+const CheckoutConfirmationPage = lazy(() => import("./pages/checkout/CheckoutConfirmationPage"));
+const EventPromoCodesPage = lazy(() => import("./pages/organizer/EventPromoCodesPage"));
+const EventRefundsPage = lazy(() => import("./pages/organizer/EventRefundsPage"));
+const EventCashPaymentPage = lazy(() => import("./pages/organizer/EventCashPaymentPage"));
+const EventEmailCampaignsPage = lazy(() => import("./pages/organizer/EventEmailCampaignsPage"));
+const EventPerformancePage = lazy(() => import("./pages/organizer/EventPerformancePage"));
+const FinancialReportsPage = lazy(() => import("./pages/organizer/FinancialReportsPage"));
+const AttendeeReportPage = lazy(() => import('./pages/AttendeeReportPage'));
+const CustomerAnalyticsPage = lazy(() => import("./pages/analytics/CustomerAnalyticsPage").then(m => ({ default: m.CustomerAnalyticsPage })));
+const ComparativeAnalyticsPage = lazy(() => import("./pages/ComparativeAnalyticsPage"));
+const AutomatedReportsPage = lazy(() => import("./pages/organizer/AutomatedReportsPage"));
+const EventDetailsPage = lazy(() => import("./pages/EventDetailsPage"));
+const CashPaymentPage = lazy(() => import("./pages/buyer/CashPaymentPage"));
+const TicketHistoryPage = lazy(() => import("./pages/buyer/TicketHistoryPage"));
+const AccountDashboard = lazy(() => import("./pages/buyer/AccountDashboard"));
+const ProfileManagement = lazy(() => import("./pages/buyer/ProfileManagement"));
+const AccountSettings = lazy(() => import("./pages/buyer/AccountSettings"));
+const VenueDetailPage = lazy(() => import("./components/VenueDetailPage"));
 
 // Magazine imports
-import MagazinePage from "./pages/MagazinePage";
-import MagazineCategoryPage from "./pages/MagazineCategoryPage";
-import MagazineArticlePage from "./pages/MagazineArticlePage";
-import MagazineRouter from "./pages/admin/MagazineRouter";
+const MagazinePage = lazy(() => import("./pages/MagazinePage"));
+const MagazineCategoryPage = lazy(() => import("./pages/MagazineCategoryPage"));
+const MagazineArticlePage = lazy(() => import("./pages/MagazineArticlePage"));
+const MagazineRouter = lazy(() => import("./pages/admin/MagazineRouter"));
 
 // Store Directory imports
-import { SubmitStore } from "./pages/stores/SubmitStore";
-import StoreDetailPage from "./pages/stores/StoreDetailPage";
-import StoreDirectoryAdminPage from "./pages/admin/StoreDirectoryAdminPage";
+const SubmitStore = lazy(() => import("./pages/stores/SubmitStore").then(m => ({ default: m.SubmitStore })));
+const StoreDetailPage = lazy(() => import("./pages/stores/StoreDetailPage"));
+const StoreDirectoryAdminPage = lazy(() => import("./pages/admin/StoreDirectoryAdminPage"));
 
-// PWA-specific imports
-import PWALoginPage from "./pages/pwa/PWALoginPage";
-import PWADashboardPage from "./pages/pwa/PWADashboardPage";
-import PWACheckinPage from "./pages/pwa/PWACheckinPage";
-import PWAAttendancePage from "./pages/pwa/PWAAttendancePage";
-import PWASettingsPage from "./pages/pwa/PWASettingsPage";
-import PWAAttendeeListPage from "./pages/pwa/PWAAttendeeListPage";
-import PWAStatisticsPage from "./pages/pwa/PWAStatisticsPage";
-import PWAPaymentPage from "./components/pwa/PWAPaymentPage";
-import SalesAgentDashboardPage from './pages/agent/SalesAgentDashboardPage';
-import CommissionPaymentPage from './pages/organizer/CommissionPaymentPage';
-import AdvancedSeatingEditorPage from "./pages/organizer/AdvancedSeatingEditorPage";
-import PWASeatingPage from "./pages/pwa/PWASeatingPage";
+// Instructor imports
+const InstructorDashboardPage = lazy(() => import("./pages/instructor/InstructorDashboardPage"));
+
+// Epic M imports
+const VanityUrlManagementPage = lazy(() => import("./pages/VanityUrlManagementPage"));
+const AdminVanityUrlPage = lazy(() => import("./pages/admin/AdminVanityUrlPage"));
+const AdminEmailManagementPage = lazy(() => import("./pages/admin/AdminEmailManagementPage"));
 
 // Import react-grid-layout and react-resizable CSS
 import '/node_modules/react-grid-layout/css/styles.css';
 import '/node_modules/react-resizable/css/styles.css';
 
-// Instructor imports
-import InstructorDashboardPage from "./pages/instructor/InstructorDashboardPage";
-
-// Epic M imports
-import VanityUrlManagementPage from "./pages/VanityUrlManagementPage";
-import AdminVanityUrlPage from "./pages/admin/AdminVanityUrlPage";
-import AdminEmailManagementPage from "./pages/admin/AdminEmailManagementPage";
-
 // Epic X - Advertising System imports
-import AdminAdvertisingPage from "./pages/admin/AdminAdvertisingPage";
-import AdPortalPage from "./pages/ads/AdPortalPage";
+const AdminAdvertisingPage = lazy(() => import("./pages/admin/AdminAdvertisingPage"));
+const AdPortalPage = lazy(() => import("./pages/ads/AdPortalPage"));
 
 // New Admin Dashboard imports
-import AdminDashboardOverview from "./pages/admin/AdminDashboardOverview";
-import AdminAnalyticsHub from "./pages/admin/AdminAnalyticsHub";
-import AdminSystemSettings from "./pages/admin/AdminSystemSettings";
-import UserManagementPage from "./pages/admin/UserManagementPage";
+const AdminDashboardOverview = lazy(() => import("./pages/admin/AdminDashboardOverview"));
+const AdminAnalyticsHub = lazy(() => import("./pages/admin/AdminAnalyticsHub"));
+const AdminSystemSettings = lazy(() => import("./pages/admin/AdminSystemSettings"));
+const UserManagementPage = lazy(() => import("./pages/admin/UserManagementPage"));
 
 // Missing Admin Page imports
-import AdminThemePage from "./pages/admin/AdminThemePage";
-import AdminPaymentsPage from "./pages/admin/AdminPaymentsPage";
-import AdminExportPage from "./pages/admin/AdminExportPage";
-import AdminNotificationsPage from "./pages/admin/AdminNotificationsPage";
-import AdminContentPage from "./pages/admin/AdminContentPage";
-import AdminEventsPage from "./pages/admin/AdminEventsPage";
-import AdminUserCreatePage from "./pages/admin/AdminUserCreatePage";
-import AdminUserRolesPage from "./pages/admin/AdminUserRolesPage";
+const AdminThemePage = lazy(() => import("./pages/admin/AdminThemePage"));
+const AdminPaymentsPage = lazy(() => import("./pages/admin/AdminPaymentsPage"));
+const AdminExportPage = lazy(() => import("./pages/admin/AdminExportPage"));
+const AdminNotificationsPage = lazy(() => import("./pages/admin/AdminNotificationsPage"));
+const AdminContentPage = lazy(() => import("./pages/admin/AdminContentPage"));
+const AdminEventsPage = lazy(() => import("./pages/admin/AdminEventsPage"));
+const AdminUserCreatePage = lazy(() => import("./pages/admin/AdminUserCreatePage"));
+const AdminUserRolesPage = lazy(() => import("./pages/admin/AdminUserRolesPage"));
 
 const queryClient = new QueryClient();
+
+// Loading component for Suspense
+const PageLoader = () => (
+  <div className="min-h-screen bg-background-main flex items-center justify-center">
+    <div className="text-center">
+      <Spinner size="lg" className="text-brand-primary" />
+      <p className="mt-4 text-text-secondary">Loading...</p>
+    </div>
+  </div>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -127,7 +128,8 @@ const App = () => (
       <Sonner />
       <FaviconManager />
       <BrowserRouter>
-        <Routes>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
           {/* Public routes */}
           <Route path="/auth/login" element={<Login />} />
           <Route path="/auth/register" element={<Register />} />
@@ -432,6 +434,7 @@ const App = () => (
           {/* Catch-all route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
       </BrowserRouter>
     </ThemeProvider>
   </QueryClientProvider>
