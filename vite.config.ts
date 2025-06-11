@@ -18,10 +18,6 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          // Core React libraries
-          if (id.includes('react') || id.includes('react-dom')) {
-            return 'react-vendor';
-          }
           // Router
           if (id.includes('react-router')) {
             return 'router';
@@ -42,8 +38,8 @@ export default defineConfig(({ mode }) => ({
           if (id.includes('react-hook-form') || id.includes('zod')) {
             return 'forms';
           }
-          // Utils and other vendor
-          if (id.includes('node_modules')) {
+          // Utils and other vendor (but keep React in main bundle)
+          if (id.includes('node_modules') && !id.includes('react')) {
             return 'vendor';
           }
         },
