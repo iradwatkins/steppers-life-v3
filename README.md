@@ -1,4 +1,9 @@
-# Welcome to your Lovable project
+# SteppersLife.com - Event Management PWA
+
+🚀 **Fresh Deployment - New GitHub & Vercel Setup**
+
+**Repository:** https://github.com/iradwatkins/steppers-life-v3  
+**Live Site:** https://stepperslife-frontend-hffah0ta2-ira-watkins-projects.vercel.app
 
 ## Project info
 
