@@ -110,6 +110,16 @@ const AdminEventsPage = lazy(() => import("./pages/admin/AdminEventsPage"));
 const AdminUserCreatePage = lazy(() => import("./pages/admin/AdminUserCreatePage"));
 const AdminUserRolesPage = lazy(() => import("./pages/admin/AdminUserRolesPage"));
 
+// PWA imports
+const PWALoginPage = lazy(() => import("./pages/pwa/PWALoginPage"));
+const PWADashboardPage = lazy(() => import("./pages/pwa/PWADashboardPage"));
+const PWACheckinPage = lazy(() => import("./pages/pwa/PWACheckinPage"));
+const PWAAttendancePage = lazy(() => import("./pages/pwa/PWAAttendancePage"));
+const PWAAttendeeListPage = lazy(() => import("./pages/pwa/PWAAttendeeListPage"));
+const PWAStatisticsPage = lazy(() => import("./pages/pwa/PWAStatisticsPage"));
+const PWASettingsPage = lazy(() => import("./pages/pwa/PWASettingsPage"));
+const PWASeatingPage = lazy(() => import("./pages/pwa/PWASeatingPage"));
+
 const queryClient = new QueryClient();
 
 // Loading component for Suspense
