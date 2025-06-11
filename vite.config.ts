@@ -15,33 +15,18 @@ export default defineConfig(({ mode }) => ({
     sourcemap: false,
     target: 'es2020',
     minify: 'esbuild',
+    esbuild: {
+      keepNames: true,
+    },
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Router
-          if (id.includes('react-router')) {
-            return 'router';
-          }
-          // UI Components
-          if (id.includes('@radix-ui') || id.includes('lucide-react')) {
-            return 'ui-components';
-          }
-          // Supabase
-          if (id.includes('@supabase')) {
-            return 'supabase';
-          }
-          // Charts and visualization
-          if (id.includes('recharts') || id.includes('react-grid-layout')) {
-            return 'charts';
-          }
-          // Forms and validation
-          if (id.includes('react-hook-form') || id.includes('zod')) {
-            return 'forms';
-          }
-          // Utils and other vendor (but keep React in main bundle)
-          if (id.includes('node_modules') && !id.includes('react')) {
-            return 'vendor';
-          }
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+          'ui-components': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', 'lucide-react'],
+          'supabase': ['@supabase/supabase-js'],
+          'charts': ['recharts'],
+          'utils': ['date-fns', 'clsx', 'tailwind-merge']
         },
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]'
