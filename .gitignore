@@ -32,3 +32,4 @@ backend/.env
 # Local development
 *.local
 .DS_Store
+.vercel
